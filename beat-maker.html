@@ -6,7 +6,6 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Swanky Cheese 🧀</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
   :root {
@@ -569,72 +568,122 @@ function speak(phrases) {
 }
 // Pre-load voices
 if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-let synths = {};
-let loop = null;
+// =====================
+// === NATIVE WEB AUDIO ENGINE ===
+// =====================
+let _audioCtx = null;
+function getCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _audioCtx;
+}
+async function unlockAudio() {
+  const ctx = getCtx();
+  if (ctx.state === 'suspended') await ctx.resume();
+}
 
-async function initAudio() {
-  synths.kick = new Tone.MembraneSynth({ pitchDecay: 0.05, octaves: 8,
-    envelope: { attack: 0.001, decay: 0.25, sustain: 0, release: 0.1 }
-  }).toDestination();
-  synths.snare = new Tone.NoiseSynth({
-    noise: { type: 'white' },
-    envelope: { attack: 0.001, decay: 0.15, sustain: 0, release: 0.05 }
-  }).toDestination();
-  synths.snare.volume.value = -6;
-  synths.hihat = new Tone.MetalSynth({
-    frequency: 400, envelope: { attack: 0.001, decay: 0.05, release: 0.01 },
-    harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5
-  }).toDestination();
-  synths.hihat.volume.value = -10;
-  synths.bass = new Tone.Synth({
-    oscillator: { type: 'sawtooth' },
-    envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.2 }
-  }).toDestination();
-  synths.bass.volume.value = -8;
-  synths.melody = new Tone.PolySynth(Tone.Synth, {
-    oscillator: { type: 'triangle' },
-    envelope: { attack: 0.02, decay: 0.3, sustain: 0.4, release: 0.8 },
-  }).toDestination();
-  synths.melody.volume.value = -6;
+const NOTE_FREQ = {
+  'A3':220.00,'Bb3':233.08,'B3':246.94,
+  'C4':261.63,'D4':293.66,'Eb4':311.13,'E4':329.63,'F4':349.23,'Gb4':369.99,'G4':392.00,'Ab4':415.30,'A4':440.00,'Bb4':466.16,'B4':493.88,
+  'C5':523.25,'D5':587.33,'Eb5':622.25,'E5':659.25,'F5':698.46,'Gb5':739.99,'G5':783.99,'Ab5':830.61,'A5':880.00,'Bb5':932.33,'B5':987.77,
+  'C6':1046.50,'D6':1174.66,'Eb6':1244.51,'E6':1318.51,'F6':1396.91,'G6':1567.98,'A6':1760.00,
+};
+
+function playKick(t) {
+  const ctx = getCtx();
+  const osc = ctx.createOscillator(), g = ctx.createGain();
+  osc.connect(g); g.connect(ctx.destination);
+  osc.frequency.setValueAtTime(160, t);
+  osc.frequency.exponentialRampToValueAtTime(0.001, t + 0.4);
+  g.gain.setValueAtTime(1.0, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+  osc.start(t); osc.stop(t + 0.4);
+}
+function playSnare(t) {
+  const ctx = getCtx();
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.15), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource(), hp = ctx.createBiquadFilter(), g = ctx.createGain();
+  hp.type = 'highpass'; hp.frequency.value = 1500;
+  g.gain.setValueAtTime(0.7, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+  src.buffer = buf; src.connect(hp); hp.connect(g); g.connect(ctx.destination);
+  src.start(t); src.stop(t + 0.15);
+}
+function playHihat(t) {
+  const ctx = getCtx();
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.04), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
+  bp.type = 'bandpass'; bp.frequency.value = 9000; bp.Q.value = 0.8;
+  g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+  src.buffer = buf; src.connect(bp); bp.connect(g); g.connect(ctx.destination);
+  src.start(t); src.stop(t + 0.04);
+}
+function playBass(t) {
+  const ctx = getCtx();
+  const osc = ctx.createOscillator(), g = ctx.createGain();
+  osc.type = 'sawtooth'; osc.frequency.value = 65.41;
+  osc.connect(g); g.connect(ctx.destination);
+  g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+  osc.start(t); osc.stop(t + 0.25);
+}
+function playMelodyNote(note, t) {
+  const ctx = getCtx();
+  const freq = NOTE_FREQ[note] || 440;
+  const osc = ctx.createOscillator(), g = ctx.createGain();
+  osc.type = 'triangle'; osc.frequency.value = freq;
+  osc.connect(g); g.connect(ctx.destination);
+  g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+  osc.start(t); osc.stop(t + 0.35);
 }
 
 function triggerSound(row, col) {
-  if (!synths.kick) return;
-  const now = Tone.now();
-  if (row === 0) synths.kick.triggerAttackRelease('C1', '8n', now);
-  else if (row === 1) synths.snare.triggerAttackRelease('8n', now);
-  else if (row === 2) synths.hihat.triggerAttackRelease('16n', now);
-  else if (row === 3) synths.bass.triggerAttackRelease('C2', '8n', now);
-  else if (row === 4) {
-    const note = (col !== undefined) ? getMelodyNote(col) : SCALES[currentScale][0];
-    synths.melody.triggerAttackRelease(note, '8n', now);
+  const ctx = getCtx();
+  if (ctx.state !== 'running') return;
+  const t = ctx.currentTime + 0.01;
+  if (row === 0) playKick(t);
+  else if (row === 1) playSnare(t);
+  else if (row === 2) playHihat(t);
+  else if (row === 3) playBass(t);
+  else if (row === 4) playMelodyNote((col !== undefined ? getMelodyNote(col) : SCALES[currentScale][0]), t);
+}
+
+let _seqTimer = null, _seqStep = 0, _seqNextTime = 0;
+const SEQ_LOOKAHEAD = 0.1, SEQ_TICK = 50;
+
+function _seqSchedule() {
+  const ctx = getCtx();
+  const stepSecs = 60 / STATE.bpm / 4;
+  while (_seqNextTime < ctx.currentTime + SEQ_LOOKAHEAD) {
+    const s = _seqStep, t = _seqNextTime;
+    for (let row = 0; row < 5; row++) {
+      if (GRID[row][s]) {
+        if (row === 0) playKick(t);
+        else if (row === 1) playSnare(t);
+        else if (row === 2) playHihat(t);
+        else if (row === 3) playBass(t);
+        else if (row === 4) playMelodyNote(SCALES[currentScale][s], t);
+      }
+    }
+    const uiDelay = Math.max(0, (t - ctx.currentTime) * 1000);
+    setTimeout(() => updatePlayhead(s), uiDelay);
+    _seqNextTime += stepSecs;
+    _seqStep = (_seqStep + 1) % 16;
   }
+  _seqTimer = setTimeout(_seqSchedule, SEQ_TICK);
 }
 
 function startSequencer() {
-  Tone.Transport.bpm.value = STATE.bpm;
-  let step = 0;
-  loop = new Tone.Sequence((time, s) => {
-    step = s;
-    STATE.currentStep = s;
-    for (let row = 0; row < 4; row++) {
-      if (GRID[row][s]) {
-        if (row === 0) synths.kick.triggerAttackRelease('C1', '8n', time);
-        else if (row === 1) synths.snare.triggerAttackRelease('8n', time);
-        else if (row === 2) synths.hihat.triggerAttackRelease('16n', time);
-        else if (row === 3) synths.bass.triggerAttackRelease('C2', '8n', time);
-        else if (row === 4) synths.melody.triggerAttackRelease(SCALES[currentScale][s], '8n', time);
-      }
-    }
-    Tone.getDraw().schedule(() => { updatePlayhead(s); }, time);
-  }, [...Array(16).keys()], '16n');
-  loop.start(0);
-  Tone.Transport.start();
+  const ctx = getCtx();
+  _seqStep = 0;
+  _seqNextTime = ctx.currentTime + 0.05;
+  _seqSchedule();
 }
 
 function stopSequencer() {
-  if (loop) { loop.stop(); loop.dispose(); loop = null; }
-  Tone.Transport.stop();
+  clearTimeout(_seqTimer);
+  _seqTimer = null;
   updatePlayhead(-1);
 }
 
@@ -708,8 +757,7 @@ function clearBeat() {
 // === CONTROLS ===
 // =====================
 async function togglePlay() {
-  await Tone.start(); // first await in gesture handler — iOS unlocks AudioContext here
-  if (!synths.kick) await initAudio();
+  await unlockAudio();
   STATE.isPlaying = !STATE.isPlaying;
   const btn = document.getElementById('btn-play');
   if (STATE.isPlaying) {
@@ -750,8 +798,7 @@ let tapTimer = null;
 let tapInterval = null;
 
 async function tapInstrument(row) {
-  await Tone.start();
-  if (!synths.kick) await initAudio();
+  await unlockAudio();
   if (!STATE.tapRecording) {
     startTapRecording();
   }
@@ -916,22 +963,15 @@ async function gradeBeat() {
   showToast(`${grade} Grade! +${pts} pts`);
 }
 
-async function playGradeSound(grade) {
-  if (!synths.kick) return;
-  const now = Tone.now();
-  const synth = new Tone.Synth({ oscillator:{type:'triangle'}, envelope:{attack:0.01,decay:0.2,sustain:0.3,release:0.3}}).toDestination();
-  if (grade === 'S') {
-    ['C4','E4','G4','C5'].forEach((n,i) => synth.triggerAttackRelease(n,'16n', now + i*0.1));
-  } else if (grade === 'A') {
-    ['C4','E4','G4'].forEach((n,i) => synth.triggerAttackRelease(n,'16n', now + i*0.1));
-  } else if (grade === 'B') {
-    synth.triggerAttackRelease('E4','8n',now);
-  } else if (grade === 'C') {
-    synth.triggerAttackRelease('C4','8n',now);
-  } else {
-    ['E4','C4'].forEach((n,i) => synth.triggerAttackRelease(n,'16n', now + i*0.15));
-  }
-  setTimeout(() => synth.dispose(), 2000);
+function playGradeSound(grade) {
+  const ctx = getCtx();
+  if (ctx.state !== 'running') return;
+  const now = ctx.currentTime + 0.01;
+  const seq = grade === 'S' ? [['C4',0],['E4',.1],['G4',.2],['C5',.3]] :
+              grade === 'A' ? [['C4',0],['E4',.1],['G4',.2]] :
+              grade === 'B' ? [['E4',0]] :
+              grade === 'C' ? [['C4',0]] : [['E4',0],['C4',.15]];
+  seq.forEach(([n,dt]) => playMelodyNote(n, now + dt));
 }
 
 // =====================
@@ -1142,11 +1182,11 @@ function switchTab(tab) {
 buildSequencer();
 updateStats();
 
-// Audio permission banner — shown on any touch device where the AudioContext
-// starts suspended and needs an explicit user gesture to unlock.
+// Audio permission banner — iOS and Android only (not desktop browsers).
 (function() {
-  const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-  if (!isTouchDevice) return;
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS 13+
+  if (!isMobile) return;
 
   const prompt = document.getElementById('audio-prompt');
   const acceptBtn = document.getElementById('ap-accept');
@@ -1155,8 +1195,7 @@ updateStats();
   prompt.style.display = 'flex';
 
   acceptBtn.addEventListener('click', async () => {
-    await Tone.start(); // this IS the user gesture — iOS unlocks AudioContext here
-    if (!synths.kick) await initAudio();
+    await unlockAudio();
     prompt.style.display = 'none';
     showToast('Audio enabled 🔊');
   });
