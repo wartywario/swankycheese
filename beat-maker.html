@@ -598,12 +598,11 @@ function startSequencer() {
     STATE.currentStep = s;
     for (let row = 0; row < 4; row++) {
       if (GRID[row][s]) {
-        const now = Tone.now();
-        if (row === 0) synths.kick.triggerAttackRelease('C1', '8n', now);
-        else if (row === 1) synths.snare.triggerAttackRelease('8n', now);
-        else if (row === 2) synths.hihat.triggerAttackRelease('16n', now);
-        else if (row === 3) synths.bass.triggerAttackRelease('C2', '8n', now);
-        else if (row === 4) synths.melody.triggerAttackRelease(SCALES[currentScale][s], '8n', now);
+        if (row === 0) synths.kick.triggerAttackRelease('C1', '8n', time);
+        else if (row === 1) synths.snare.triggerAttackRelease('8n', time);
+        else if (row === 2) synths.hihat.triggerAttackRelease('16n', time);
+        else if (row === 3) synths.bass.triggerAttackRelease('C2', '8n', time);
+        else if (row === 4) synths.melody.triggerAttackRelease(SCALES[currentScale][s], '8n', time);
       }
     }
     Tone.getDraw().schedule(() => { updatePlayhead(s); }, time);
