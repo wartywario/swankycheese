@@ -60,6 +60,22 @@
   #rotateOverlay p { color: #44ccee; font-family: 'Press Start 2P',monospace; font-size: 10px; text-align: center; line-height: 2.2; }
   @keyframes wobble { from { transform: rotate(-20deg); } to { transform: rotate(20deg); } }
 
+  /* ── MOBILE FULLSCREEN MODE ── */
+  #gameContainer.fs-mode {
+    position: fixed;
+    inset: 0;
+    width: 100dvw !important;
+    height: 100dvh !important;
+    max-width: none !important;
+  }
+  #gameContainer.fs-mode canvas {
+    width: 100%;
+    height: 100%;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  #gameContainer.fs-mode + #controls { display: none; }
+
   /* Only apply the portrait-hide on touch devices */
   html.is-touch #gameContainer,
   html.is-touch #controls { display: none; }
@@ -155,6 +171,7 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const W = 800, H = 420;
+let renderScaleX = 1, renderScaleY = 1;
 
 // Keep canvas focused so spacebar always works
 canvas.focus();
@@ -1642,6 +1659,31 @@ document.addEventListener('keydown', e=>{
 });
 document.addEventListener('keyup', e=>{ keys[e.code]=false; });
 
+// ── MOBILE FULLSCREEN / FILL-VIEWPORT ──
+const gameContainer = document.getElementById('gameContainer');
+
+function resizeToViewport() {
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  renderScaleX  = canvas.width  / W;
+  renderScaleY  = canvas.height / H;
+}
+
+function enterMobileMode() {
+  if (!isMobile || gameContainer.classList.contains('fs-mode')) return;
+  gameContainer.classList.add('fs-mode');
+  resizeToViewport();
+  // Android: request true fullscreen (no-op / caught on iOS where API is absent)
+  const req = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
+  if (req) req.call(document.documentElement).then(resizeToViewport).catch(() => {});
+}
+
+document.addEventListener('fullscreenchange',        resizeToViewport);
+document.addEventListener('webkitfullscreenchange',  resizeToViewport);
+window.addEventListener('resize', () => {
+  if (gameContainer.classList.contains('fs-mode')) resizeToViewport();
+});
+
 // ── ON-SCREEN BUTTON TOUCH CONTROLS ──
 const btnUp   = document.getElementById('btnUp');
 const btnDown = document.getElementById('btnDown');
@@ -1668,12 +1710,12 @@ btnDown.addEventListener('mouseup',    ()=>setDive(false));
 btnDown.addEventListener('mouseleave', ()=>setDive(false));
 
 // Centre tap zone — advances state (same as spacebar)
-tapZone.addEventListener('touchstart', e=>{ initAudio(); handleSpace(); e.preventDefault(); }, {passive:false});
+tapZone.addEventListener('touchstart', e=>{ enterMobileMode(); initAudio(); handleSpace(); e.preventDefault(); }, {passive:false});
 tapZone.addEventListener('click', ()=>{ initAudio(); handleSpace(); });
 
 // Also let tapping either flight button advance state on non-playing screens
 function btnTapAdvance(e) {
-  if (gameState !== 'playing') { initAudio(); handleSpace(); }
+  if (gameState !== 'playing') { enterMobileMode(); initAudio(); handleSpace(); }
 }
 btnUp.addEventListener('touchstart',   btnTapAdvance, {passive:false});
 btnDown.addEventListener('touchstart', btnTapAdvance, {passive:false});
@@ -2202,6 +2244,7 @@ function drawWinScreen() {
 let lastTime=0;
 function gameLoop(ts) {
   lastTime=ts;
+  ctx.setTransform(renderScaleX, 0, 0, renderScaleY, 0, 0);
   ctx.fillStyle=C.uiBg; ctx.fillRect(0,0,W,H);
 
   if(gameState==='title')    { drawTitleScreen(); return void requestAnimationFrame(gameLoop); }
