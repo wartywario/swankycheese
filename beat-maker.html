@@ -551,7 +551,6 @@ let synths = {};
 let loop = null;
 
 async function initAudio() {
-  await Tone.start();
   synths.kick = new Tone.MembraneSynth({ pitchDecay: 0.05, octaves: 8,
     envelope: { attack: 0.001, decay: 0.25, sustain: 0, release: 0.1 }
   }).toDestination();
@@ -687,7 +686,7 @@ function clearBeat() {
 // === CONTROLS ===
 // =====================
 async function togglePlay() {
-  Tone.start(); // must be called synchronously within the gesture — iOS drops context after first await
+  await Tone.start(); // first await in gesture handler — iOS unlocks AudioContext here
   if (!synths.kick) await initAudio();
   STATE.isPlaying = !STATE.isPlaying;
   const btn = document.getElementById('btn-play');
@@ -729,7 +728,7 @@ let tapTimer = null;
 let tapInterval = null;
 
 async function tapInstrument(row) {
-  Tone.start();
+  await Tone.start();
   if (!synths.kick) await initAudio();
   if (!STATE.tapRecording) {
     startTapRecording();
@@ -1121,9 +1120,8 @@ function switchTab(tab) {
 buildSequencer();
 updateStats();
 
-// iOS Web Audio unlock — pre-warm the AudioContext on first touch so it's
-// already running by the time the user hits Play.
-document.addEventListener('touchstart', () => Tone.start(), { once: true, passive: true });
+// iOS Web Audio unlock — resume AudioContext on first touch anywhere on the page.
+document.addEventListener('touchstart', async () => { await Tone.start(); }, { once: true, passive: true });
 
 // Show a hint on iOS since audio requires interaction
 if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
