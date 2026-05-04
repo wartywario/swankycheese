@@ -203,6 +203,46 @@
     line-height: 2.2;
   }
 
+  .games-nav {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 30px;
+  }
+
+  .game-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: var(--black);
+    border: 2px solid var(--dark-green);
+    color: var(--green);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    padding: 14px 18px;
+    text-decoration: none;
+    transition: all 0.05s;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .game-link:hover {
+    border-color: var(--green);
+    color: var(--amber);
+    box-shadow: 0 0 10px var(--green);
+  }
+
+  .game-link .game-icon {
+    font-size: 20px;
+  }
+
+  .game-link .game-sub {
+    color: var(--dark-green);
+    font-size: 6px;
+  }
+
   footer {
     margin-top: 40px;
     font-size: 7px;
@@ -215,6 +255,19 @@
 
 <h1>SWANKY CHEESE</h1>
 <p class="subtitle">&gt; SELECT YOUR CHEESE<span class="cursor">_</span></p>
+
+<nav class="games-nav">
+  <a href="seaplane.html" class="game-link">
+    <span class="game-icon">✈️</span>
+    LAKE UNION LANDING
+    <span class="game-sub">Seaplane Game</span>
+  </a>
+  <a href="beat-maker.html" class="game-link">
+    <span class="game-icon">🎹</span>
+    BEAT MAKER
+    <span class="game-sub">Make Beats with Swanky</span>
+  </a>
+</nav>
 
 <div class="cheese-selector">
   <button class="cheese-btn" data-cheese="cheddar">CHEDDAR</button>

@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Swanky Cheese 🧀</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+  :root {
+    --gold:#F5C518; --gold-dark:#C9920A; --gold-light:#FFE066;
+    --purple:#4B0082; --purple-mid:#7B2FBE; --purple-light:#B06AE0;
+    --pink:#FF2D78; --jet:#1A1A1A; --diamond:#E8F4FF;
+    --bg:#0D0018; --card:#1A0030; --card2:#240040; --text:#FFF8DC;
+    --radius:14px; --radius-sm:8px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);
+    min-height:100dvh;overflow-x:hidden;
+    background-image:radial-gradient(ellipse at 20% 50%,rgba(75,0,130,.4) 0%,transparent 60%),
+      radial-gradient(ellipse at 80% 20%,rgba(255,45,120,.2) 0%,transparent 50%);}
+  h1,h2{font-family:'Fredoka One',cursive;}
+  #app{max-width:520px;margin:0 auto;padding:10px 10px 80px;display:flex;flex-direction:column;gap:10px;}
+  /* HEADER */
+  header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;
+    background:var(--card);border-radius:var(--radius);border:1px solid rgba(245,197,24,.2);}
+  header h1{font-size:1.2rem;color:var(--gold);}
+  header h1 span{color:var(--pink);}
+  .stats{display:flex;gap:12px;align-items:center;}
+  .stat{text-align:center;}
+  .stat-val{font-family:'Fredoka One',cursive;font-size:1.1rem;color:var(--gold);line-height:1;}
+  .stat-label{font-size:.58rem;text-transform:uppercase;letter-spacing:.5px;opacity:.6;}
+  /* BOTTOM NAV */
+  .tabs{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:100;
+    background:var(--card);border-top:1px solid rgba(245,197,24,.2);
+    padding-bottom:env(safe-area-inset-bottom);}
+  .tab{flex:1;padding:10px 8px 8px;border:none;border-radius:0;
+    font-family:'Fredoka One',cursive;font-size:.8rem;cursor:pointer;
+    background:transparent;color:var(--text);opacity:.45;
+    display:flex;flex-direction:column;align-items:center;gap:1px;transition:all .2s;}
+  .tab .tab-icon{font-size:1.2rem;}
+  .tab.active{opacity:1;background:rgba(123,47,190,.15);border-top:2px solid var(--gold);}
+  /* LAYOUT */
+  .main-area{display:flex;flex-direction:column;gap:10px;}
+  /* STAGE — horizontal strip on mobile */
+  .stage{background:var(--card);border-radius:var(--radius);padding:10px 12px;
+    border:1px solid rgba(245,197,24,.15);display:flex;flex-direction:row;align-items:center;gap:12px;}
+  .stage h2{display:none;}
+  .stage-left{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;}
+  .stage-right{flex:1;display:flex;flex-direction:column;gap:6px;}
+  .swanky-container{position:relative;width:88px;height:100px;display:flex;align-items:flex-end;justify-content:center;flex-shrink:0;}
+  #swanky-svg,#wardrobe-swanky-svg{width:100%;height:100%;}
+  .level-badge{background:linear-gradient(135deg,var(--purple),var(--purple-mid));
+    border:1.5px solid var(--gold);border-radius:14px;padding:2px 9px;
+    font-family:'Fredoka One',cursive;font-size:.7rem;color:var(--gold);}
+  .speech-bubble{background:var(--card2);border:1px solid rgba(245,197,24,.25);
+    border-radius:10px;padding:7px 10px;font-size:.75rem;line-height:1.3;}
+  /* DANCE */
+  .dance-idle{animation:shimmy 2s ease-in-out infinite;}
+  .dance-shimmy{animation:shimmy .4s ease-in-out infinite;}
+  .dance-slide{animation:gouda-slide .8s ease-in-out 3;}
+  .dance-shake{animation:cheddar-shake .3s ease-in-out infinite;}
+  .dance-bounce{animation:brie-bounce .5s ease-in-out 4;}
+  .dance-dip{animation:fondue-dip 1s ease-in-out 2;}
+  .dance-swagger{animation:aged-swagger 1.2s ease-in-out 2;}
+  @keyframes shimmy{0%,100%{transform:translateX(0) rotate(0deg)}25%{transform:translateX(-4px) rotate(-2deg)}75%{transform:translateX(4px) rotate(2deg)}}
+  @keyframes gouda-slide{0%{transform:translateX(0)}30%{transform:translateX(-22px) rotate(-5deg)}60%{transform:translateX(22px) rotate(5deg)}100%{transform:translateX(0)}}
+  @keyframes cheddar-shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg) scale(1.05)}75%{transform:rotate(8deg) scale(1.05)}}
+  @keyframes brie-bounce{0%,100%{transform:translateY(0) scaleY(1)}40%{transform:translateY(-16px) scaleY(1.1)}55%{transform:translateY(0) scaleY(.9)}70%{transform:translateY(-6px)}}
+  @keyframes fondue-dip{0%,100%{transform:rotate(0) translateY(0)}30%{transform:rotate(-15deg) translateY(5px)}60%{transform:rotate(10deg) translateY(-5px)}}
+  @keyframes aged-swagger{0%{transform:translateX(0) rotate(0)}20%{transform:translateX(-8px) rotate(-3deg)}40%{transform:translateX(8px) rotate(3deg) scale(1.05)}60%{transform:translateX(-4px)}80%{transform:translateX(4px) scale(1.03)}100%{transform:translateX(0)}}
+  .playing-pulse #cheese-body{animation:cheese-glow .5s ease-in-out infinite alternate;}
+  .playing-pulse #w-cheese-body{animation:cheese-glow .5s ease-in-out infinite alternate;}
+  @keyframes cheese-glow{from{filter:drop-shadow(0 0 3px rgba(245,197,24,.4))}to{filter:drop-shadow(0 0 10px rgba(245,197,24,.9))}}
+  /* BEAT LAB */
+  .beat-lab{background:var(--card);border-radius:var(--radius);padding:12px;border:1px solid rgba(245,197,24,.15);}
+  .beat-lab-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .beat-lab-header h2{font-size:.95rem;color:var(--gold-light);}
+  .sequencer{display:flex;flex-direction:column;gap:4px;}
+  .seq-row{display:grid;grid-template-columns:36px repeat(16,1fr);gap:2px;align-items:center;}
+  .seq-label{font-size:.58rem;font-weight:800;text-transform:uppercase;text-align:right;padding-right:3px;line-height:1;}
+  .seq-label.kick{color:#FF6B35;}.seq-label.snare{color:#FFD166;}
+  .seq-label.hihat{color:#06D6A0;}.seq-label.bass{color:#B06AE0;}
+  .pad{aspect-ratio:1;border-radius:3px;border:1px solid rgba(255,255,255,.08);
+    cursor:pointer;background:rgba(255,255,255,.07);position:relative;overflow:hidden;min-height:24px;touch-action:manipulation;}
+  .pad::after{content:'';position:absolute;inset:0;background:white;opacity:0;transition:opacity .04s;}
+  .pad.active.kick{background:#FF6B35;border-color:#FF8C5A;box-shadow:0 0 5px rgba(255,107,53,.5);}
+  .pad.active.snare{background:#FFD166;border-color:#FFE08A;box-shadow:0 0 5px rgba(255,209,102,.5);}
+  .pad.active.hihat{background:#06D6A0;border-color:#2FFFC4;box-shadow:0 0 5px rgba(6,214,160,.5);}
+  .pad.active.bass{background:#B06AE0;border-color:#C97AF5;box-shadow:0 0 5px rgba(176,106,224,.5);}
+  .pad.playing::after{opacity:.4;}
+  .pad:active{filter:brightness(1.4);}
+  .beat-marker{height:3px;margin:1px 0;display:grid;grid-template-columns:36px repeat(16,1fr);gap:2px;}
+  .beat-marker-item{border-radius:2px;background:rgba(255,255,255,.04);}
+  .beat-marker-item.bar-start{background:rgba(245,197,24,.4);}
+  .beat-marker-item.beat-start{background:rgba(245,197,24,.15);}
+  .playhead-row{display:grid;grid-template-columns:36px repeat(16,1fr);gap:2px;height:3px;margin-bottom:3px;}
+  .playhead-cell{border-radius:2px;background:transparent;transition:background .04s;}
+  .playhead-cell.active{background:var(--gold);}
+  /* CONTROLS */
+  .controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+  .btn{padding:13px 10px;border:none;border-radius:var(--radius-sm);
+    font-family:'Fredoka One',cursive;font-size:.95rem;cursor:pointer;
+    transition:all .1s;touch-action:manipulation;}
+  .btn-play{background:var(--gold);color:var(--jet);font-size:1rem;}
+  .btn-play:active{filter:brightness(1.1);transform:scale(.97);}
+  .btn-play.playing{background:var(--pink);color:white;}
+  .btn-clear{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.2);font-size:.85rem;}
+  .btn-clear:active{background:rgba(255,255,255,.08);}
+  .btn-grade{background:var(--purple-mid);color:white;grid-column:1/-1;font-size:1.05rem;padding:14px;}
+  .btn-grade:active{filter:brightness(1.2);transform:scale(.98);}
+  .bpm-control{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);
+    padding:8px 10px;border-radius:var(--radius-sm);grid-column:1/-1;}
+  .bpm-control label{font-size:.7rem;opacity:.6;white-space:nowrap;}
+  .bpm-control input[type=range]{flex:1;accent-color:var(--gold);}
+  #bpm-display{font-family:'Fredoka One',cursive;color:var(--gold);min-width:28px;font-size:.9rem;}
+  /* GRADE PANEL */
+  .grade-panel{margin-top:10px;padding:12px;background:var(--card2);border-radius:var(--radius-sm);
+    border:1px solid rgba(245,197,24,.1);display:none;}
+  .grade-panel.show{display:block;animation:fadeSlide .3s ease;}
+  @keyframes fadeSlide{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .grade-display{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+  .grade-letter{font-family:'Fredoka One',cursive;font-size:2.8rem;line-height:1;
+    text-shadow:0 0 16px currentColor;flex-shrink:0;}
+  .grade-s{color:var(--gold);}.grade-a{color:#00E5FF;}
+  .grade-b{color:#69FF47;}.grade-c{color:#FFD166;}.grade-d{color:#FF6B9D;}
+  .grade-meta{flex:1;min-width:0;}
+  .grade-message{font-weight:700;font-size:.82rem;margin-bottom:3px;}
+  .grade-points{font-size:.72rem;opacity:.7;}
+  .grade-hint{padding:8px 10px;background:rgba(75,0,130,.3);border-radius:var(--radius-sm);
+    border-left:3px solid var(--purple-light);font-size:.78rem;color:var(--diamond);margin-top:8px;}
+  .grade-hint strong{color:var(--gold-light);}
+  .score-bars{display:flex;flex-direction:column;gap:4px;margin:8px 0;}
+  .score-bar-row{display:flex;align-items:center;gap:6px;font-size:.68rem;}
+  .score-bar-label{width:76px;opacity:.7;flex-shrink:0;}
+  .score-bar-track{flex:1;height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;}
+  .score-bar-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.34,1.56,.64,1);background:var(--purple-light);}
+  .score-bar-val{width:28px;text-align:right;opacity:.8;flex-shrink:0;}
+  .pad.active.melody{background:#00E5FF;border-color:#66F0FF;box-shadow:0 0 5px rgba(0,229,255,.5);}
+  .seq-label.melody{color:#00E5FF;}
+  .melody-pad{font-size:.45rem;font-weight:800;color:rgba(255,255,255,.4);line-height:1;
+    display:flex;align-items:center;justify-content:center;letter-spacing:-.5px;}
+  .melody-pad.active{color:var(--jet);}
+  .seq-row-divider{height:1px;background:rgba(0,229,255,.15);margin:4px 0;}
+  /* Scale selector */
+  .scale-selector{display:flex;align-items:center;gap:6px;margin-top:6px;padding:6px 8px;
+    background:rgba(0,229,255,.06);border-radius:var(--radius-sm);border:1px solid rgba(0,229,255,.15);}
+  .scale-selector label{font-size:.65rem;color:#00E5FF;opacity:.8;white-space:nowrap;}
+  .scale-selector select{flex:1;background:rgba(0,0,0,.4);color:var(--text);border:1px solid rgba(0,229,255,.25);
+    border-radius:4px;padding:4px 6px;font-family:'Nunito',sans-serif;font-size:.72rem;cursor:pointer;}
+  .scale-selector select:focus{outline:none;border-color:#00E5FF;}
+  /* Voice pill */
+  .voice-row{display:flex;align-items:center;gap:6px;margin-top:6px;
+    padding:5px 8px;background:rgba(255,45,120,.06);border-radius:var(--radius-sm);border:1px solid rgba(255,45,120,.15);}
+  .voice-row label{font-size:.65rem;color:var(--pink);opacity:.8;white-space:nowrap;}
+  .voice-toggle{position:relative;width:36px;height:20px;cursor:pointer;flex-shrink:0;}
+  .voice-toggle input{opacity:0;width:0;height:0;}
+  .voice-slider{position:absolute;inset:0;background:rgba(255,255,255,.15);border-radius:10px;transition:.2s;}
+  .voice-slider::before{content:'';position:absolute;height:14px;width:14px;left:3px;bottom:3px;
+    background:white;border-radius:50%;transition:.2s;}
+  .voice-toggle input:checked+.voice-slider{background:var(--pink);}
+  .voice-toggle input:checked+.voice-slider::before{transform:translateX(16px);}
+  .voice-phrases{font-size:.62rem;color:rgba(255,45,120,.7);flex:1;font-style:italic;}
+  .mode-toggle{display:flex;background:rgba(255,255,255,.05);border-radius:var(--radius-sm);
+    overflow:hidden;border:1px solid rgba(255,255,255,.1);}
+  .mode-btn{flex:1;padding:6px 8px;border:none;background:transparent;
+    color:var(--text);font-family:'Fredoka One',cursive;font-size:.78rem;
+    cursor:pointer;opacity:.5;transition:all .15s;touch-action:manipulation;}
+  .mode-btn.active{background:var(--purple-mid);opacity:1;}
+  /* LIVE TAP */
+  .tap-area{display:none;}
+  .tap-area.show{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+  .tap-btn{height:62px;border:none;border-radius:var(--radius-sm);
+    font-family:'Fredoka One',cursive;font-size:.95rem;cursor:pointer;touch-action:manipulation;transition:all .06s;}
+  .tap-btn.kick-tap{background:#FF6B35;color:white;}
+  .tap-btn.snare-tap{background:#FFD166;color:var(--jet);}
+  .tap-btn.hihat-tap{background:#06D6A0;color:var(--jet);}
+  .tap-btn.bass-tap{background:#B06AE0;color:white;}
+  .tap-btn:active{transform:scale(.93);filter:brightness(1.3);}
+  .tap-progress{height:5px;background:rgba(255,255,255,.1);border-radius:3px;margin-top:6px;grid-column:1/-1;}
+  .tap-progress-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .1s linear;width:0%;}
+  /* WARDROBE */
+  .wardrobe-panel{display:none;}
+  .wardrobe-panel.active{display:flex;flex-direction:column;gap:10px;}
+  .wardrobe-swanky{background:var(--card);border-radius:var(--radius);padding:12px 14px;
+    border:1px solid rgba(245,197,24,.15);display:flex;flex-direction:row;align-items:center;gap:14px;}
+  .wardrobe-swanky .swanky-container{width:90px;height:102px;}
+  .wardrobe-swanky-right{flex:1;display:flex;flex-direction:column;gap:6px;}
+  .wardrobe-items{background:var(--card);border-radius:var(--radius);padding:12px;border:1px solid rgba(245,197,24,.15);}
+  .wardrobe-items h2{font-size:.95rem;color:var(--gold-light);margin-bottom:10px;}
+  .slot-tabs{display:flex;gap:5px;overflow-x:auto;margin-bottom:10px;padding-bottom:2px;scrollbar-width:none;}
+  .slot-tabs::-webkit-scrollbar{display:none;}
+  .slot-tab{padding:5px 11px;border-radius:14px;border:1px solid rgba(255,255,255,.15);
+    background:transparent;color:var(--text);font-size:.72rem;cursor:pointer;
+    white-space:nowrap;touch-action:manipulation;transition:all .12s;}
+  .slot-tab.active{background:var(--purple-mid);border-color:var(--purple-light);}
+  .items-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+  .item-card{background:var(--card2);border-radius:var(--radius-sm);padding:9px 6px;
+    text-align:center;border:2px solid transparent;cursor:pointer;position:relative;touch-action:manipulation;transition:all .1s;}
+  .item-card.unlocked{border-color:rgba(255,255,255,.12);}
+  .item-card.unlocked:active{border-color:var(--gold);transform:scale(.96);}
+  .item-card.equipped{border-color:var(--gold);background:rgba(245,197,24,.08);}
+  .item-card.locked{opacity:.36;cursor:not-allowed;}
+  .item-emoji{font-size:1.5rem;margin-bottom:3px;}
+  .item-name{font-size:.63rem;font-weight:700;margin-bottom:2px;}
+  .item-cost{font-size:.58rem;color:var(--gold);font-family:'Fredoka One',cursive;}
+  .item-cost.owned{color:#06D6A0;}
+  .equipped-badge{position:absolute;top:3px;right:3px;background:var(--gold);color:var(--jet);
+    font-size:.48rem;font-weight:900;padding:1px 3px;border-radius:3px;}
+  /* TOAST */
+  .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-60px);
+    z-index:999;background:var(--gold);color:var(--jet);font-family:'Fredoka One',cursive;
+    font-size:1rem;padding:8px 18px;border-radius:20px;opacity:0;
+    transition:all .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;}
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+  /* DESKTOP ≥ 540px */
+  @media(min-width:540px){
+    #app{max-width:860px;padding:16px 16px 80px;gap:14px;}
+    header h1{font-size:1.5rem;}
+    .main-area{flex-direction:row;align-items:flex-start;}
+    .beat-lab{flex:1;}
+    .stage{flex-direction:column;width:190px;flex-shrink:0;align-items:center;}
+    .stage h2{display:block;font-size:.9rem;color:var(--gold-light);}
+    .stage-right{align-items:center;}
+    .swanky-container{width:140px;height:158px;}
+    .seq-row{grid-template-columns:48px repeat(16,1fr);gap:4px;}
+    .beat-marker{grid-template-columns:48px repeat(16,1fr);gap:4px;}
+    .playhead-row{grid-template-columns:48px repeat(16,1fr);gap:4px;}
+    .pad{min-height:30px;}
+    .items-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));}
+    .wardrobe-panel.active{flex-direction:row;}
+    .wardrobe-swanky{flex-direction:column;width:200px;flex-shrink:0;align-items:center;}
+    .wardrobe-swanky .swanky-container{width:140px;height:158px;}
+    .wardrobe-swanky-right{align-items:center;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <header>
+    <h1>🧀 Swanky <span>Cheese</span></h1>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-val" id="points-display">0</div>
+        <div class="stat-label">💎 Points</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="level-display">1</div>
+        <div class="stat-label">⭐ Level</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="streak-display">0</div>
+        <div class="stat-label">🔥 Streak</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- BOTTOM NAV TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('beatlab')"><span class="tab-icon">🎹</span>Beat Lab</button>
+    <button class="tab" onclick="switchTab('wardrobe')"><span class="tab-icon">👑</span>Wardrobe</button>
+  </div>
+
+  <!-- BEAT LAB -->
+  <div id="tab-beatlab">
+    <div class="main-area">
+      <!-- LEFT: Sequencer -->
+      <div class="beat-lab">
+        <div class="beat-lab-header">
+          <h2>🎹 Beat Lab</h2>
+          <div class="mode-toggle">
+            <button class="mode-btn active" onclick="setMode('step')" id="btn-step">Step</button>
+            <button class="mode-btn" onclick="setMode('tap')" id="btn-tap">Live Tap</button>
+          </div>
+        </div>
+
+        <!-- Playhead -->
+        <div class="playhead-row" id="playhead-row">
+          <div></div>
+          <div class="playhead-cell" id="ph-0"></div><div class="playhead-cell" id="ph-1"></div>
+          <div class="playhead-cell" id="ph-2"></div><div class="playhead-cell" id="ph-3"></div>
+          <div class="playhead-cell" id="ph-4"></div><div class="playhead-cell" id="ph-5"></div>
+          <div class="playhead-cell" id="ph-6"></div><div class="playhead-cell" id="ph-7"></div>
+          <div class="playhead-cell" id="ph-8"></div><div class="playhead-cell" id="ph-9"></div>
+          <div class="playhead-cell" id="ph-10"></div><div class="playhead-cell" id="ph-11"></div>
+          <div class="playhead-cell" id="ph-12"></div><div class="playhead-cell" id="ph-13"></div>
+          <div class="playhead-cell" id="ph-14"></div><div class="playhead-cell" id="ph-15"></div>
+        </div>
+
+        <!-- Beat marker -->
+        <div class="beat-marker">
+          <div></div>
+          <div class="beat-marker-item bar-start"></div>
+          <div class="beat-marker-item"></div>
+          <div class="beat-marker-item"></div>
+          <div class="beat-marker-item"></div>
+          <div class="beat-marker-item beat-start"></div>
+          <div class="beat-marker-item"></div>
+          <div class="beat-marker-item"></div>
+          <div class="beat-marker-item"></div>
+          <div class="beat-marker-item beat-start"></div>
+          <div class="beat-marker-item"></div>
+          <div class="beat-marker-item"></div>
+          <div class="beat-marker-item"></div>
+          <div class="beat-marker-item beat-start"></div>
+          <div class="beat-marker-item"></div>
+          <div class="beat-marker-item"></div>
+          <div class="beat-marker-item"></div>
+        </div>
+
+        <!-- Sequencer Grid -->
+        <div class="sequencer" id="sequencer"></div>
+
+        <!-- Scale + Voice controls -->
+        <div class="scale-selector">
+          <label>🎵 Scale</label>
+          <select id="scale-select" onchange="setScale(this.value)">
+            <option value="major_pent">C Major Pentatonic</option>
+            <option value="minor_pent">A Minor Pentatonic</option>
+            <option value="blues">C Blues</option>
+            <option value="dorian">D Dorian</option>
+          </select>
+        </div>
+        <div class="voice-row">
+          <label>🎤 Swanky's Voice</label>
+          <label class="voice-toggle">
+            <input type="checkbox" id="voice-toggle" checked>
+            <span class="voice-slider"></span>
+          </label>
+          <span class="voice-phrases" id="voice-phrase-preview">"Swanky!" · "Drop the beat!"</span>
+        </div>
+        <div class="tap-area" id="tap-area">
+          <button class="tap-btn kick-tap" onpointerdown="tapInstrument(0)">KICK 🔴</button>
+          <button class="tap-btn snare-tap" onpointerdown="tapInstrument(1)">SNARE 🟡</button>
+          <button class="tap-btn hihat-tap" onpointerdown="tapInstrument(2)">HI-HAT 🟢</button>
+          <button class="tap-btn bass-tap" onpointerdown="tapInstrument(3)">BASS 🟣</button>
+          <button class="tap-btn" style="background:#00E5FF;color:#1A1A1A;grid-column:1/-1;" onpointerdown="tapInstrument(4)">MELODY 🎵 — programs notes by timing</button>
+          <div class="tap-progress"><div class="tap-progress-fill" id="tap-progress-fill"></div></div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+          <button class="btn btn-play" id="btn-play" onclick="togglePlay()">▶ Play Beat</button>
+          <button class="btn btn-clear" onclick="clearBeat()">Clear</button>
+          <button class="btn btn-grade" onclick="gradeBeat()">Grade It! 🎓</button>
+          <div class="bpm-control">
+            <label>BPM</label>
+            <input type="range" min="70" max="120" value="90" oninput="setBPM(this.value)">
+            <span id="bpm-display">90</span>
+          </div>
+        </div>
+
+        <!-- Grade Panel -->
+        <div class="grade-panel" id="grade-panel">
+          <div class="grade-display">
+            <div class="grade-letter" id="grade-letter">A</div>
+            <div class="grade-meta">
+              <div class="grade-message" id="grade-message"></div>
+              <div class="grade-points" id="grade-points-earned"></div>
+            </div>
+          </div>
+          <div class="score-bars" id="score-bars"></div>
+          <div class="grade-hint" id="grade-hint"></div>
+        </div>
+      </div>
+
+      <!-- Swanky Stage: horizontal strip on mobile -->
+      <div class="stage">
+        <div class="stage-left">
+          <div class="swanky-container">
+            <svg id="swanky-svg" viewBox="0 0 160 180" xmlns="http://www.w3.org/2000/svg">
+              <g id="swanky-root" class="dance-idle">
+                <ellipse cx="80" cy="170" rx="45" ry="8" fill="rgba(0,0,0,0.3)"/>
+                <g id="cheese-body">
+                  <polygon points="80,20 145,145 15,145" fill="#F5C518" stroke="#C9920A" stroke-width="2"/>
+                  <polygon points="80,28 137,140 23,140" fill="#FFE066"/>
+                  <circle cx="75" cy="90" r="8" fill="#C9920A" opacity="0.6"/>
+                  <circle cx="95" cy="115" r="6" fill="#C9920A" opacity="0.5"/>
+                  <circle cx="65" cy="118" r="5" fill="#C9920A" opacity="0.5"/>
+                  <circle cx="88" cy="75" r="4" fill="#C9920A" opacity="0.4"/>
+                </g>
+                <g id="legs">
+                  <rect x="55" y="140" width="16" height="22" rx="8" fill="#C9920A"/>
+                  <rect x="89" y="140" width="16" height="22" rx="8" fill="#C9920A"/>
+                </g>
+                <g id="cosmetic-feet">
+                  <ellipse cx="63" cy="163" rx="12" ry="6" fill="#1A1A1A"/>
+                  <ellipse cx="97" cy="163" rx="12" ry="6" fill="#1A1A1A"/>
+                </g>
+                <g id="arms">
+                  <ellipse cx="22" cy="110" rx="10" ry="18" fill="#F5C518" stroke="#C9920A" stroke-width="1.5" transform="rotate(-20 22 110)"/>
+                  <ellipse cx="138" cy="110" rx="10" ry="18" fill="#F5C518" stroke="#C9920A" stroke-width="1.5" transform="rotate(20 138 110)"/>
+                </g>
+                <g id="eyes">
+                  <ellipse cx="68" cy="70" rx="10" ry="12" fill="white"/>
+                  <ellipse cx="92" cy="70" rx="10" ry="12" fill="white"/>
+                  <circle cx="70" cy="72" r="6" fill="#1A1A1A"/>
+                  <circle cx="94" cy="72" r="6" fill="#1A1A1A"/>
+                  <circle cx="72" cy="70" r="2" fill="white"/>
+                  <circle cx="96" cy="70" r="2" fill="white"/>
+                  <path d="M60 59 Q68 54 76 59" stroke="#C9920A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                  <path d="M84 59 Q92 54 100 59" stroke="#C9920A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                </g>
+                <g id="mouth-base">
+                  <path d="M70 98 Q80 108 90 98" stroke="#C9920A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                </g>
+                <g id="cosmetic-mouth"></g>
+                <g id="cosmetic-body"></g>
+                <g id="cosmetic-eyes"></g>
+                <g id="cosmetic-head"></g>
+              </g>
+            </svg>
+          </div>
+          <div class="level-badge" id="level-badge">Lvl 1</div>
+        </div>
+        <div class="stage-right">
+          <h2>Swanky's Stage</h2>
+          <div class="speech-bubble" id="speech-bubble">Let's get this cheddar! 🧀✨</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WARDROBE TAB -->
+  <div id="tab-wardrobe" style="display:none;">
+    <div class="wardrobe-panel active">
+      <div class="wardrobe-swanky">
+        <div class="swanky-container">
+          <svg id="wardrobe-swanky-svg" viewBox="0 0 160 180" xmlns="http://www.w3.org/2000/svg">
+            <g id="wardrobe-swanky-root" class="dance-idle">
+              <ellipse cx="80" cy="170" rx="45" ry="8" fill="rgba(0,0,0,0.3)"/>
+              <g id="w-cheese-body">
+                <polygon points="80,20 145,145 15,145" fill="#F5C518" stroke="#C9920A" stroke-width="2"/>
+                <polygon points="80,28 137,140 23,140" fill="#FFE066"/>
+                <circle cx="75" cy="90" r="8" fill="#C9920A" opacity="0.6"/>
+                <circle cx="95" cy="115" r="6" fill="#C9920A" opacity="0.5"/>
+                <circle cx="65" cy="118" r="5" fill="#C9920A" opacity="0.5"/>
+              </g>
+              <g id="w-legs">
+                <rect x="55" y="140" width="16" height="22" rx="8" fill="#C9920A"/>
+                <rect x="89" y="140" width="16" height="22" rx="8" fill="#C9920A"/>
+              </g>
+              <g id="w-cosmetic-feet">
+                <ellipse cx="63" cy="163" rx="12" ry="6" fill="#1A1A1A"/>
+                <ellipse cx="97" cy="163" rx="12" ry="6" fill="#1A1A1A"/>
+              </g>
+              <g id="w-arms">
+                <ellipse cx="22" cy="110" rx="10" ry="18" fill="#F5C518" stroke="#C9920A" stroke-width="1.5" transform="rotate(-20 22 110)"/>
+                <ellipse cx="138" cy="110" rx="10" ry="18" fill="#F5C518" stroke="#C9920A" stroke-width="1.5" transform="rotate(20 138 110)"/>
+              </g>
+              <g id="w-eyes">
+                <ellipse cx="68" cy="70" rx="10" ry="12" fill="white"/>
+                <ellipse cx="92" cy="70" rx="10" ry="12" fill="white"/>
+                <circle cx="70" cy="72" r="6" fill="#1A1A1A"/>
+                <circle cx="94" cy="72" r="6" fill="#1A1A1A"/>
+                <circle cx="72" cy="70" r="2" fill="white"/>
+                <circle cx="96" cy="70" r="2" fill="white"/>
+                <path d="M60 59 Q68 54 76 59" stroke="#C9920A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                <path d="M84 59 Q92 54 100 59" stroke="#C9920A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              </g>
+              <g id="w-mouth-base">
+                <path d="M70 98 Q80 108 90 98" stroke="#C9920A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              </g>
+              <g id="w-cosmetic-mouth"></g>
+              <g id="w-cosmetic-body"></g>
+              <g id="w-cosmetic-eyes"></g>
+              <g id="w-cosmetic-head"></g>
+            </g>
+          </svg>
+        </div>
+        <div class="wardrobe-swanky-right">
+          <h2 style="color:var(--gold-light);">👑 Swanky's Look</h2>
+          <div style="font-size:.72rem;opacity:.6;">Tap items to equip</div>
+          <button class="btn btn-clear" style="font-size:.8rem;padding:8px;" onclick="unequipAll()">Remove All</button>
+        </div>
+      </div>
+      <div class="wardrobe-items">
+        <h2>Your Wardrobe</h2>
+        <div class="slot-tabs" id="slot-tabs"></div>
+        <div class="items-grid" id="items-grid"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// =====================
+// === STATE ===
+// =====================
+const STATE = {
+  points: 0,
+  level: 1,
+  streak: 0,
+  bpm: 90,
+  isPlaying: false,
+  currentStep: -1,
+  mode: 'step',
+  tapRecording: false,
+  tapStartTime: 0,
+  tapDuration: 8000, // 8 seconds for tap recording
+  equippedItems: { head: null, eyes: null, body: null, mouth: null, feet: null },
+  unlockedItems: new Set(),
+  gradeHistory: [],
+  currentDanceIndex: 0,
+  dances: ['dance-idle','dance-shimmy','dance-slide','dance-shake','dance-bounce','dance-dip','dance-swagger'],
+};
+
+// Beat grid: 4 rows (kick, snare, hihat, bass) x 16 steps
+const GRID = Array.from({length:5}, () => new Array(16).fill(false));
+const LABELS = ['Kick','Snare','Hi-Hat','Bass','Melody'];
+const LABEL_CLASSES = ['kick','snare','hihat','bass','melody'];
+
+// =====================
+// === SCALES & VOICE ===
+// =====================
+const SCALES = {
+  major_pent: ['C4','D4','E4','G4','A4','C5','D5','E5','G5','A5','C6','D6','E6','G6','A6','C6'],
+  minor_pent: ['A3','C4','D4','E4','G4','A4','C5','D5','E5','G5','A5','C6','D6','E6','G6','A6'],
+  blues:      ['C4','Eb4','F4','Gb4','G4','Bb4','C5','Eb5','F5','Gb5','G5','Bb5','C6','Eb6','F6','G6'],
+  dorian:     ['D4','E4','F4','G4','A4','B4','C5','D5','E5','F5','G5','A5','B5','C6','D6','E6'],
+};
+let currentScale = 'major_pent';
+function setScale(val) { currentScale = val; buildSequencer(); }
+
+const VOICE_START = ["Swanky!","Let's get cheesy!","Drop the beat!","Gouda vibes only!","It's cheddar time!","Let's get this cheddar!"];
+const VOICE_END = ["That's a wrap, cheddar!","Aged to perfection!","Mmm, that was sharp!","Fondue that again!","Oh that was gouda!","You're on a roll-e!"];
+
+function speak(phrases) {
+  if (!document.getElementById('voice-toggle').checked) return;
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const msg = new SpeechSynthesisUtterance(phrases[Math.floor(Math.random()*phrases.length)]);
+  msg.rate = 1.05; msg.pitch = 1.3; msg.volume = 0.9;
+  // prefer a fun voice if available
+  const voices = window.speechSynthesis.getVoices();
+  const pick = voices.find(v => v.name.includes('Samantha') || v.name.includes('Google UK') || v.name.includes('Karen')) || voices[0];
+  if (pick) msg.voice = pick;
+  window.speechSynthesis.speak(msg);
+}
+// Pre-load voices
+if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+let synths = {};
+let loop = null;
+
+async function initAudio() {
+  await Tone.start();
+  synths.kick = new Tone.MembraneSynth({ pitchDecay: 0.05, octaves: 8,
+    envelope: { attack: 0.001, decay: 0.25, sustain: 0, release: 0.1 }
+  }).toDestination();
+  synths.snare = new Tone.NoiseSynth({
+    noise: { type: 'white' },
+    envelope: { attack: 0.001, decay: 0.15, sustain: 0, release: 0.05 }
+  }).toDestination();
+  synths.snare.volume.value = -6;
+  synths.hihat = new Tone.MetalSynth({
+    frequency: 400, envelope: { attack: 0.001, decay: 0.05, release: 0.01 },
+    harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5
+  }).toDestination();
+  synths.hihat.volume.value = -10;
+  synths.bass = new Tone.Synth({
+    oscillator: { type: 'sawtooth' },
+    envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.2 }
+  }).toDestination();
+  synths.bass.volume.value = -8;
+  synths.melody = new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: 'triangle' },
+    envelope: { attack: 0.02, decay: 0.3, sustain: 0.4, release: 0.8 },
+  }).toDestination();
+  synths.melody.volume.value = -6;
+}
+
+function triggerSound(row, col) {
+  if (!synths.kick) return;
+  const now = Tone.now();
+  if (row === 0) synths.kick.triggerAttackRelease('C1', '8n', now);
+  else if (row === 1) synths.snare.triggerAttackRelease('8n', now);
+  else if (row === 2) synths.hihat.triggerAttackRelease('16n', now);
+  else if (row === 3) synths.bass.triggerAttackRelease('C2', '8n', now);
+  else if (row === 4) {
+    const note = (col !== undefined) ? getMelodyNote(col) : SCALES[currentScale][0];
+    synths.melody.triggerAttackRelease(note, '8n', now);
+  }
+}
+
+function startSequencer() {
+  Tone.Transport.bpm.value = STATE.bpm;
+  let step = 0;
+  loop = new Tone.Sequence((time, s) => {
+    step = s;
+    STATE.currentStep = s;
+    for (let row = 0; row < 4; row++) {
+      if (GRID[row][s]) {
+        const now = Tone.now();
+        if (row === 0) synths.kick.triggerAttackRelease('C1', '8n', now);
+        else if (row === 1) synths.snare.triggerAttackRelease('8n', now);
+        else if (row === 2) synths.hihat.triggerAttackRelease('16n', now);
+        else if (row === 3) synths.bass.triggerAttackRelease('C2', '8n', now);
+        else if (row === 4) synths.melody.triggerAttackRelease(SCALES[currentScale][s], '8n', now);
+      }
+    }
+    Tone.getDraw().schedule(() => { updatePlayhead(s); }, time);
+  }, [...Array(16).keys()], '16n');
+  loop.start(0);
+  Tone.Transport.start();
+}
+
+function stopSequencer() {
+  if (loop) { loop.stop(); loop.dispose(); loop = null; }
+  Tone.Transport.stop();
+  updatePlayhead(-1);
+}
+
+function updatePlayhead(step) {
+  document.querySelectorAll('.playhead-cell').forEach((el, i) => {
+    el.classList.toggle('active', i === step);
+  });
+  // flash pads
+  for (let row = 0; row < 4; row++) {
+    if (step >= 0 && GRID[row][step]) {
+      const pad = document.getElementById(`pad-${row}-${step}`);
+      if (pad) { pad.classList.add('playing'); setTimeout(() => pad.classList.remove('playing'), 80); }
+    }
+  }
+}
+
+// =====================
+// === SEQUENCER UI ===
+// =====================
+function getMelodyNote(col) {
+  return SCALES[currentScale][col];
+}
+function shortNote(note) {
+  return note.replace(/\d/, '');
+}
+
+function buildSequencer() {
+  const seq = document.getElementById('sequencer');
+  seq.innerHTML = '';
+  for (let row = 0; row < 5; row++) {
+    if (row === 4) {
+      const divider = document.createElement('div');
+      divider.className = 'seq-row-divider';
+      seq.appendChild(divider);
+    }
+    const rowEl = document.createElement('div');
+    rowEl.className = 'seq-row';
+    const label = document.createElement('div');
+    label.className = 'seq-label ' + LABEL_CLASSES[row];
+    label.textContent = LABELS[row];
+    rowEl.appendChild(label);
+    for (let col = 0; col < 16; col++) {
+      const pad = document.createElement('button');
+      pad.className = 'pad ' + LABEL_CLASSES[row] + (GRID[row][col] ? ' active' : '');
+      pad.id = 'pad-' + row + '-' + col;
+      if (row === 4) {
+        pad.textContent = shortNote(getMelodyNote(col));
+        pad.classList.add('melody-pad');
+      }
+      pad.onclick = () => togglePad(row, col);
+      rowEl.appendChild(pad);
+    }
+    seq.appendChild(rowEl);
+  }
+}
+
+function togglePad(row, col) {
+  GRID[row][col] = !GRID[row][col];
+  const pad = document.getElementById('pad-' + row + '-' + col);
+  pad.classList.toggle('active', GRID[row][col]);
+  if (GRID[row][col]) triggerSound(row, col);
+}
+
+function clearBeat() {
+  for (let r = 0; r < 5; r++) GRID[r].fill(false);
+  buildSequencer();
+  document.getElementById('grade-panel').classList.remove('show');
+}
+
+// =====================
+// === CONTROLS ===
+// =====================
+async function togglePlay() {
+  if (!synths.kick) await initAudio();
+  STATE.isPlaying = !STATE.isPlaying;
+  const btn = document.getElementById('btn-play');
+  if (STATE.isPlaying) {
+    startSequencer();
+    btn.textContent = '⏹ Stop';
+    btn.classList.add('playing');
+    document.getElementById('swanky-root').classList.add('playing-pulse');
+    setSwankyDance('dance-shimmy');
+    setTimeout(() => speak(VOICE_START), 200);
+  } else {
+    speak(VOICE_END);
+    stopSequencer();
+    btn.textContent = '▶ Play Beat';
+    btn.classList.remove('playing');
+    document.getElementById('swanky-root').classList.remove('playing-pulse');
+    setSwankyDance('dance-idle');
+  }
+}
+
+function setBPM(val) {
+  STATE.bpm = parseInt(val);
+  document.getElementById('bpm-display').textContent = val;
+  if (STATE.isPlaying) Tone.Transport.bpm.value = STATE.bpm;
+}
+
+function setMode(mode) {
+  STATE.mode = mode;
+  document.getElementById('btn-step').classList.toggle('active', mode === 'step');
+  document.getElementById('btn-tap').classList.toggle('active', mode === 'tap');
+  document.getElementById('sequencer').style.display = mode === 'step' ? '' : 'none';
+  document.getElementById('tap-area').classList.toggle('show', mode === 'tap');
+}
+
+// =====================
+// === LIVE TAP ===
+// =====================
+let tapTimer = null;
+let tapInterval = null;
+
+async function tapInstrument(row) {
+  if (!synths.kick) await initAudio();
+  if (!STATE.tapRecording) {
+    startTapRecording();
+  }
+  const elapsed = Date.now() - STATE.tapStartTime;
+  const stepDuration = (60000 / STATE.bpm) / 4;
+  const nearestStep = Math.round(elapsed / stepDuration) % 16;
+  triggerSound(row, nearestStep); // play the actual note at that step position
+  if (nearestStep >= 0 && nearestStep < 16) {
+    GRID[row][nearestStep] = true;
+  }
+}
+
+function startTapRecording() {
+  STATE.tapRecording = true;
+  STATE.tapStartTime = Date.now();
+  clearBeat();
+  const fill = document.getElementById('tap-progress-fill');
+  fill.style.width = '0%';
+  tapInterval = setInterval(() => {
+    const pct = Math.min(100, ((Date.now() - STATE.tapStartTime) / STATE.tapDuration) * 100);
+    fill.style.width = pct + '%';
+  }, 100);
+  tapTimer = setTimeout(() => {
+    STATE.tapRecording = false;
+    clearInterval(tapInterval);
+    fill.style.width = '100%';
+    setSpeak("Ooh, I felt that rhythm! 🎵");
+    setTimeout(() => fill.style.width = '0%', 500);
+  }, STATE.tapDuration);
+}
+
+// =====================
+// === GRADING ===
+// =====================
+const GRADE_MESSAGES = {
+  S: "AGED TO PERFECTION!! 🧀✨",
+  A: "That's some sharp cheddar right there!",
+  B: "Solid! A little more funk and you're golden.",
+  C: "Not bad! Try spicing up those hi-hats.",
+  D: "Even I started somewhere. Check the hint! 👇"
+};
+
+const HINTS = {
+  density_low: "Try filling in more beats — your grid is looking a bit empty!",
+  density_high: "Whoa, too many notes! Leave some breathing room in your beat.",
+  variety: "Mix it up! Try using all 4 instruments for a fuller sound.",
+  syncopation: "Spice it up! Try hitting some pads on the off-beats (steps 3, 7, 11, 15).",
+  anchor: "Pro tip: Put a Kick on step 1 and a Snare on step 5 or 9 for a solid groove.",
+  perfect: "You're nailing it! Keep experimenting with different patterns! 🔥",
+};
+
+async function gradeBeat() {
+  if (!synths.kick) await initAudio();
+  const filled = GRID.slice(0,4).flat().filter(Boolean).length;
+  if (filled < 2) { setSpeak("Add some more beats first, fam! 🎹"); return; }
+
+  // --- Scoring ---
+  // 1. Density (30pts) — rhythm rows only
+  const density = filled / 64;
+  let densityScore;
+  if (density < 0.15) densityScore = 10;
+  else if (density < 0.3) densityScore = 20;
+  else if (density <= 0.6) densityScore = 30;
+  else if (density <= 0.75) densityScore = 20;
+  else densityScore = 10;
+
+  // 2. Variety (30pts) — rhythm rows
+  const rowsFilled = GRID.slice(0,4).filter(row => row.some(Boolean)).length;
+  const varietyScore = [0, 10, 18, 24, 30][rowsFilled] || 0;
+
+  // 3. Syncopation (25pts)
+  const offBeats = [2,4,6,10,12,14];
+  let offCount = 0;
+  for (let r = 0; r < 4; r++) offBeats.forEach(s => { if (GRID[r][s]) offCount++; });
+  const syncoScore = Math.min(25, Math.floor((offCount / 8) * 25));
+
+  // 4. Rhythm anchor (15pts)
+  let anchorScore = 0;
+  if (GRID[0][0]) anchorScore += 8;
+  if (GRID[1][4] || GRID[1][8]) anchorScore += 7;
+
+  // 5. Melody bonus (up to +20 extra pts)
+  const melodyNotes = GRID[4].filter(Boolean).length;
+  const melodyBonus = Math.min(20, melodyNotes * 3);
+
+  const total = densityScore + varietyScore + syncoScore + anchorScore + melodyBonus;
+
+  let grade;
+  if (total >= 90) grade = 'S';
+  else if (total >= 75) grade = 'A';
+  else if (total >= 55) grade = 'B';
+  else if (total >= 35) grade = 'C';
+  else grade = 'D';
+
+  // Points
+  const pointsMap = { S:100, A:75, B:50, C:25, D:10 };
+  let pts = pointsMap[grade];
+  if (['S','A','B'].includes(grade)) {
+    STATE.streak++;
+    if (STATE.streak >= 3) { pts += 25; showToast('+25 Streak Bonus! 🔥'); }
+  } else {
+    STATE.streak = 0;
+  }
+
+  STATE.points += pts;
+  STATE.level = Math.floor(STATE.points / 200) + 1;
+  STATE.gradeHistory.push(grade);
+  updateStats();
+
+  // Show grade panel
+  const panel = document.getElementById('grade-panel');
+  panel.classList.add('show');
+
+  const gradeClasses = {S:'grade-s',A:'grade-a',B:'grade-b',C:'grade-c',D:'grade-d'};
+  document.getElementById('grade-letter').textContent = grade;
+  document.getElementById('grade-letter').className = 'grade-letter ' + gradeClasses[grade];
+  document.getElementById('grade-message').textContent = GRADE_MESSAGES[grade];
+  document.getElementById('grade-points-earned').textContent = `+${pts} points earned`;
+
+  // Score bars
+  const bars = [
+    { label: 'Density', val: densityScore, max: 30 },
+    { label: 'Variety', val: varietyScore, max: 30 },
+    { label: 'Syncopation', val: syncoScore, max: 25 },
+    { label: 'Rhythm', val: anchorScore, max: 15 },
+    { label: '🎵 Melody', val: melodyBonus, max: 20 },
+  ];
+  document.getElementById('score-bars').innerHTML = bars.map(b => `
+    <div class="score-bar-row">
+      <span class="score-bar-label">${b.label}</span>
+      <div class="score-bar-track">
+        <div class="score-bar-fill" style="width:0%" data-pct="${Math.round(b.val/b.max*100)}"></div>
+      </div>
+      <span class="score-bar-val">${b.val}/${b.max}</span>
+    </div>
+  `).join('');
+  setTimeout(() => {
+    document.querySelectorAll('.score-bar-fill').forEach(el => {
+      el.style.width = el.dataset.pct + '%';
+    });
+  }, 50);
+
+  // Hint
+  let hint = HINTS.perfect;
+  if (densityScore < 20 && density < 0.3) hint = HINTS.density_low;
+  else if (densityScore < 20 && density > 0.6) hint = HINTS.density_high;
+  else if (varietyScore < 18) hint = HINTS.variety;
+  else if (syncoScore < 12) hint = HINTS.syncopation;
+  else if (anchorScore < 8) hint = HINTS.anchor;
+  document.getElementById('grade-hint').innerHTML = `<strong>💡 Tip:</strong> ${hint}`;
+
+  // Dance reaction
+  const danceName = grade === 'S' ? 'dance-swagger' :
+                    grade === 'A' ? 'dance-slide' :
+                    grade === 'B' ? 'dance-bounce' :
+                    grade === 'C' ? 'dance-shake' : 'dance-idle';
+  setSwankyDance(danceName);
+  setTimeout(() => setSwankyDance('dance-idle'), 4000);
+
+  setSpeak(GRADE_MESSAGES[grade]);
+  playGradeSound(grade);
+  showToast(`${grade} Grade! +${pts} pts`);
+}
+
+async function playGradeSound(grade) {
+  if (!synths.kick) return;
+  const now = Tone.now();
+  const synth = new Tone.Synth({ oscillator:{type:'triangle'}, envelope:{attack:0.01,decay:0.2,sustain:0.3,release:0.3}}).toDestination();
+  if (grade === 'S') {
+    ['C4','E4','G4','C5'].forEach((n,i) => synth.triggerAttackRelease(n,'16n', now + i*0.1));
+  } else if (grade === 'A') {
+    ['C4','E4','G4'].forEach((n,i) => synth.triggerAttackRelease(n,'16n', now + i*0.1));
+  } else if (grade === 'B') {
+    synth.triggerAttackRelease('E4','8n',now);
+  } else if (grade === 'C') {
+    synth.triggerAttackRelease('C4','8n',now);
+  } else {
+    ['E4','C4'].forEach((n,i) => synth.triggerAttackRelease(n,'16n', now + i*0.15));
+  }
+  setTimeout(() => synth.dispose(), 2000);
+}
+
+// =====================
+// === COSMETICS ===
+// =====================
+const ITEMS = [
+  // HEAD
+  { id:'backwards-cap', slot:'head', name:'Backwards Cap', cost:30, emoji:'🧢',
+    svg: `<g id="cosmetic-head-item">
+      <rect x="52" y="12" width="56" height="12" rx="4" fill="#FF2D78"/>
+      <rect x="36" y="18" width="30" height="6" rx="3" fill="#CC0055"/>
+      <text x="80" y="23" text-anchor="middle" font-size="7" fill="white" font-weight="bold">SC</text>
+    </g>` },
+  { id:'gold-crown', slot:'head', name:'Gold Crown', cost:75, emoji:'👑',
+    svg: `<g id="cosmetic-head-item">
+      <polygon points="57,8 65,0 73,10 80,2 87,10 95,0 103,8 105,18 55,18" fill="#F5C518" stroke="#C9920A" stroke-width="1.5"/>
+      <circle cx="65" cy="6" r="3" fill="#FF2D78"/>
+      <circle cx="80" cy="3" r="3" fill="#E8F4FF"/>
+      <circle cx="95" cy="6" r="3" fill="#FF2D78"/>
+    </g>` },
+  { id:'bucket-hat', slot:'head', name:'Bucket Hat', cost:35, emoji:'🪣',
+    svg: `<g id="cosmetic-head-item">
+      <ellipse cx="80" cy="16" rx="32" ry="6" fill="#4B0082"/>
+      <path d="M56,16 Q58,0 80,0 Q102,0 104,16" fill="#7B2FBE"/>
+    </g>` },
+  // EYES
+  { id:'diamond-shades', slot:'eyes', name:'Diamond Shades', cost:50, emoji:'😎',
+    svg: `<g id="cosmetic-eyes-item">
+      <rect x="57" y="63" width="22" height="14" rx="5" fill="#E8F4FF" stroke="#B06AE0" stroke-width="1.5" opacity="0.9"/>
+      <rect x="81" y="63" width="22" height="14" rx="5" fill="#E8F4FF" stroke="#B06AE0" stroke-width="1.5" opacity="0.9"/>
+      <line x1="79" y1="70" x2="81" y2="70" stroke="#B06AE0" stroke-width="1.5"/>
+      <line x1="55" y1="70" x2="57" y2="70" stroke="#B06AE0" stroke-width="1.5"/>
+      <line x1="103" y1="70" x2="105" y2="70" stroke="#B06AE0" stroke-width="1.5"/>
+    </g>` },
+  { id:'star-shades', slot:'eyes', name:'Star Shades', cost:40, emoji:'🌟',
+    svg: `<g id="cosmetic-eyes-item">
+      <rect x="57" y="63" width="22" height="14" rx="5" fill="#FF2D78" stroke="#FF6B9D" stroke-width="1.5" opacity="0.85"/>
+      <rect x="81" y="63" width="22" height="14" rx="5" fill="#FF2D78" stroke="#FF6B9D" stroke-width="1.5" opacity="0.85"/>
+      <text x="68" y="73" text-anchor="middle" font-size="9" fill="white">★</text>
+      <text x="92" y="73" text-anchor="middle" font-size="9" fill="white">★</text>
+    </g>` },
+  // BODY
+  { id:'platinum-chain', slot:'body', name:'Platinum Chain', cost:60, emoji:'⛓️',
+    svg: `<g id="cosmetic-body-item">
+      <path d="M60,100 Q80,110 100,100" stroke="#E8E8E8" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <circle cx="80" cy="110" r="5" fill="#E8E8E8" stroke="#B0B0B0" stroke-width="1"/>
+    </g>` },
+  { id:'silver-rope', slot:'body', name:'Silver Rope', cost:45, emoji:'🔗',
+    svg: `<g id="cosmetic-body-item">
+      <path d="M55,95 Q80,108 105,95" stroke="#C0C0C0" stroke-width="3" stroke-dasharray="5,3" fill="none" stroke-linecap="round"/>
+    </g>` },
+  { id:'ruby-ring', slot:'body', name:'Ruby Ring', cost:150, emoji:'💍',
+    svg: `<g id="cosmetic-body-item">
+      <circle cx="25" cy="108" r="6" fill="#C0C0C0" stroke="#A0A0A0" stroke-width="1"/>
+      <circle cx="25" cy="108" r="3" fill="#FF2D78"/>
+    </g>` },
+  // MOUTH
+  { id:'grillz-jr', slot:'mouth', name:"Grillz Jr", cost:55, emoji:'🦷',
+    svg: `<g id="cosmetic-mouth-item">
+      <rect x="69" y="98" width="22" height="5" rx="2" fill="#FFD700" stroke="#C9920A" stroke-width="0.5"/>
+    </g>` },
+  { id:'gold-grill', slot:'mouth', name:'Gold Grill', cost:100, emoji:'😁',
+    svg: `<g id="cosmetic-mouth-item">
+      <rect x="67" y="96" width="26" height="7" rx="3" fill="#F5C518" stroke="#C9920A" stroke-width="1"/>
+      <line x1="73" y1="96" x2="73" y2="103" stroke="#C9920A" stroke-width="0.8"/>
+      <line x1="80" y1="96" x2="80" y2="103" stroke="#C9920A" stroke-width="0.8"/>
+      <line x1="87" y1="96" x2="87" y2="103" stroke="#C9920A" stroke-width="0.8"/>
+    </g>` },
+  // FEET
+  { id:'fresh-sneakers', slot:'feet', name:'Fresh Sneakers', cost:80, emoji:'👟',
+    svg: `<g id="cosmetic-feet-item">
+      <ellipse cx="63" cy="163" rx="13" ry="7" fill="#FF2D78"/>
+      <ellipse cx="97" cy="163" rx="13" ry="7" fill="#FF2D78"/>
+      <rect x="53" y="159" width="20" height="3" rx="1" fill="white" opacity="0.8"/>
+      <rect x="87" y="159" width="20" height="3" rx="1" fill="white" opacity="0.8"/>
+    </g>` },
+  { id:'light-up-kicks', slot:'feet', name:'Light-Up Kicks', cost:120, emoji:'✨',
+    svg: `<g id="cosmetic-feet-item">
+      <ellipse cx="63" cy="163" rx="13" ry="7" fill="#1A1A1A"/>
+      <ellipse cx="97" cy="163" rx="13" ry="7" fill="#1A1A1A"/>
+      <ellipse cx="63" cy="165" rx="8" ry="3" fill="#F5C518" opacity="0.8"/>
+      <ellipse cx="97" cy="165" rx="8" ry="3" fill="#F5C518" opacity="0.8"/>
+    </g>` },
+];
+
+function renderWardrobe() {
+  const slots = ['All','head','eyes','body','mouth','feet'];
+  const slotLabels = { All:'All', head:'Head', eyes:'Eyes', body:'Chain', mouth:'Mouth', feet:'Feet' };
+  const activeSlot = window._activeWardrobeSlot || 'All';
+
+  // Slot tabs
+  document.getElementById('slot-tabs').innerHTML = slots.map(s =>
+    `<button class="slot-tab ${s===activeSlot?'active':''}" onclick="filterWardrobe('${s}')">${slotLabels[s]||s}</button>`
+  ).join('');
+
+  // Items
+  const items = activeSlot === 'All' ? ITEMS : ITEMS.filter(i => i.slot === activeSlot);
+  document.getElementById('items-grid').innerHTML = items.map(item => {
+    const unlocked = STATE.unlockedItems.has(item.id) || STATE.points >= item.cost;
+    const equipped = STATE.equippedItems[item.slot] === item.id;
+    const cls = equipped ? 'item-card equipped unlocked' : unlocked ? 'item-card unlocked' : 'item-card locked';
+    return `<div class="${cls}" onclick="toggleEquip('${item.id}')">
+      ${equipped ? '<div class="equipped-badge">ON</div>' : ''}
+      <div class="item-emoji">${item.emoji}</div>
+      <div class="item-name">${item.name}</div>
+      <div class="item-cost ${unlocked?'owned':''}">${unlocked ? '✓ Unlocked' : item.cost+' pts'}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterWardrobe(slot) {
+  window._activeWardrobeSlot = slot;
+  renderWardrobe();
+}
+
+function toggleEquip(itemId) {
+  const item = ITEMS.find(i => i.id === itemId);
+  if (!item) return;
+  const canAfford = STATE.points >= item.cost || STATE.unlockedItems.has(item.id);
+  if (!canAfford) { setSpeak("Not enough points yet! Keep making beats! 💪"); return; }
+  STATE.unlockedItems.add(itemId);
+  if (STATE.equippedItems[item.slot] === itemId) {
+    STATE.equippedItems[item.slot] = null;
+  } else {
+    STATE.equippedItems[item.slot] = itemId;
+  }
+  updateSwankyCosmetics('swanky-root');
+  updateSwankyCosmetics('wardrobe-swanky-root', 'w-');
+  renderWardrobe();
+  setSpeak("Looking SWANKY! 🧀✨");
+}
+
+function updateSwankyCosmetics(rootId, prefix='') {
+  const slots = ['head','eyes','body','mouth','feet'];
+  slots.forEach(slot => {
+    const el = document.getElementById(`${prefix ? 'w-' : ''}cosmetic-${slot}`);
+    if (!el) return;
+    const equippedId = STATE.equippedItems[slot];
+    if (equippedId) {
+      const item = ITEMS.find(i => i.id === equippedId);
+      if (item) { el.innerHTML = item.svg; return; }
+    }
+    el.innerHTML = '';
+  });
+}
+
+function unequipAll() {
+  Object.keys(STATE.equippedItems).forEach(k => STATE.equippedItems[k] = null);
+  updateSwankyCosmetics('swanky-root');
+  updateSwankyCosmetics('wardrobe-swanky-root', 'w-');
+  renderWardrobe();
+}
+
+// =====================
+// === SWANKY UI ===
+// =====================
+const SWANKY_QUIPS = [
+  "Let's get this cheddar! 🧀",
+  "You're on a ROLL(e)! 🎵",
+  "That beat's gouda nuff! ✨",
+  "Feelin' sharp today! 🎸",
+  "Stay swanky, stay funky! 💎",
+  "Aged to perfection! 🏆",
+];
+
+function setSwankyDance(danceClass) {
+  const root = document.getElementById('swanky-root');
+  if (!root) return;
+  root.className = danceClass;
+  if (STATE.isPlaying) root.classList.add('playing-pulse');
+}
+
+function setSpeak(msg) {
+  document.getElementById('speech-bubble').textContent = msg;
+  setTimeout(() => {
+    const q = SWANKY_QUIPS[Math.floor(Math.random()*SWANKY_QUIPS.length)];
+    document.getElementById('speech-bubble').textContent = q;
+  }, 3500);
+}
+
+function updateStats() {
+  document.getElementById('points-display').textContent = STATE.points;
+  document.getElementById('level-display').textContent = STATE.level;
+  document.getElementById('streak-display').textContent = STATE.streak;
+  document.getElementById('level-badge').textContent = `Lvl ${STATE.level}`;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// =====================
+// === TABS ===
+// =====================
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['beatlab','wardrobe'][i]===tab));
+  document.getElementById('tab-beatlab').style.display = tab==='beatlab' ? '' : 'none';
+  document.getElementById('tab-wardrobe').style.display = tab==='wardrobe' ? '' : 'none';
+  if (tab === 'wardrobe') renderWardrobe();
+}
+
+// =====================
+// === INIT ===
+// =====================
+buildSequencer();
+updateStats();
+</script>
+</body>
+</html>

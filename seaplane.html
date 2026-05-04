@@ -1,0 +1,2266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>LAKE UNION LANDING</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #0a0814;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Press Start 2P', monospace;
+    overflow: hidden;
+  }
+  #gameContainer {
+    position: relative;
+    width: min(96vw, calc(96vh * 800 / 420));
+    max-width: 100vw;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    image-rendering: pixelated;
+    border: 3px solid #2255aa;
+    box-shadow: 0 0 0 2px #4488dd, 0 0 30px #2255aa55;
+    outline: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  #controls {
+    color: #4488dd88;
+    font-size: 7px;
+    margin-top: 6px;
+    text-align: center;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  /* ── PORTRAIT ROTATION WARNING ──
+     Only shown on actual touch devices in portrait mode.
+     .is-touch is added to <html> by JS on touch devices only. */
+  #rotateOverlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 999;
+    background: #0a0814;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+  }
+  #rotateOverlay .icon { font-size: 64px; animation: wobble 2s ease-in-out infinite alternate; }
+  #rotateOverlay p { color: #44ccee; font-family: 'Press Start 2P',monospace; font-size: 10px; text-align: center; line-height: 2.2; }
+  @keyframes wobble { from { transform: rotate(-20deg); } to { transform: rotate(20deg); } }
+
+  /* Only apply the portrait-hide on touch devices */
+  html.is-touch #gameContainer,
+  html.is-touch #controls { display: none; }
+  @media (orientation: landscape) {
+    html.is-touch #gameContainer { display: block; }
+    html.is-touch #controls      { display: block; }
+    html.is-touch #rotateOverlay { display: none !important; }
+  }
+  @media (orientation: portrait) {
+    html.is-touch #rotateOverlay { display: flex; }
+  }
+
+  /* ── ON-SCREEN TOUCH BUTTONS ── */
+  #touchControls {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+  }
+  .touchBtn {
+    pointer-events: all;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 22%;
+    opacity: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: opacity 0.2s;
+  }
+  /* Only show touch buttons on actual touch devices */
+  html.is-touch .touchBtn { opacity: 0.55; }
+  html.is-touch .touchBtn:active { opacity: 0.88; }
+  .touchBtn .arrow {
+    font-size: clamp(28px, 7vw, 52px);
+    line-height: 1;
+    color: #44ccee;
+    text-shadow: 0 0 12px #44ccee99;
+  }
+  .touchBtn .label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(5px, 1.2vw, 9px);
+    color: #44cceeaa;
+  }
+  #tapZone {
+    pointer-events: all;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  /* Hide tap zone on desktop — spacebar and click work fine */
+  html:not(.is-touch) #tapZone { pointer-events: none; }
+  /* On mobile, hide touch buttons and show tapzone when not playing */
+  html.is-touch .touchBtn.hidden      { opacity: 0 !important; pointer-events: none !important; }
+  html.is-touch #tapZone.hidden       { pointer-events: none; }
+</style>
+</head>
+<body>
+
+<!-- Portrait mode warning -->
+<div id="rotateOverlay">
+  <div class="icon">📱</div>
+  <p>ROTATE YOUR PHONE<br>TO LANDSCAPE MODE<br>TO PLAY</p>
+</div>
+
+<div id="gameContainer">
+  <canvas id="gameCanvas" width="800" height="420" tabindex="0"></canvas>
+  <!-- On-screen controls overlay -->
+  <div id="touchControls">
+    <button class="touchBtn" id="btnUp" aria-label="Climb">
+      <span class="arrow">▲</span>
+      <span class="label">CLIMB</span>
+    </button>
+    <div id="tapZone"></div>
+    <button class="touchBtn" id="btnDown" aria-label="Dive">
+      <span class="arrow">▼</span>
+      <span class="label">DIVE</span>
+    </button>
+  </div>
+</div>
+<div id="controls">↑/W CLIMB &nbsp;|&nbsp; ↓/S DIVE &nbsp;|&nbsp; SPACE START &nbsp;|&nbsp; 1–5 LEVEL</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const W = 800, H = 420;
+
+// Keep canvas focused so spacebar always works
+canvas.focus();
+canvas.addEventListener('click', () => canvas.focus());
+document.addEventListener('visibilitychange', () => { if (!document.hidden) canvas.focus(); });
+
+// Detect touch device — add class to html element so CSS can target it
+const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+if (isMobile) document.documentElement.classList.add('is-touch');
+
+function drawContinueHint(y) {
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#44ccee99';
+  ctx.font = '7px "Press Start 2P",monospace';
+  const hint = isMobile ? 'TAP SCREEN TO CONTINUE' : 'PRESS SPACE TO CONTINUE';
+  ctx.fillText(hint, W/2, y);
+  ctx.textAlign = 'left';
+}
+
+// ============================================================
+// MIDJOURNEY ASSET SYSTEM
+// Drop your Midjourney-generated PNGs into the same folder
+// as this HTML file and update the paths below.
+// Each asset has a canvas fallback if the image doesn't load.
+// ============================================================
+const ASSETS = {
+  plane:      { src: 'assets/plane.png',      img: null, loaded: false },
+  latte:      { src: 'assets/latte.png',      img: null, loaded: false },
+  kayak:      { src: 'assets/kayak.png',      img: null, loaded: false },
+  sailboat:   { src: 'assets/sailboat.png',   img: null, loaded: false },
+  drawbridge: { src: 'assets/drawbridge.png', img: null, loaded: false },
+  orca:       { src: 'assets/orca.png',       img: null, loaded: false },
+  b737:       { src: 'assets/737.png',        img: null, loaded: false },
+  bg_sky:     { src: 'assets/bg_sky.png',     img: null, loaded: false },
+  bg_city:    { src: 'assets/bg_city.png',    img: null, loaded: false },
+  title_bg:   { src: 'assets/title_bg.png',   img: null, loaded: false },
+};
+
+// Sprite assets are drawn with 'multiply' blend to knock out white backgrounds.
+// Background assets (sky, city, title) are drawn normally.
+const SPRITE_ASSETS = new Set(['plane','latte','kayak','sailboat','drawbridge']);
+
+function loadAssets() {
+  Object.entries(ASSETS).forEach(([key, asset]) => {
+    const img = new Image();
+    // NOTE: no crossOrigin — setting it breaks local file:// loading
+    img.onload = () => {
+      asset.img = img;
+      asset.loaded = true;
+      console.log(`✅ Asset loaded: ${key} (${img.naturalWidth}x${img.naturalHeight})`);
+    };
+    img.onerror = (e) => {
+      asset.loaded = false;
+      console.warn(`❌ Asset failed: ${key} — ${asset.src}`);
+    };
+    img.src = asset.src;
+  });
+}
+loadAssets();
+
+// Draw a sprite asset — plain drawImage, expects PNG with real alpha channel.
+function drawSprite(key, dx, dy, dw, dh) {
+  const asset = ASSETS[key];
+  if (!asset || !asset.loaded || !asset.img) return false;
+  ctx.drawImage(asset.img, dx, dy, dw, dh);
+  return true;
+}
+
+// Draw a background asset (no blend mode change needed).
+function drawBgAsset(key, dx, dy, dw, dh) {
+  const asset = ASSETS[key];
+  if (!asset || !asset.loaded || !asset.img) return false;
+  ctx.drawImage(asset.img, dx, dy, dw, dh);
+  return true;
+}
+
+// ============================================================
+// 16-BIT PALETTE — SNES-era inspired
+// ============================================================
+const C = {
+  // Sky layers
+  skyTop:     '#1a1a5e',
+  skyMid:     '#2a4a8a',
+  skyHorizon: '#4a7ab8',
+  // Water
+  water:      '#1a4a6e',
+  waterMid:   '#2a6a9e',
+  waterShine: '#4a9abe',
+  waterFoam:  '#8acbde',
+  // Ground/shore
+  ground:     '#2a4a1a',
+  groundDark: '#1a2a0e',
+  groundMid:  '#3a6a2a',
+  groundLight:'#5a8a3a',
+  // Buildings
+  bldDark:    '#1a2233',
+  bldMid:     '#2a3448',
+  bldLight:   '#3a4a6a',
+  bldWindow:  '#d4aa44',
+  bldWindowOff:'#2a2a1a',
+  // Plane
+  planeBody:  '#4ab8de',
+  planeDark:  '#2a7a9e',
+  planeLight: '#8adaee',
+  planeWhite: '#d8eeff',
+  // Obstacles
+  coffeeBody: '#7a4a2a',
+  coffeeDark: '#4a2a0e',
+  coffeeLight:'#aa7a4a',
+  coffeeFoam: '#f8f0e0',
+  kayakHull:  '#cc4488',
+  kayakDark:  '#882255',
+  kayakPadd:  '#2288aa',
+  sailWhite:  '#e8f0ff',
+  sailBlue:   '#4488cc',
+  sailRed:    '#cc4444',
+  hullDark:   '#223344',
+  hullMid:    '#334455',
+  bridgeGray: '#556677',
+  bridgeDark: '#334455',
+  bridgeLight:'#778899',
+  // UI
+  uiBg:       '#0a0a1a',
+  uiBorder:   '#4488dd',
+  uiGold:     '#eebb44',
+  uiGreen:    '#44cc88',
+  uiRed:      '#cc4444',
+  uiCyan:     '#44ccee',
+  uiWhite:    '#e8eeff',
+  uiGray:     '#4a5a6a',
+  // Effects
+  exhaust:    '#8aeedd',
+  sparkR:     '#ffaa44',
+  sparkY:     '#ffee44',
+};
+
+// ============================================================
+// AUDIO — GRUNGE MUSIC ENGINE
+// Each level plays a synthesized riff inspired by a Seattle band
+// ============================================================
+let audioCtx = null;
+let musicNodes = []; // all currently playing music nodes, for cleanup
+let drumInterval = null;
+let bassInterval = null;
+let melodyInterval = null;
+let currentBeat = 0;
+
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+// ---- SFX ----
+function playTone(freq, type, dur, vol=0.3, delay=0) {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = type; o.frequency.value = freq;
+  const t = audioCtx.currentTime + delay;
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.start(t); o.stop(t + dur);
+}
+function playCrash() {
+  [80,60,40,100,50].forEach((f,i) => playTone(f,'sawtooth',0.3,0.4,i*0.05));
+  playTone(200,'square',0.1,0.3,0);
+}
+function playLanding() {
+  [440,550,660,880].forEach((f,i) => playTone(f,'square',0.2,0.3,i*0.12));
+  playTone(1320,'sine',0.5,0.4,0.5);
+}
+function playCoinUp() {
+  playTone(987,'square',0.1,0.3,0);
+  playTone(1318,'square',0.15,0.3,0.1);
+}
+function playFoghorn() {
+  playTone(110,'sawtooth',0.8,0.4,0);
+  playTone(130,'sawtooth',0.6,0.3,0.1);
+}
+
+function playDrumSolo() {
+  if (!audioCtx) return;
+  // Classic rock drum fill: 16th note run on toms then big crash
+  const t = audioCtx.currentTime;
+  const step = 0.10;
+  const hits = [
+    // kick-snare setup
+    {type:'kick',  d:0},
+    {type:'snare', d:step*1},
+    // rapid tom fill (simulated with pitched kicks)
+    {type:'tom1',  d:step*2},
+    {type:'tom1',  d:step*2.5},
+    {type:'tom2',  d:step*3},
+    {type:'tom2',  d:step*3.5},
+    {type:'tom3',  d:step*4},
+    {type:'tom3',  d:step*4.5},
+    // snare rolls
+    {type:'snare', d:step*5},
+    {type:'snare', d:step*5.4},
+    {type:'snare', d:step*5.7},
+    {type:'snare', d:step*5.9},
+    // big kick + crash cymbal at the end
+    {type:'kick',  d:step*6.2},
+    {type:'crash', d:step*6.2},
+    {type:'kick',  d:step*7},
+    {type:'crash', d:step*8},
+  ];
+
+  hits.forEach(h => {
+    const ht = t + h.d;
+    if (h.type === 'kick') {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(160, ht);
+      o.frequency.exponentialRampToValueAtTime(30, ht + 0.25);
+      g.gain.setValueAtTime(0.8, ht);
+      g.gain.exponentialRampToValueAtTime(0.001, ht + 0.3);
+      o.start(ht); o.stop(ht + 0.35);
+    } else if (h.type === 'snare') {
+      const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.12, audioCtx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+      const src = audioCtx.createBufferSource(), g = audioCtx.createGain();
+      const f = audioCtx.createBiquadFilter();
+      f.type='bandpass'; f.frequency.value=2200; f.Q.value=0.6;
+      src.buffer=buf; src.connect(f); f.connect(g); g.connect(audioCtx.destination);
+      g.gain.setValueAtTime(0.5, ht);
+      g.gain.exponentialRampToValueAtTime(0.001, ht+0.12);
+      src.start(ht); src.stop(ht+0.15);
+    } else if (h.type === 'tom1' || h.type === 'tom2' || h.type === 'tom3') {
+      const freq = h.type==='tom1' ? 120 : h.type==='tom2' ? 90 : 65;
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.type='sine';
+      o.frequency.setValueAtTime(freq*1.5, ht);
+      o.frequency.exponentialRampToValueAtTime(freq, ht+0.12);
+      g.gain.setValueAtTime(0.5, ht);
+      g.gain.exponentialRampToValueAtTime(0.001, ht+0.2);
+      o.start(ht); o.stop(ht+0.25);
+    } else if (h.type === 'crash') {
+      const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.8, audioCtx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+      const src = audioCtx.createBufferSource(), g = audioCtx.createGain();
+      const f = audioCtx.createBiquadFilter();
+      f.type='highpass'; f.frequency.value=5000;
+      src.buffer=buf; src.connect(f); f.connect(g); g.connect(audioCtx.destination);
+      g.gain.setValueAtTime(0.4, ht);
+      g.gain.exponentialRampToValueAtTime(0.001, ht+0.8);
+      src.start(ht); src.stop(ht+0.85);
+    }
+  });
+}
+
+// ---- ENGINE HUM ----
+let engineInterval = null;
+function startEngine() {
+  if (engineInterval) return;
+  engineInterval = setInterval(() => {
+    if (audioCtx && gameState === 'playing')
+      playTone(55 + plane.vy*2,'sawtooth',0.08,0.04);
+  }, 90);
+  startLevelMusic(level);
+  flashSongTitle(level);
+}
+function stopEngine() {
+  clearInterval(engineInterval); engineInterval = null;
+  stopMusic();
+}
+
+// ---- GRUNGE MUSIC ----
+
+// Create a distorted guitar node
+function makeGuitar(freq, dur, vol=0.18) {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const wave = audioCtx.createWaveShaper();
+  const g = audioCtx.createGain();
+
+  // Distortion curve — heavy crunch
+  const curve = new Float32Array(256);
+  const k = 200;
+  for (let i = 0; i < 256; i++) {
+    const x = (i * 2) / 256 - 1;
+    curve[i] = (Math.PI + k) * x / (Math.PI + k * Math.abs(x));
+  }
+  wave.curve = curve;
+
+  o.connect(wave); wave.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sawtooth';
+  o.frequency.value = freq;
+  const t = audioCtx.currentTime;
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(vol, t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.start(t); o.stop(t + dur + 0.05);
+}
+
+// Bass note — clean low thump
+function makeBass(freq, dur, vol=0.3) {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'triangle';
+  o.frequency.value = freq;
+  const t = audioCtx.currentTime;
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.start(t); o.stop(t + dur + 0.05);
+}
+
+// Drum hit — kick, snare, or hihat
+function makeDrum(type) {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  if (type === 'kick') {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sine';
+    o.frequency.setValueAtTime(150, t);
+    o.frequency.exponentialRampToValueAtTime(30, t + 0.25);
+    g.gain.setValueAtTime(0.7, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    o.start(t); o.stop(t + 0.35);
+  } else if (type === 'snare') {
+    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.15, audioCtx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const src = audioCtx.createBufferSource();
+    const g = audioCtx.createGain();
+    const filt = audioCtx.createBiquadFilter();
+    filt.type = 'bandpass'; filt.frequency.value = 1800; filt.Q.value = 0.5;
+    src.buffer = buf;
+    src.connect(filt); filt.connect(g); g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(0.4, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    src.start(t); src.stop(t + 0.2);
+  } else if (type === 'hat') {
+    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.05, audioCtx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const src = audioCtx.createBufferSource();
+    const g = audioCtx.createGain();
+    const filt = audioCtx.createBiquadFilter();
+    filt.type = 'highpass'; filt.frequency.value = 8000;
+    src.buffer = buf;
+    src.connect(filt); filt.connect(g); g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(0.15, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    src.start(t); src.stop(t + 0.08);
+  }
+}
+
+// ---- SONG DEFINITIONS ----
+// Each song: bpm, guitar riff sequence (freq, duration), bass sequence, drum pattern
+// Frequencies are in Hz. Riffs loop every 'bars' beats.
+
+const SONGS = [
+  {
+    // LVL 1 — "Smells Like Teen Spirit" inspired (Nirvana)
+    // Iconic F5-Bb5-Ab5-Db5 power chord riff
+    title: 'NIRVANA VIBES',
+    bpm: 117,
+    guitar: [
+      [174.6,0.18],[174.6,0.09],[174.6,0.18],  // F
+      [233.1,0.18],[233.1,0.09],[233.1,0.18],  // Bb
+      [207.7,0.18],[207.7,0.09],[207.7,0.18],  // Ab
+      [138.6,0.18],[138.6,0.09],[138.6,0.18],  // Db
+    ],
+    bass: [87.3, 116.5, 103.8, 69.3],  // octave down
+    drums: ['kick','hat','snare','hat', 'kick','kick','snare','hat'],
+  },
+  {
+    // LVL 2 — "Black" inspired (Pearl Jam)
+    // E-A-B brooding verse riff
+    title: 'PEARL JAM FEELS',
+    bpm: 96,
+    guitar: [
+      [82.4,0.3],[82.4,0.15],   // E
+      [110,0.3],[110,0.15],     // A
+      [123.5,0.3],[123.5,0.15], // B
+      [110,0.3],[82.4,0.3],
+    ],
+    bass: [41.2, 55.0, 61.7, 55.0],
+    drums: ['kick','hat','hat','snare', 'kick','hat','snare','hat'],
+  },
+  {
+    // LVL 3 — "Spoonman" inspired (Soundgarden)
+    // Odd-time chunky D-G-F riff, 7/4 feel approximated
+    title: 'SOUNDGARDEN RIFF',
+    bpm: 112,
+    guitar: [
+      [146.8,0.2],[146.8,0.1],[146.8,0.2], // D
+      [196,0.2],[196,0.1],                  // G
+      [174.6,0.2],[174.6,0.1],[174.6,0.2], // F
+      [130.8,0.35],                         // C (resolve)
+    ],
+    bass: [73.4, 98.0, 87.3, 65.4],
+    drums: ['kick','hat','snare','hat', 'kick','snare','hat','snare'],
+  },
+  {
+    // LVL 4 — "Would?" inspired (Alice in Chains)
+    // Heavy A-G-D drop riff
+    title: 'AIC DROP TUNING',
+    bpm: 104,
+    guitar: [
+      [110,0.25],[110,0.12],[110,0.25], // A
+      [98,0.25],[98,0.12],              // G
+      [146.8,0.25],[146.8,0.12],        // D
+      [82.4,0.4],                       // E (heavy resolve)
+    ],
+    bass: [55.0, 49.0, 73.4, 41.2],
+    drums: ['kick','kick','snare','hat', 'kick','snare','kick','snare'],
+  },
+  {
+    // LVL 5 — "Hunger Strike" inspired (Temple of the Dog)
+    // Big anthemic E-A-D-A riff
+    title: 'TEMPLE OF THE DOG',
+    bpm: 88,
+    guitar: [
+      [164.8,0.35],[164.8,0.18],  // E
+      [220,0.35],[220,0.18],      // A
+      [293.7,0.35],[293.7,0.18],  // D
+      [220,0.35],[164.8,0.35],    // A→E
+    ],
+    bass: [82.4, 110, 146.8, 110],
+    drums: ['kick','hat','snare','hat', 'kick','hat','snare','hat'],
+  }
+];
+
+let songBeat = 0;
+let guitarStep = 0;
+let bassStep = 0;
+
+function startLevelMusic(lvl) {
+  stopMusic();
+  if (!audioCtx) return;
+  const song = SONGS[Math.min(lvl, SONGS.length - 1)];
+  const beatMs = (60 / song.bpm) * 1000 * 0.5; // eighth-note subdivisions
+
+  songBeat = 0; guitarStep = 0; bassStep = 0;
+
+  drumInterval = setInterval(() => {
+    if (gameState !== 'playing') return;
+    const pat = song.drums;
+    makeDrum(pat[songBeat % pat.length]);
+    songBeat++;
+  }, beatMs);
+
+  // Guitar fires on every other drum beat (quarter notes)
+  melodyInterval = setInterval(() => {
+    if (gameState !== 'playing') return;
+    const step = song.guitar[guitarStep % song.guitar.length];
+    makeGuitar(step[0], step[1]);
+    guitarStep++;
+  }, beatMs * 2);
+
+  // Bass on every 4 drum beats (half notes, one per chord)
+  bassInterval = setInterval(() => {
+    if (gameState !== 'playing') return;
+    const freq = song.bass[bassStep % song.bass.length];
+    makeBass(freq, (beatMs * 4) / 1000 * 0.8);
+    bassStep++;
+  }, beatMs * 4);
+}
+
+function stopMusic() {
+  clearInterval(drumInterval);
+  clearInterval(melodyInterval);
+  clearInterval(bassInterval);
+  drumInterval = null; melodyInterval = null; bassInterval = null;
+  songBeat = 0; guitarStep = 0; bassStep = 0;
+}
+
+// Show song title briefly when level starts
+let songTitleTimer = 0;
+let songTitleText = '';
+function flashSongTitle(lvl) {
+  const song = SONGS[Math.min(lvl, SONGS.length - 1)];
+  songTitleText = song.title;
+  songTitleTimer = 180; // 3 seconds at 60fps
+}
+
+function drawSongTitle() {
+  if (songTitleTimer <= 0) return;
+  songTitleTimer--;
+  const alpha = Math.min(1, songTitleTimer / 30); // fade out last 0.5s
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = '#00000088';
+  ctx.fillRect(W/2 - 140, H - 58, 280, 22);
+  ctx.fillStyle = C.uiGold;
+  ctx.font = '7px "Press Start 2P",monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('♪ ' + songTitleText, W/2, H - 43);
+  ctx.textAlign = 'left';
+  ctx.restore();
+}
+
+// ============================================================
+// LEVELS
+// ============================================================
+const LEVELS = [
+  {
+    name: "THE GENTLE COMMUTE",
+    subtitle: "Just avoid the lattes, hon",
+    skyTop: '#1a1a5e', skyBot: '#3a6a9e',
+    groundColor: '#2a4a1a',
+    obstacles: ['latte','latte','kayak','latte','kayak'],
+    speed: 2.2,
+    story: [
+      "Chuck 'Floatplane' McGee",
+      "reporting for duty.",
+      "",
+      "Lake Union: 2 miles ahead.",
+      "Seattle traffic: as always,",
+      "absolutely unhinged.",
+      "",
+      "Watch for the lattes.",
+      "They're EVERYWHERE now.",
+    ]
+  },
+  {
+    name: "DRAWBRIDGE DRAMA",
+    subtitle: "The bridge is up. Of course it is.",
+    skyTop: '#0e1a4e', skyBot: '#2a5a8e',
+    groundColor: '#1a3a0e',
+    obstacles: ['drawbridge','latte','kayak','drawbridge','sailboat'],
+    speed: 2.6,
+    story: [
+      "The Fremont Bridge.",
+      "Goes up every 7 minutes.",
+      "Has been 'going up'",
+      "since 1917.",
+      "",
+      "A kayaker is filming",
+      "the whole thing",
+      "for their vlog.",
+    ]
+  },
+  {
+    name: "THE BALLARD LOCKS",
+    subtitle: "Boats. So many boats.",
+    skyTop: '#0a1840', skyBot: '#1a4a7a',
+    groundColor: '#1a2a0e',
+    obstacles: ['sailboat','drawbridge','latte','sailboat','kayak','drawbridge'],
+    speed: 3.0,
+    story: [
+      "The Ballard Locks:",
+      "where salmon go to",
+      "think about their",
+      "life choices.",
+      "",
+      "Also: 47 sailboats",
+      "named 'Knot Working'.",
+      "",
+      "We wish we were joking.",
+    ]
+  },
+  {
+    name: "TECH BRO REGATTA",
+    subtitle: "Their Patagonia is *vintage*",
+    skyTop: '#080e30', skyBot: '#183070',
+    groundColor: '#0e2008',
+    obstacles: ['sailboat','sailboat','latte','kayak','sailboat','drawbridge','latte'],
+    speed: 3.5,
+    story: [
+      "Every boat here costs",
+      "more than your house.",
+      "",
+      "The crew: four guys",
+      "named either Chad",
+      "or literally 'Chad'.",
+      "",
+      "One is on a call.",
+      "He's 'circling back'.",
+    ]
+  },
+  {
+    name: "PEAK SEATTLE",
+    subtitle: "Final approach. Don't blow it.",
+    skyTop: '#04081a', skyBot: '#102858',
+    groundColor: '#0a1505',
+    obstacles: ['latte','sailboat','drawbridge','kayak','737','latte','sailboat','drawbridge','kayak'],
+    speed: 4.0,
+    story: [
+      "You can SEE Lake Union.",
+      "",
+      "Between you and glory:",
+      "a giant latte,",
+      "a drawbridge stuck open,",
+      "a yacht club,",
+      "& a Boeing 737.",
+      "",
+      "Because of course.",
+      "Welcome to Seattle.",
+    ]
+  }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let gameState = 'title';
+let level = 0, lives = 3, score = 0;
+let storyLine = 0, storyTimer = 0;
+let crashMsg = '', invincTimer = 0;
+
+const CRASH_MSGS = [
+  "A Portlander\nwould've landed that.",
+  "Bold move.\nWrong move.",
+  "At least the latte\nsurvived.",
+  "The kayaker\ngot it on film.",
+  "5-star Yelp review:\n'Exciting water landing!'",
+  "The bridge says:\nnot today.",
+];
+const LAND_MSGS = [
+  "NAILED IT!\nVery chill. Very Seattle.",
+  "PERFECT LANDING!\nTen out of ten lattes.",
+  "SMOOTH!\nEven the kayakers clapped.",
+  "BEAUTIFUL!\nThe bridge almost closed for you.",
+];
+
+// ============================================================
+// PLANE
+// ============================================================
+const plane = {
+  x: 120, y: H/2, vy: 0,
+  gravity: 0.18, thrust: -0.55, maxVy: 5,
+  width: 56, height: 20,
+  trail: [],
+};
+
+// ============================================================
+// OBSTACLES & SCROLL
+// ============================================================
+let obstacles = [], obstacleQueue = [], obstacleCooldown = 0;
+const OBS_SPACING = 320;
+let bgBuildings = [], bgMountains = [], bgClouds = [];
+let scrollX = 0;
+const TOTAL_LEVEL_WIDTH = 4200;
+let landingZone = null;
+
+// ============================================================
+// BACKGROUND INIT
+// ============================================================
+function initBuildings() {
+  bgBuildings = [];
+  // Background layer (far) — tall thin skyscrapers
+  for (let x = 0; x < 2600; x += 55 + Math.random()*50) {
+    const h = 70 + Math.random()*100;
+    bgBuildings.push({ x, h, w: 24 + Math.random()*28, layer: 'far',
+      winRows: 2 + Math.floor(Math.random()*3),
+      winCols: 1 + Math.floor(Math.random()*2) });
+  }
+  // Midground layer — wider buildings with more detail
+  for (let x = 0; x < 2600; x += 80 + Math.random()*60) {
+    const h = 50 + Math.random()*70;
+    bgBuildings.push({ x, h, w: 36 + Math.random()*36, layer: 'mid',
+      winRows: 2 + Math.floor(Math.random()*3),
+      winCols: 2 + Math.floor(Math.random()*3) });
+  }
+}
+function initMountains() {
+  bgMountains = [
+    { x: 950, h: 160, w: 280 },  // Rainier
+    { x: 280, h: 95,  w: 190 },
+    { x: 1650, h: 115, w: 210 },
+    { x: 1250, h: 82,  w: 150 },
+    { x: 600,  h: 60,  w: 120 },
+  ];
+}
+function initClouds() {
+  bgClouds = [];
+  for (let i = 0; i < 10; i++) {
+    bgClouds.push({
+      x: Math.random()*2800,
+      y: 25 + Math.random()*90,
+      w: 70 + Math.random()*90,
+      speed: 0.15 + Math.random()*0.25,
+      opacity: 0.3 + Math.random()*0.4,
+    });
+  }
+}
+
+// ============================================================
+// PIXEL HELPER — draw dithered shading band
+// ============================================================
+function ditherRect(x, y, w, h, col1, col2) {
+  for (let py = 0; py < h; py += 2) {
+    for (let px = 0; px < w; px += 2) {
+      ctx.fillStyle = (Math.floor(px/2 + py/2)) % 2 === 0 ? col1 : col2;
+      ctx.fillRect(x + px, y + py, 2, 2);
+    }
+  }
+}
+
+function shadowText(text, x, y, fill, shadow, size) {
+  ctx.font = `${size}px "Press Start 2P", monospace`;
+  ctx.fillStyle = shadow;
+  ctx.fillText(text, x+2, y+2);
+  ctx.fillStyle = fill;
+  ctx.fillText(text, x, y);
+}
+
+// ============================================================
+// OBSTACLE BUILDERS
+// ============================================================
+function buildLatte(x) {
+  // Flying horizontal coffee cup — hurled at the plane at a random height
+  const flyY = 70 + Math.random() * (H - 160);
+  const cW = 54, cH = 74;
+  return {
+    type: 'latte',
+    x, y: flyY,
+    w: cW, h: cH,
+    hitX: x - Math.round(cH * 0.75) + 4, hitY: flyY - cH/2 + 4, hitW: Math.round(cH * 1.5) - 8, hitH: cH - 8,
+    draw(ctx, sx) {
+      const rx = this.x - sx;
+      const ry = this.y;
+
+      // Image is 612x408 (3:2). Scale to match cH height keeping aspect ratio.
+      const imgW = Math.round(cH * 1.5), imgH = cH;
+      if (drawSprite('latte', rx - imgW/2, ry - imgH/2, imgW, imgH)) return;
+
+      // Motion blur streaks trailing behind (right side)
+      for(let i=1;i<=5;i++) {
+        ctx.fillStyle = `rgba(160,100,40,${0.12 - i*0.02})`;
+        ctx.fillRect(rx + cW/2 + i*9, ry - cH/2 + 6, 14, cH - 12);
+      }
+
+      // Cup body (side view)
+      ctx.fillStyle = C.coffeeDark;
+      ctx.beginPath();
+      ctx.moveTo(rx - cW/2,     ry - cH/2 + 3);
+      ctx.lineTo(rx + cW/2,     ry - cH/2);
+      ctx.lineTo(rx + cW/2,     ry + cH/2);
+      ctx.lineTo(rx - cW/2,     ry + cH/2 - 3);
+      ctx.closePath(); ctx.fill();
+
+      ctx.fillStyle = C.coffeeBody;
+      ctx.beginPath();
+      ctx.moveTo(rx - cW/2 + 5, ry - cH/2 + 4);
+      ctx.lineTo(rx + cW/2 - 4, ry - cH/2 + 1);
+      ctx.lineTo(rx + cW/2 - 4, ry + cH/2 - 1);
+      ctx.lineTo(rx - cW/2 + 5, ry + cH/2 - 4);
+      ctx.closePath(); ctx.fill();
+
+      // Top highlight
+      ctx.fillStyle = C.coffeeLight;
+      ctx.beginPath();
+      ctx.moveTo(rx - cW/2 + 5, ry - cH/2 + 4);
+      ctx.lineTo(rx + cW/2 - 4, ry - cH/2 + 1);
+      ctx.lineTo(rx + cW/2 - 4, ry - cH/2 + 9);
+      ctx.lineTo(rx - cW/2 + 5, ry - cH/2 + 11);
+      ctx.closePath(); ctx.fill();
+
+      // Lid
+      ctx.fillStyle = '#bbaa55';
+      ctx.fillRect(rx - cW/2 - 2, ry - cH/2 - 4, cW + 4, 6);
+      ctx.fillStyle = '#ddc866';
+      ctx.fillRect(rx - cW/2,     ry - cH/2 - 3, cW, 2);
+      ctx.fillStyle = '#2a1000';
+      ctx.fillRect(rx + cW/2 - 12, ry - cH/2 - 3, 9, 4);
+
+      // Sleeve band
+      ctx.fillStyle = '#3e2008';
+      ctx.fillRect(rx - cW/2 + 8, ry - 5, cW - 16, 13);
+      ctx.strokeStyle = '#2a1000'; ctx.lineWidth = 1;
+      for(let i=0;i<3;i++) {
+        ctx.beginPath();
+        ctx.moveTo(rx - cW/2 + 12 + i*11, ry - 5);
+        ctx.lineTo(rx - cW/2 + 12 + i*11, ry + 8);
+        ctx.stroke();
+      }
+
+      // Handle (trailing side)
+      ctx.strokeStyle = C.coffeeLight; ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(rx - cW/2 - 7, ry + 1, 11, -Math.PI*0.45, Math.PI*0.45);
+      ctx.stroke();
+
+      // Coffee splash ahead of the cup (leading edge)
+      const t = Date.now()/300;
+      ctx.fillStyle = C.coffeeFoam + 'cc';
+      ctx.beginPath(); ctx.ellipse(rx - cW/2 - 6 + Math.sin(t)*2, ry - 3, 9, 5, -0.4, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = C.coffeeBody + 'aa';
+      ctx.beginPath(); ctx.ellipse(rx - cW/2 - 14 + Math.sin(t+1)*3, ry + 4, 6, 4, 0.3, 0, Math.PI*2); ctx.fill();
+
+      // Price tag
+      ctx.fillStyle = C.uiGold; ctx.font = '5px "Press Start 2P",monospace';
+      ctx.fillText('$9', rx - 6, ry - cH/2 - 8);
+    }
+  };
+}
+
+function buildKayak(x) {
+  const y = H - 26; // hull base sits on the waterline
+  return {
+    type:'kayak', x, y, w:72, h:32,
+    hitX:x+6, hitY:y-38, hitW:60, hitH:42,
+    phase: Math.random()*Math.PI*2,
+    draw(ctx, sx) {
+      const rx = this.x - sx;
+      const t = Date.now()/700;
+      const bob = Math.sin(t+this.phase)*3;
+      const ry = this.y + bob;
+      if (drawSprite('kayak', rx-8, ry-42, 88, 60)) return;
+      // Wake ripples
+      ctx.strokeStyle = C.waterShine+'66'; ctx.lineWidth=1;
+      for(let i=0;i<3;i++) {
+        ctx.beginPath();
+        ctx.ellipse(rx+36, ry+12, 30+i*12, 4+i*2, 0, 0, Math.PI*2);
+        ctx.stroke();
+      }
+      // Hull shadow
+      ctx.fillStyle='#00000044';
+      ctx.beginPath(); ctx.ellipse(rx+36,ry+8,38,8,0,0,Math.PI*2); ctx.fill();
+      // Hull bottom dark
+      ctx.fillStyle = C.kayakDark;
+      ctx.beginPath(); ctx.ellipse(rx+36,ry+5,36,8,0,0,Math.PI); ctx.fill();
+      // Hull top
+      ctx.fillStyle = C.kayakHull;
+      ctx.beginPath(); ctx.ellipse(rx+36,ry+2,35,10,0,0,Math.PI*2); ctx.fill();
+      // Hull highlight
+      ctx.fillStyle = '#ee66aa';
+      ctx.beginPath(); ctx.ellipse(rx+28,ry-2,16,4,-0.2,0,Math.PI); ctx.fill();
+      // Deck stripe
+      ctx.strokeStyle='#ff88cc'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(rx+4,ry+2); ctx.lineTo(rx+68,ry+2); ctx.stroke();
+      // Cockpit rim
+      ctx.fillStyle='#442233';
+      ctx.beginPath(); ctx.ellipse(rx+35,ry+1,13,7,0,0,Math.PI*2); ctx.fill();
+      // Cockpit interior
+      ctx.fillStyle=C.uiGold;
+      ctx.beginPath(); ctx.ellipse(rx+35,ry,10,5,0,0,Math.PI*2); ctx.fill();
+      // Paddler body
+      ctx.fillStyle='#2255aa'; // jacket
+      ctx.fillRect(rx+28, ry-20, 14, 14);
+      // Head
+      ctx.fillStyle='#ffcc88';
+      ctx.beginPath(); ctx.arc(rx+35,ry-24,7,0,Math.PI*2); ctx.fill();
+      // Helmet
+      ctx.fillStyle='#ff4400';
+      ctx.beginPath(); ctx.arc(rx+35,ry-28,7,Math.PI,0); ctx.fill();
+      // GoPro
+      ctx.fillStyle='#111'; ctx.fillRect(rx+33,ry-32,4,3);
+      ctx.fillStyle='#4af'; ctx.fillRect(rx+34,ry-31,2,2);
+      // Paddle
+      ctx.strokeStyle='#aaaaaa'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(rx+2,ry-10); ctx.lineTo(rx+68,ry-10); ctx.stroke();
+      // Paddle blades — 16-bit chunky
+      ctx.fillStyle=C.kayakPadd;
+      ctx.fillRect(rx+1, ry-17, 10, 14);
+      ctx.fillStyle='#66aacc';
+      ctx.fillRect(rx+2, ry-15, 4, 10);
+      ctx.fillStyle=C.kayakPadd;
+      ctx.fillRect(rx+59, ry-17, 10, 14);
+      // FILMING label
+      ctx.fillStyle=C.uiCyan; ctx.font='5px "Press Start 2P",monospace';
+      ctx.fillText('▶ LIVE', rx+22, ry-36);
+
+      // Water splash — kayaker flicks paddle at the plane
+      const splashT = Date.now() / 400;
+      const splashPhase = this.phase;
+      // Animated arc of water droplets spraying left (toward the plane)
+      for (let i = 0; i < 8; i++) {
+        const angle = -Math.PI * 0.9 + i * (Math.PI * 0.14);
+        const dist = 18 + Math.sin(splashT * 1.3 + i * 0.6 + splashPhase) * 10 + i * 6;
+        const dropX = rx + 10 + Math.cos(angle) * dist;
+        const dropY = ry - 10 + Math.sin(angle) * dist * 0.55;
+        const alpha = 0.5 + Math.sin(splashT * 2 + i) * 0.3;
+        const size  = 2 + (i % 3);
+        ctx.fillStyle = `rgba(120,200,240,${alpha})`;
+        ctx.beginPath(); ctx.arc(dropX, dropY, size, 0, Math.PI * 2); ctx.fill();
+      }
+      // Paddle splash burst at blade tip
+      const burstX = rx + 2;
+      const burstY = ry - 10;
+      for (let i = 0; i < 5; i++) {
+        const a = -Math.PI * 0.7 + i * 0.28;
+        const d = 6 + Math.abs(Math.sin(splashT * 3 + i)) * 14;
+        ctx.fillStyle = `rgba(180,230,255,${0.6 - i * 0.1})`;
+        ctx.beginPath();
+        ctx.arc(burstX + Math.cos(a)*d, burstY + Math.sin(a)*d*0.5, 1.5, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+  };
+}
+
+function buildDrawbridge(x) {
+  const groundY = H - 28;
+  const armLen = 92, towerH = 105, towerW = 24;
+  return {
+    type:'drawbridge', x, y:groundY, w:210, h:towerH+armLen,
+    draw(ctx, sx) {
+      const rx = this.x - sx;
+      const gy = this.y;
+      if (drawSprite('drawbridge', rx-10, gy-towerH-armLen-10, 230, towerH+armLen+20)) return;
+      // Water channel under bridge
+      ctx.fillStyle = C.waterMid;
+      ctx.fillRect(rx+towerW, gy-18, 210-towerW*2, 22);
+      ctx.fillStyle = C.waterShine+'66';
+      ctx.fillRect(rx+towerW, gy-8, 210-towerW*2, 6);
+
+      const drawTower = (tx) => {
+        // Tower shadow
+        ctx.fillStyle='#00000033'; ctx.fillRect(tx+4,gy-towerH+4,towerW,towerH);
+        // Tower dark face
+        ctx.fillStyle=C.bridgeDark; ctx.fillRect(tx,gy-towerH,towerW,towerH);
+        // Tower mid face (dithered shading)
+        ctx.fillStyle=C.bridgeGray; ctx.fillRect(tx+4,gy-towerH,towerW-8,towerH);
+        // Tower light edge
+        ctx.fillStyle=C.bridgeLight; ctx.fillRect(tx+towerW-4,gy-towerH,4,towerH);
+        // Arch windows
+        for(let row=0;row<4;row++) {
+          const wy = gy - towerH + 12 + row*22;
+          ctx.fillStyle=C.bridgeDark; ctx.fillRect(tx+6,wy,towerW-12,14);
+          ctx.fillStyle='#445566'; ctx.fillRect(tx+7,wy+1,towerW-14,10);
+        }
+        // Top cap
+        ctx.fillStyle=C.bridgeLight; ctx.fillRect(tx-2,gy-towerH-4,towerW+4,6);
+        ctx.fillStyle=C.bridgeDark;  ctx.fillRect(tx,gy-towerH-8,towerW,4);
+      };
+      drawTower(rx); drawTower(rx+186);
+
+      // Draw raised arms with 16-bit shading
+      const drawArm = (ox, oy, angle) => {
+        ctx.save(); ctx.translate(ox, oy); ctx.rotate(angle);
+        // Arm shadow
+        ctx.fillStyle='#00000044'; ctx.fillRect(2,2,armLen,12);
+        // Arm dark face
+        ctx.fillStyle='#556633'; ctx.fillRect(0,0,armLen,12);
+        // Arm light top
+        ctx.fillStyle='#88aa44'; ctx.fillRect(0,0,armLen,4);
+        // Cross-beam details
+        for(let i=10;i<armLen-10;i+=18) {
+          ctx.fillStyle='#445522'; ctx.fillRect(i,2,4,10);
+        }
+        // Red tip
+        ctx.fillStyle=C.uiRed; ctx.fillRect(armLen-10,-2,10,16);
+        ctx.fillStyle='#ff6666'; ctx.fillRect(armLen-8,0,6,4);
+        ctx.restore();
+      };
+      drawArm(rx+towerW/2, gy-towerH*0.88, -Math.PI*0.55);
+      drawArm(rx+186+towerW/2, gy-towerH*0.88, Math.PI*0.55);
+
+      // Blink lights
+      const blink = Math.floor(Date.now()/400)%2;
+      ctx.fillStyle = blink ? '#ff4444' : '#441111';
+      ctx.beginPath(); ctx.arc(rx+towerW/2, gy-towerH+6, 6, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(rx+186+towerW/2, gy-towerH+6, 6, 0, Math.PI*2); ctx.fill();
+      if(blink) {
+        ctx.fillStyle='#ff444444';
+        ctx.beginPath(); ctx.arc(rx+towerW/2, gy-towerH+6, 12, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(rx+186+towerW/2, gy-towerH+6, 12, 0, Math.PI*2); ctx.fill();
+      }
+      // Label
+      ctx.fillStyle=C.uiGold; ctx.font='5px "Press Start 2P",monospace';
+      ctx.fillText('BRIDGE UP', rx+50, gy-towerH-12);
+      ctx.fillStyle='#aaaaaa'; ctx.font='5px monospace';
+      ctx.fillText('(forever, probably)', rx+40, gy-towerH-2);
+    },
+    hitTest(px,py,pw,ph) {
+      const bx=this.x;
+      if(rectsOverlap(px,py,pw,ph,bx,this.y-105,towerW,105)) return true;
+      if(rectsOverlap(px,py,pw,ph,bx+186,this.y-105,towerW,105)) return true;
+      const lax=bx+towerW/2, lay=this.y-92;
+      if(lineSegmentHitsRect(lax,lay,lax+Math.cos(-Math.PI*0.55)*92,lay+Math.sin(-Math.PI*0.55)*92,14,px,py,pw,ph)) return true;
+      const rax=bx+186+towerW/2;
+      if(lineSegmentHitsRect(rax,lay,rax+Math.cos(Math.PI*0.55)*92,lay+Math.sin(Math.PI*0.55)*92,14,px,py,pw,ph)) return true;
+      return false;
+    }
+  };
+}
+
+function buildSailboat(x) {
+  const y = H - 44;
+  const names = ['KNOT WORKING','SEATACKLE','VENTI WIND','CIRCLING BACK','PIVOT'];
+  return {
+    type:'sailboat', x, y, w:84, h:165,
+    hitX:x+12, hitY:y-135, hitW:60, hitH:148,
+    phase: Math.random()*Math.PI*2,
+    name: names[Math.floor(Math.random()*names.length)],
+    draw(ctx, sx) {
+      const rx = this.x - sx;
+      const t = Date.now()/900;
+      const bob = Math.sin(t+this.phase)*2.5;
+      const ry = this.y + bob;
+      if (drawSprite('sailboat', rx-10, ry-148, 104, 168)) return;
+      // Mast shadow
+      ctx.strokeStyle='#00000044'; ctx.lineWidth=5;
+      ctx.beginPath(); ctx.moveTo(rx+43,ry-142); ctx.lineTo(rx+43,ry-4); ctx.stroke();
+      // Mast
+      ctx.strokeStyle=C.uiWhite; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(rx+41,ry-142); ctx.lineTo(rx+41,ry-4); ctx.stroke();
+      // Boom
+      ctx.strokeStyle='#aaaaaa'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(rx+41,ry-10); ctx.lineTo(rx+70,ry-10); ctx.stroke();
+      // Main sail — layered shading
+      ctx.fillStyle = C.sailWhite+'cc';
+      ctx.beginPath();
+      ctx.moveTo(rx+41,ry-140); ctx.lineTo(rx+82,ry-55); ctx.lineTo(rx+41,ry-8); ctx.closePath(); ctx.fill();
+      // Sail shading (right edge darker)
+      ctx.fillStyle = C.sailBlue+'44';
+      ctx.beginPath();
+      ctx.moveTo(rx+62,ry-90); ctx.lineTo(rx+82,ry-55); ctx.lineTo(rx+56,ry-40); ctx.closePath(); ctx.fill();
+      // Sail highlight (left edge)
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.beginPath();
+      ctx.moveTo(rx+41,ry-140); ctx.lineTo(rx+55,ry-110); ctx.lineTo(rx+41,ry-80); ctx.closePath(); ctx.fill();
+      // Jib sail
+      ctx.fillStyle = C.sailRed+'aa';
+      ctx.beginPath();
+      ctx.moveTo(rx+41,ry-140); ctx.lineTo(rx+5,ry-42); ctx.lineTo(rx+41,ry-8); ctx.closePath(); ctx.fill();
+      ctx.fillStyle='#ee8888aa';
+      ctx.beginPath();
+      ctx.moveTo(rx+41,ry-140); ctx.lineTo(rx+22,ry-95); ctx.lineTo(rx+41,ry-80); ctx.closePath(); ctx.fill();
+      // Hull shadow
+      ctx.fillStyle='#00000033';
+      ctx.beginPath(); ctx.moveTo(rx+8,ry-6); ctx.lineTo(rx+78,ry-6); ctx.lineTo(rx+70,ry+18); ctx.lineTo(rx+18,ry+18); ctx.closePath(); ctx.fill();
+      // Hull dark bottom
+      ctx.fillStyle=C.hullDark;
+      ctx.beginPath(); ctx.moveTo(rx+10,ry+2); ctx.lineTo(rx+74,ry+2); ctx.lineTo(rx+66,ry+16); ctx.lineTo(rx+18,ry+16); ctx.closePath(); ctx.fill();
+      // Hull main
+      ctx.fillStyle=C.hullMid;
+      ctx.beginPath(); ctx.moveTo(rx+8,ry-8); ctx.lineTo(rx+76,ry-8); ctx.lineTo(rx+68,ry+4); ctx.lineTo(rx+16,ry+4); ctx.closePath(); ctx.fill();
+      // Hull waterline stripe
+      ctx.fillStyle=C.uiCyan;
+      ctx.fillRect(rx+10,ry-5,64,3);
+      // Hull highlight
+      ctx.fillStyle='#556677';
+      ctx.fillRect(rx+10,ry-8,64,4);
+      // Boat name
+      ctx.save(); ctx.translate(rx+42,ry+6); ctx.rotate(-0.12);
+      ctx.fillStyle='#00000099'; ctx.font='5px monospace'; ctx.fillText(this.name,-(this.name.length*2.8)+2,2);
+      ctx.fillStyle=C.uiGold; ctx.fillText(this.name,-(this.name.length*2.8),0);
+      ctx.restore();
+      // Crew member (tech bro)
+      ctx.fillStyle='#4466aa'; ctx.fillRect(rx+33,ry-18,12,14);
+      ctx.fillStyle='#ffcc88'; ctx.beginPath(); ctx.arc(rx+39,ry-22,6,0,Math.PI*2); ctx.fill();
+      // Phone (of course)
+      ctx.fillStyle='#222'; ctx.fillRect(rx+40,ry-20,4,6);
+      ctx.fillStyle='#66aaff'; ctx.fillRect(rx+41,ry-19,2,4);
+    }
+  };
+}
+
+// ============================================================
+// COLLISION
+// ============================================================
+function rectsOverlap(ax,ay,aw,ah,bx,by,bw,bh) {
+  return ax<bx+bw && ax+aw>bx && ay<by+bh && ay+ah>by;
+}
+function lineSegmentHitsRect(x1,y1,x2,y2,thick,rx,ry,rw,rh) {
+  for(let i=0;i<=12;i++) {
+    const t=i/12;
+    const px=x1+(x2-x1)*t, py=y1+(y2-y1)*t;
+    if(px>rx&&px<rx+rw&&py>ry&&py<ry+rh) return true;
+  }
+  return false;
+}
+function checkCollision(obs) {
+  // Plane position in WORLD coordinates
+  const px = (plane.x + scrollX) - plane.width/2;
+  const py = plane.y - plane.height/2;
+  const pw = plane.width - 8, ph = plane.height - 4;
+  if(obs.hitTest) return obs.hitTest(px, py, pw, ph);
+  return rectsOverlap(px, py, pw, ph,
+    obs.hitX ?? obs.x, obs.hitY ?? obs.y, obs.hitW ?? obs.w, obs.hitH ?? obs.h);
+}
+
+// ============================================================
+// LEVEL INIT
+// ============================================================
+function buildLandingZone() {
+  // Extra offset for level 5 which has more obstacles including the 737
+  const extra = level === 4 ? 600 : 0;
+  return { x: TOTAL_LEVEL_WIDTH - 520 + extra, w: 220, y: H-28 };
+}
+function initLevel(lvl) {
+  level=lvl;
+  scrollX=0; obstacles=[]; obstacleQueue=[...LEVELS[lvl].obstacles];
+  obstacleCooldown=200; orcas=[]; orcaSpawnTimer=0;
+  plane.x=120; plane.y=H/2; plane.vy=0; plane.trail=[];
+  landingZone=buildLandingZone();
+  initBuildings(); initMountains(); initClouds();
+  gameState='story'; storyLine=0; storyTimer=0; storyReady=false; invincTimer=0; songTitleTimer=0;
+}
+function buildBoeing737(x) {
+  // Giant 737 flies across mid-screen — player must go above or below
+  const flyY = 80 + Math.random() * 100; // upper half, leaving room below
+  const bW = 220, bH = 60;
+  return {
+    type: '737',
+    x, y: flyY,
+    w: bW, h: bH,
+    hitX: x + 10, hitY: flyY - bH/2 + 6, hitW: bW - 20, hitH: bH - 12,
+    draw(ctx, sx) {
+      const rx = this.x - sx;
+      const ry = this.y;
+
+      if (drawSprite('b737', rx - bW/2, ry - bH/2 - 30, bW, bH + 30)) return;
+
+      // === CANVAS FALLBACK — side-on 737 ===
+      // Engine exhaust trails
+      for(let i=1;i<=6;i++) {
+        ctx.fillStyle = `rgba(180,200,255,${0.10 - i*0.015})`;
+        ctx.fillRect(rx + bW/2 + i*12, ry - 8, 18, 16);
+      }
+      // Condensation trail (long)
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      ctx.fillRect(rx + bW/2 + 20, ry - 3, 180, 6);
+
+      // Shadow on ground
+      ctx.fillStyle = '#00000022';
+      ctx.beginPath();
+      ctx.ellipse(rx, H - 26, bW * 0.45, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Fuselage — main tube
+      ctx.fillStyle = '#c8d8ee'; // light aluminium
+      ctx.beginPath();
+      ctx.moveTo(rx - bW/2 + 30, ry - 14);
+      ctx.lineTo(rx + bW/2 - 10, ry - 12);
+      ctx.lineTo(rx + bW/2,      ry - 4);  // nose slope
+      ctx.lineTo(rx + bW/2,      ry + 4);
+      ctx.lineTo(rx + bW/2 - 10, ry + 12);
+      ctx.lineTo(rx - bW/2 + 30, ry + 14);
+      ctx.lineTo(rx - bW/2 + 10, ry + 10); // tail taper
+      ctx.lineTo(rx - bW/2,      ry + 4);
+      ctx.lineTo(rx - bW/2,      ry - 4);
+      ctx.lineTo(rx - bW/2 + 10, ry - 10);
+      ctx.closePath();
+      ctx.fill();
+
+      // Fuselage top shading (darker)
+      ctx.fillStyle = '#a8b8cc';
+      ctx.beginPath();
+      ctx.moveTo(rx - bW/2 + 10, ry - 10);
+      ctx.lineTo(rx + bW/2 - 10, ry - 12);
+      ctx.lineTo(rx + bW/2,      ry - 4);
+      ctx.lineTo(rx + bW/2 - 10, ry - 2);
+      ctx.lineTo(rx - bW/2 + 10, ry - 2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Fuselage underside (lighter)
+      ctx.fillStyle = '#e8f0ff';
+      ctx.beginPath();
+      ctx.moveTo(rx - bW/2 + 10, ry + 4);
+      ctx.lineTo(rx + bW/2 - 10, ry + 4);
+      ctx.lineTo(rx + bW/2,      ry + 4);
+      ctx.lineTo(rx - bW/2 + 10, ry + 14);
+      ctx.closePath();
+      ctx.fill();
+
+      // Main wing — swept back, large
+      ctx.fillStyle = '#b0c0d8';
+      ctx.beginPath();
+      ctx.moveTo(rx - 10, ry + 10);      // wing root leading
+      ctx.lineTo(rx - 80, ry + 50);      // wingtip leading
+      ctx.lineTo(rx - 100, ry + 50);     // wingtip trailing
+      ctx.lineTo(rx - 40, ry + 12);      // wing root trailing
+      ctx.closePath();
+      ctx.fill();
+      // Wing highlight
+      ctx.fillStyle = '#d0dff0';
+      ctx.beginPath();
+      ctx.moveTo(rx - 10, ry + 10);
+      ctx.lineTo(rx - 80, ry + 50);
+      ctx.lineTo(rx - 72, ry + 50);
+      ctx.lineTo(rx - 6, ry + 10);
+      ctx.closePath();
+      ctx.fill();
+
+      // Wing engines (two pods under wing)
+      const drawEngine = (ex, ey) => {
+        ctx.fillStyle = '#445566';
+        ctx.beginPath();
+        ctx.ellipse(ex, ey, 22, 9, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#223344';
+        ctx.beginPath();
+        ctx.ellipse(ex + 18, ey, 6, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#88aacc';
+        ctx.beginPath();
+        ctx.ellipse(ex - 18, ey, 6, 7, 0, 0, Math.PI * 2);
+        ctx.fill();
+      };
+      drawEngine(rx - 30, ry + 30);
+      drawEngine(rx - 58, ry + 42);
+
+      // Tail fin (vertical stabilizer)
+      ctx.fillStyle = '#b0c0d8';
+      ctx.beginPath();
+      ctx.moveTo(rx - bW/2 + 20, ry - 14);
+      ctx.lineTo(rx - bW/2 + 14, ry - 48); // fin top
+      ctx.lineTo(rx - bW/2 + 28, ry - 14);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#a0aabb';
+      ctx.beginPath();
+      ctx.moveTo(rx - bW/2 + 20, ry - 14);
+      ctx.lineTo(rx - bW/2 + 14, ry - 48);
+      ctx.lineTo(rx - bW/2 + 20, ry - 14);
+      ctx.closePath();
+      ctx.fill();
+
+      // Horizontal stabilizer (tail wings)
+      ctx.fillStyle = '#b0c0d8';
+      ctx.beginPath();
+      ctx.moveTo(rx - bW/2 + 22, ry + 8);
+      ctx.lineTo(rx - bW/2 - 8, ry + 30);
+      ctx.lineTo(rx - bW/2 - 12, ry + 30);
+      ctx.lineTo(rx - bW/2 + 12, ry + 8);
+      ctx.closePath();
+      ctx.fill();
+
+      // Windows row
+      for (let i = 0; i < 18; i++) {
+        const wx = rx + bW/2 - 28 - i * 10;
+        if (wx < rx - bW/2 + 30) break;
+        ctx.fillStyle = '#aaddff';
+        ctx.fillRect(wx, ry - 7, 6, 5);
+        ctx.fillStyle = '#88bbdd';
+        ctx.fillRect(wx + 1, ry - 6, 2, 2);
+      }
+
+      // Boeing livery stripe
+      ctx.fillStyle = '#2244aa';
+      ctx.fillRect(rx - bW/2 + 12, ry - 2, bW - 24, 3);
+      ctx.fillStyle = '#4466cc';
+      ctx.fillRect(rx - bW/2 + 12, ry - 5, bW - 24, 2);
+
+      // Label
+      ctx.fillStyle = C.uiRed;
+      ctx.font = '6px "Press Start 2P",monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('BOEING 737', rx - bW/6, ry - 22);
+      ctx.fillStyle = '#888888';
+      ctx.font = '5px monospace';
+      ctx.fillText('SEA→ ...somewhere', rx - bW/6, ry - 12);
+      ctx.textAlign = 'left';
+    }
+  };
+}
+
+function spawnNextObstacle() {
+  if(!obstacleQueue.length) return;
+  const type=obstacleQueue.shift(), x=scrollX+W+80;
+  let obs;
+  if(type==='latte') obs=buildLatte(x);
+  else if(type==='kayak') obs=buildKayak(x);
+  else if(type==='drawbridge') obs=buildDrawbridge(x);
+  else if(type==='sailboat') obs=buildSailboat(x);
+  else if(type==='737') obs=buildBoeing737(x);
+  if(obs) obstacles.push(obs);
+}
+
+// ============================================================
+// ORCA SYSTEM — breaching orcas that leap from the water
+// ============================================================
+let orcas = [];
+let orcaSpawnTimer = 0;
+const ORCA_SPAWN_INTERVAL = 280; // frames between possible spawns
+
+function spawnOrca() {
+  // Random x position ahead of the player, along the waterline
+  const ox = scrollX + W * 0.6 + Math.random() * W * 0.8;
+  orcas.push({
+    x: ox,
+    startY: H - 26,       // rises from waterline
+    t: 0,                  // animation progress 0→1→0 (breach arc)
+    duration: 90 + Math.random() * 40,  // frames for full breach
+    peakY: H - 26 - (120 + Math.random() * 100),  // how high it leaps
+    width: 44, height: 80,
+    hit: false,
+  });
+}
+
+function updateAndDrawOrcas() {
+  // Possibly spawn a new one
+  orcaSpawnTimer++;
+  if (orcaSpawnTimer > ORCA_SPAWN_INTERVAL && Math.random() < 0.018) {
+    spawnOrca();
+    orcaSpawnTimer = 0;
+  }
+
+  orcas = orcas.filter(o => o.t < o.duration * 2);
+
+  for (const o of orcas) {
+    o.t++;
+    // Parabolic arc: rises then falls back into water
+    const progress = o.t / o.duration; // 0→1 = rise, >1 = fall
+    const arcT = progress <= 1 ? progress : 2 - progress;
+    // Ease in/out with a sine curve
+    const ease = Math.sin(arcT * Math.PI * 0.5);
+    const oy = o.startY + (o.peakY - o.startY) * ease;
+
+    // Tilt: leaning forward on way up, backward on way down
+    const tilt = (progress <= 1 ? -0.35 : 0.25) * ease;
+
+    // Screen x (world → screen)
+    const rx = o.x - scrollX;
+
+    // Skip if off-screen
+    if (rx < -100 || rx > W + 100) continue;
+
+    // Collision check (only during ascent/peak when above water)
+    if (!o.hit && oy < H - 60 && invincTimer <= 0) {
+      const planeWX = plane.x + scrollX;
+      const planeWY = plane.y;
+      const dx = Math.abs(planeWX - o.x);
+      const dy = Math.abs(planeWY - oy);
+      if (dx < 36 && dy < 44) {
+        o.hit = true;
+        doCrash();
+      }
+    }
+
+    // Draw the orca
+    drawOrca(ctx, rx, oy, tilt, o.t, progress);
+
+    // Water splash at base when emerging/returning
+    if (arcT < 0.25 || (progress > 1 && arcT < 0.25)) {
+      drawOrcaSplash(ctx, rx, o.startY, arcT);
+    }
+  }
+}
+
+function drawOrca(ctx, rx, ry, tilt, t, progress) {
+  ctx.save();
+  ctx.translate(rx, ry);
+  ctx.rotate(tilt);
+
+  if (ASSETS.orca.loaded && ASSETS.orca.img) {
+    // Asset: draw centered, nose up
+    ctx.drawImage(ASSETS.orca.img, -24, -80, 48, 80);
+  } else {
+  // Main black body
+  ctx.fillStyle = '#111111';
+  ctx.beginPath();
+  ctx.moveTo(0, -40);          // snout tip
+  ctx.bezierCurveTo(18, -42, 28, -30, 30, -10);  // top back
+  ctx.bezierCurveTo(28, 10, 18, 22, 0, 24);       // bottom back
+  ctx.bezierCurveTo(-14, 22, -22, 10, -20, -10);  // belly bottom
+  ctx.bezierCurveTo(-18, -28, -12, -38, 0, -40);  // back to snout
+  ctx.closePath();
+  ctx.fill();
+
+  // White belly patch
+  ctx.fillStyle = '#f0f0f0';
+  ctx.beginPath();
+  ctx.moveTo(-4, -20);
+  ctx.bezierCurveTo(2, -22, 12, -18, 14, -4);
+  ctx.bezierCurveTo(12, 10, 4, 18, -4, 18);
+  ctx.bezierCurveTo(-14, 16, -16, 6, -14, -6);
+  ctx.bezierCurveTo(-12, -16, -8, -18, -4, -20);
+  ctx.closePath();
+  ctx.fill();
+
+  // White eye patch
+  ctx.fillStyle = '#e8e8e8';
+  ctx.beginPath();
+  ctx.ellipse(10, -24, 8, 5, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eye
+  ctx.fillStyle = '#111';
+  ctx.beginPath();
+  ctx.arc(12, -25, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(12.8, -25.8, 0.8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Dorsal fin (tall, iconic)
+  ctx.fillStyle = '#111111';
+  ctx.beginPath();
+  ctx.moveTo(6, -10);
+  ctx.lineTo(10, -52);   // fin tip
+  ctx.lineTo(22, -10);
+  ctx.closePath();
+  ctx.fill();
+  // Fin highlight edge
+  ctx.fillStyle = '#333';
+  ctx.beginPath();
+  ctx.moveTo(6, -10);
+  ctx.lineTo(9, -50);
+  ctx.lineTo(12, -10);
+  ctx.closePath();
+  ctx.fill();
+
+  // Pectoral fin (side)
+  ctx.fillStyle = '#111111';
+  ctx.beginPath();
+  ctx.moveTo(-2, 0);
+  ctx.lineTo(-28, 20);
+  ctx.lineTo(-18, 4);
+  ctx.closePath();
+  ctx.fill();
+
+  // Tail fluke (bottom, partially visible)
+  ctx.fillStyle = '#111111';
+  ctx.beginPath();
+  ctx.moveTo(-16, 18);
+  ctx.lineTo(-30, 36);
+  ctx.lineTo(-22, 22);
+  ctx.lineTo(-8, 30);
+  ctx.lineTo(-16, 18);
+  ctx.closePath();
+  ctx.fill();
+  // White tail notch
+  ctx.fillStyle = '#f0f0f0';
+  ctx.beginPath();
+  ctx.arc(-18, 28, 4, 0, Math.PI * 2);
+  ctx.fill();
+  } // end canvas fallback
+
+  // "SURPRISE" label on the way up (always shown, asset or canvas)
+  if (progress < 0.4) {
+    const alpha = Math.min(1, progress * 4);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = C.uiCyan;
+    ctx.font = '6px "Press Start 2P",monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('SURPRISE!', 0, -65);
+    ctx.textAlign = 'left';
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.restore();
+}
+
+function drawOrcaSplash(ctx, rx, ry, arcT) {
+  const alpha = 1 - arcT * 4;
+  if (alpha <= 0) return;
+  ctx.globalAlpha = alpha * 0.8;
+  ctx.fillStyle = C.waterFoam;
+  for (let i = 0; i < 6; i++) {
+    const angle = -Math.PI * 0.8 + i * (Math.PI * 0.32);
+    const dist = 18 + i * 6;
+    ctx.beginPath();
+    ctx.ellipse(
+      rx + Math.cos(angle) * dist,
+      ry + Math.sin(angle) * dist * 0.4 - 4,
+      4 + i * 2, 3, angle, 0, Math.PI * 2
+    );
+    ctx.fill();
+  }
+  // Big central splash column
+  ctx.fillStyle = C.waterShine;
+  ctx.fillRect(rx - 6, ry - 20, 12, 20);
+  ctx.globalAlpha = 1;
+}
+
+// ============================================================
+// INPUT
+// ============================================================
+const keys={};
+document.addEventListener('keydown', e=>{
+  keys[e.code]=true;
+  if(e.code==='Space') { handleSpace(); e.preventDefault(); }
+  if(['ArrowUp','ArrowDown','KeyW','KeyS'].includes(e.code)) e.preventDefault();
+
+  // Number keys 1–5: jump to that level from any state
+  const numMatch = e.code.match(/^Digit([1-5])$/);
+  if(numMatch) {
+    initAudio();
+    stopEngine();
+    stopMusic();
+    const lvl = parseInt(numMatch[1]) - 1;
+    lives = 3; score = 0;
+    initLevel(lvl);
+    updateTouchUI();
+    e.preventDefault();
+  }
+});
+document.addEventListener('keyup', e=>{ keys[e.code]=false; });
+
+// ── ON-SCREEN BUTTON TOUCH CONTROLS ──
+const btnUp   = document.getElementById('btnUp');
+const btnDown = document.getElementById('btnDown');
+const tapZone = document.getElementById('tapZone');
+
+function setClimb(on)  { keys['ArrowUp']   = on; }
+function setDive(on)   { keys['ArrowDown'] = on; }
+
+// Climb button
+btnUp.addEventListener('touchstart',  e=>{ initAudio(); setClimb(true);  e.preventDefault(); }, {passive:false});
+btnUp.addEventListener('touchend',    e=>{ setClimb(false); e.preventDefault(); }, {passive:false});
+btnUp.addEventListener('touchcancel', e=>{ setClimb(false); e.preventDefault(); }, {passive:false});
+// Mouse fallback for desktop testing
+btnUp.addEventListener('mousedown',  ()=>setClimb(true));
+btnUp.addEventListener('mouseup',    ()=>setClimb(false));
+btnUp.addEventListener('mouseleave', ()=>setClimb(false));
+
+// Dive button
+btnDown.addEventListener('touchstart',  e=>{ initAudio(); setDive(true);  e.preventDefault(); }, {passive:false});
+btnDown.addEventListener('touchend',    e=>{ setDive(false); e.preventDefault(); }, {passive:false});
+btnDown.addEventListener('touchcancel', e=>{ setDive(false); e.preventDefault(); }, {passive:false});
+btnDown.addEventListener('mousedown',  ()=>setDive(true));
+btnDown.addEventListener('mouseup',    ()=>setDive(false));
+btnDown.addEventListener('mouseleave', ()=>setDive(false));
+
+// Centre tap zone — advances state (same as spacebar)
+tapZone.addEventListener('touchstart', e=>{ initAudio(); handleSpace(); e.preventDefault(); }, {passive:false});
+tapZone.addEventListener('click', ()=>{ initAudio(); handleSpace(); });
+
+// Also let tapping either flight button advance state on non-playing screens
+function btnTapAdvance(e) {
+  if (gameState !== 'playing') { initAudio(); handleSpace(); }
+}
+btnUp.addEventListener('touchstart',   btnTapAdvance, {passive:false});
+btnDown.addEventListener('touchstart', btnTapAdvance, {passive:false});
+
+// Show/hide touch controls based on game state
+function updateTouchUI() {
+  const playing = gameState === 'playing';
+  btnUp.classList.toggle('hidden', !playing);
+  btnDown.classList.toggle('hidden', !playing);
+  tapZone.classList.toggle('hidden', playing);
+}
+
+let storyReady = false; // true once all lines shown, space can launch
+
+function handleSpace() {
+  initAudio();
+  if(gameState==='title')           { initLevel(0); startEngine(); playFoghorn(); }
+  else if(gameState==='story')      {
+    if(storyReady) { gameState='playing'; startEngine(); }
+    else { storyLine=LEVELS[level].story.length; storyReady=true; }
+  }
+  else if(gameState==='crashed')    { lives<=0 ? gameState='gameover' : (initLevel(level), startEngine()); }
+  else if(gameState==='landed')     { level+1>=LEVELS.length ? (gameState='win', winOrcaT=0) : (initLevel(level+1), startEngine(), playFoghorn()); }
+  else if(gameState==='gameover')   { lives=3; score=0; level=0; initLevel(0); startEngine(); playFoghorn(); }
+  else if(gameState==='win')        { lives=3; score=0; level=0; gameState='title'; stopEngine(); }
+  updateTouchUI();
+}
+
+// ============================================================
+// DRAW — BACKGROUND LAYERS
+// ============================================================
+function drawSky() {
+  const ld = LEVELS[level] || LEVELS[0];
+  if(drawBgAsset('bg_sky', 0, 0, W, H)) return;
+  // 16-bit sky: multi-band gradient
+  const bands = [
+    {y:0,    h:70,  col:ld.skyTop},
+    {y:70,   h:80,  col:interpolateColor(ld.skyTop, ld.skyBot, 0.33)},
+    {y:150,  h:80,  col:interpolateColor(ld.skyTop, ld.skyBot, 0.66)},
+    {y:230,  h:90,  col:ld.skyBot},
+    {y:320,  h:70,  col:interpolateColor(ld.skyBot, '#1a4a6e', 0.5)},
+  ];
+  bands.forEach(b=>{ ctx.fillStyle=b.col; ctx.fillRect(0,b.y,W,b.h); });
+}
+
+function interpolateColor(c1, c2, t) {
+  const r1=parseInt(c1.slice(1,3),16), g1=parseInt(c1.slice(3,5),16), b1=parseInt(c1.slice(5,7),16);
+  const r2=parseInt(c2.slice(1,3),16), g2=parseInt(c2.slice(3,5),16), b2=parseInt(c2.slice(5,7),16);
+  const r=Math.round(r1+(r2-r1)*t), g=Math.round(g1+(g2-g1)*t), b=Math.round(b1+(b2-b1)*t);
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+}
+
+function drawStars() {
+  // Only show in darker sky levels
+  const lvl = LEVELS[level] || LEVELS[0];
+  if(lvl.skyTop > '#2a') return;
+  for(let i=0;i<50;i++) {
+    const sx=((i*173+scrollX*0.01+i*7)%(W+20))-10;
+    const sy=(i*97)%(H*0.45);
+    const twinkle = Math.sin(Date.now()/500+i)*0.4+0.6;
+    ctx.fillStyle=`rgba(220,230,255,${twinkle*(i%3===0?0.9:0.5)})`;
+    ctx.fillRect(sx, sy, i%4===0?2:1, i%4===0?2:1);
+  }
+}
+
+function drawMountains(sx) {
+  bgMountains.forEach(m=>{
+    const mx = m.x - sx*0.12;
+    // Far shadow
+    ctx.fillStyle='#0a1520';
+    ctx.beginPath(); ctx.moveTo(mx-m.w/2+10,H-28); ctx.lineTo(mx+8,H-28-m.h+8); ctx.lineTo(mx+m.w/2+10,H-28); ctx.closePath(); ctx.fill();
+    // Main body dark
+    ctx.fillStyle='#1a2a3a';
+    ctx.beginPath(); ctx.moveTo(mx-m.w/2,H-28); ctx.lineTo(mx,H-28-m.h); ctx.lineTo(mx+m.w/2,H-28); ctx.closePath(); ctx.fill();
+    // Mid tone face
+    ctx.fillStyle='#2a3a4e';
+    ctx.beginPath(); ctx.moveTo(mx-m.w*0.15,H-28); ctx.lineTo(mx,H-28-m.h); ctx.lineTo(mx+m.w*0.3,H-28-m.h*0.3); ctx.closePath(); ctx.fill();
+    // Snow 3-layer
+    ctx.fillStyle='#e8eeff'; // bright
+    ctx.beginPath(); ctx.moveTo(mx-m.w*0.08,H-28-m.h*0.76); ctx.lineTo(mx,H-28-m.h); ctx.lineTo(mx+m.w*0.08,H-28-m.h*0.76); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#c8d8ee'; // mid snow
+    ctx.beginPath(); ctx.moveTo(mx-m.w*0.14,H-28-m.h*0.65); ctx.lineTo(mx-m.w*0.08,H-28-m.h*0.76); ctx.lineTo(mx+m.w*0.08,H-28-m.h*0.76); ctx.lineTo(mx+m.w*0.14,H-28-m.h*0.65); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#a8c0dd'; // shadow snow
+    ctx.beginPath(); ctx.moveTo(mx-m.w*0.18,H-28-m.h*0.56); ctx.lineTo(mx-m.w*0.14,H-28-m.h*0.65); ctx.lineTo(mx-m.w*0.06,H-28-m.h*0.6); ctx.closePath(); ctx.fill();
+  });
+}
+
+function drawBuildings(sx) {
+  if(ASSETS.bg_city.loaded && ASSETS.bg_city.img) {
+    const iw = ASSETS.bg_city.img.width || W;
+    for(let ox = -(sx*0.35 % iw); ox < W+iw; ox += iw)
+      drawBgAsset('bg_city', ox, H-28-180, iw, 180);
+    return;
+  }
+  // Far layer
+  bgBuildings.filter(b=>b.layer==='far').forEach(b=>{
+    const bx=(b.x - sx*0.28 + 5200)%5200 - 200;
+    // Building body — 3 shades
+    ctx.fillStyle=C.bldDark; ctx.fillRect(bx,H-28-b.h,b.w,b.h);
+    ctx.fillStyle=C.bldMid;  ctx.fillRect(bx+4,H-28-b.h,b.w-8,b.h);
+    ctx.fillStyle=C.bldLight; ctx.fillRect(bx+b.w-4,H-28-b.h,4,b.h);
+    // Windows
+    for(let r=0;r<b.winRows;r++) for(let c=0;c<b.winCols;c++) {
+      const on = Math.sin(bx*0.1+r*3.7+c*2.3) > 0;
+      ctx.fillStyle = on ? C.bldWindow : C.bldWindowOff;
+      ctx.fillRect(bx+4+c*12, H-28-b.h+8+r*18, 8, 10);
+    }
+    // Roof detail
+    ctx.fillStyle=C.bldLight; ctx.fillRect(bx-1,H-28-b.h-3,b.w+2,4);
+    ctx.fillStyle=C.bldDark;  ctx.fillRect(bx+b.w/2-2,H-28-b.h-8,4,6);
+  });
+  // Mid layer
+  bgBuildings.filter(b=>b.layer==='mid').forEach(b=>{
+    const bx=(b.x - sx*0.42 + 5200)%5200 - 200;
+    ctx.fillStyle=C.bldDark; ctx.fillRect(bx,H-28-b.h,b.w,b.h);
+    ctx.fillStyle=C.bldMid;  ctx.fillRect(bx+5,H-28-b.h,b.w-10,b.h);
+    ctx.fillStyle=C.bldLight; ctx.fillRect(bx+b.w-5,H-28-b.h,5,b.h);
+    for(let r=0;r<b.winRows;r++) for(let c=0;c<b.winCols;c++) {
+      const on = Math.sin(bx*0.15+r*4.1+c*1.9) > 0;
+      ctx.fillStyle = on ? C.bldWindow+'cc' : C.bldWindowOff;
+      ctx.fillRect(bx+6+c*13, H-28-b.h+8+r*17, 9, 11);
+    }
+    ctx.fillStyle=C.bldLight; ctx.fillRect(bx-2,H-28-b.h-4,b.w+4,5);
+  });
+}
+
+function drawClouds(sx) {
+  bgClouds.forEach(cl=>{
+    const cx=(cl.x - sx*cl.speed*0.25 + 3400)%3400 - 150;
+    const a=cl.opacity;
+    // Cloud body — multiple ellipses for puffy 16-bit look
+    ctx.fillStyle=`rgba(200,220,255,${a*0.6})`;
+    ctx.beginPath(); ctx.ellipse(cx, cl.y, cl.w/2, 16, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx+cl.w*0.22, cl.y-8, cl.w*0.3, 14, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx-cl.w*0.25, cl.y-4, cl.w*0.28, 11, 0, 0, Math.PI*2); ctx.fill();
+    // Cloud highlight
+    ctx.fillStyle=`rgba(240,248,255,${a*0.5})`;
+    ctx.beginPath(); ctx.ellipse(cx+cl.w*0.22, cl.y-10, cl.w*0.18, 8, 0, 0, Math.PI*2); ctx.fill();
+    // Cloud shadow bottom
+    ctx.fillStyle=`rgba(160,180,220,${a*0.3})`;
+    ctx.beginPath(); ctx.ellipse(cx, cl.y+4, cl.w/2-4, 7, 0, 0, Math.PI*2); ctx.fill();
+  });
+}
+
+function drawWater() {
+  const wy = H - 28;
+  // Deep water base
+  ctx.fillStyle = C.water; ctx.fillRect(0, wy, W, 28);
+  // Mid tone band
+  ctx.fillStyle = C.waterMid; ctx.fillRect(0, wy, W, 12);
+  // Surface shimmer — 16-bit style horizontal lines
+  const t = Date.now()/1000;
+  for(let i=0;i<5;i++) {
+    const wx = (i*160 + t*50 + scrollX*0.1) % (W+100) - 50;
+    ctx.fillStyle = C.waterShine;
+    ctx.fillRect(wx, wy+2, 40, 2);
+    ctx.fillRect(wx+80, wy+6, 25, 2);
+    ctx.fillRect(wx+130, wy+10, 35, 2);
+  }
+  // Shore/ground line — tiled with color bands
+  ctx.fillStyle = LEVELS[level]?.groundColor || C.ground;
+  ctx.fillRect(0, wy-3, W, 5);
+  ctx.fillStyle = C.groundLight;
+  ctx.fillRect(0, wy-5, W, 2);
+}
+
+function drawLandingZone() {
+  if(!landingZone) return;
+  const lx = landingZone.x - scrollX;
+  if(lx > W+100 || lx+landingZone.w < -100) return;
+  // Marked water strip
+  ctx.fillStyle = C.waterShine;
+  ctx.fillRect(lx, H-28, landingZone.w, 10);
+  // Flashing runway markers
+  const blink = Math.floor(Date.now()/280)%2;
+  const arrowCol = blink ? C.uiGreen : C.uiGold;
+  for(let i=0;i<5;i++) {
+    const arx = lx + 10 + i*(landingZone.w/5 - 4);
+    ctx.fillStyle = arrowCol;
+    ctx.beginPath(); ctx.moveTo(arx+8,H-32); ctx.lineTo(arx,H-42); ctx.lineTo(arx+16,H-42); ctx.closePath(); ctx.fill();
+    // Arrow glow
+    if(blink) { ctx.fillStyle=arrowCol+'44'; ctx.beginPath(); ctx.moveTo(arx+8,H-28); ctx.lineTo(arx-4,H-46); ctx.lineTo(arx+20,H-46); ctx.closePath(); ctx.fill(); }
+  }
+  // LAND HERE text with shadow
+  shadowText('LAND HERE', lx+landingZone.w/2 - 44, H-46, C.uiGreen, '#003300', 8);
+
+  const dist = landingZone.x - (scrollX + plane.x);
+  if(dist>50 && dist<700) {
+    shadowText(`LAKE UNION: ${Math.floor(dist)}m`, W/2-80, 30, C.uiCyan, '#001133', 7);
+  }
+}
+
+// ============================================================
+// DRAW — PLANE (16-bit with shading layers)
+// ============================================================
+function drawPlane() {
+  if(invincTimer>0 && Math.floor(invincTimer/4)%2) return;
+  const px=plane.x, py=plane.y;
+  const tilt=Math.max(-0.35, Math.min(0.35, plane.vy*0.07));
+
+  // Engine exhaust trail
+  plane.trail.push({x:px-32, y:py, age:0});
+  if(plane.trail.length>22) plane.trail.shift();
+  plane.trail.forEach((tr,i)=>{
+    tr.age++;
+    const a=1-tr.age/22;
+    const sz = 4 - tr.age/8;
+    ctx.fillStyle=`rgba(${138+Math.floor(tr.age*5)},238,220,${a*0.6})`;
+    if(sz>0) ctx.fillRect(tr.x, tr.y-sz/2, sz, sz);
+  });
+
+  if(ASSETS.plane.loaded) {
+    ctx.save(); ctx.translate(px,py); ctx.rotate(tilt);
+    drawSprite('plane', -30, -20, 60, 40);
+    ctx.restore(); return;
+  }
+
+  ctx.save(); ctx.translate(px,py); ctx.rotate(tilt);
+
+  // Drop shadow
+  ctx.fillStyle='#00000033';
+  ctx.beginPath(); ctx.ellipse(0,12,22,6,0,0,Math.PI*2); ctx.fill();
+
+  // Float/pontoons
+  ctx.fillStyle='#1a5a7a';
+  ctx.beginPath(); ctx.ellipse(-2,16,14,4,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#2a7a9a';
+  ctx.beginPath(); ctx.ellipse(-2,14,12,3.5,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#88ddf8'; ctx.fillRect(-12,12,4,4); // pontoon highlight
+
+  // Fuselage — 3 tone shading
+  // Dark underside
+  ctx.fillStyle=C.planeDark;
+  ctx.beginPath(); ctx.moveTo(28,0); ctx.lineTo(-10,6); ctx.lineTo(-26,3); ctx.lineTo(-26,0); ctx.lineTo(28,0); ctx.closePath(); ctx.fill();
+  // Main body
+  ctx.fillStyle=C.planeBody;
+  ctx.beginPath(); ctx.moveTo(28,0); ctx.lineTo(-10,-7); ctx.lineTo(-26,-3); ctx.lineTo(-26,3); ctx.lineTo(-10,6); ctx.closePath(); ctx.fill();
+  // Top highlight
+  ctx.fillStyle=C.planeLight;
+  ctx.beginPath(); ctx.moveTo(20,-1); ctx.lineTo(-6,-7); ctx.lineTo(-18,-3); ctx.lineTo(-14,0); ctx.closePath(); ctx.fill();
+  // Nose highlight
+  ctx.fillStyle=C.planeWhite;
+  ctx.beginPath(); ctx.moveTo(28,0); ctx.lineTo(20,-1); ctx.lineTo(16,1); ctx.closePath(); ctx.fill();
+
+  // Wings
+  ctx.fillStyle='#1a5a7a'; // dark shadow side
+  ctx.beginPath(); ctx.moveTo(6,-8); ctx.lineTo(-12,-8); ctx.lineTo(-16,-24); ctx.lineTo(-8,-22); ctx.closePath(); ctx.fill();
+  ctx.fillStyle=C.planeBody; // main wing
+  ctx.beginPath(); ctx.moveTo(8,-8); ctx.lineTo(-10,-8); ctx.lineTo(-14,-24); ctx.lineTo(-6,-22); ctx.closePath(); ctx.fill();
+  ctx.fillStyle=C.planeLight; // wing top highlight
+  ctx.beginPath(); ctx.moveTo(8,-8); ctx.lineTo(0,-8); ctx.lineTo(-4,-20); ctx.lineTo(-6,-22); ctx.closePath(); ctx.fill();
+  // Wing tip light
+  ctx.fillStyle='#ff4444';
+  ctx.fillRect(-16,-25,4,4);
+
+  // Tail fin
+  ctx.fillStyle=C.planeDark;
+  ctx.beginPath(); ctx.moveTo(-20,-3); ctx.lineTo(-26,-17); ctx.lineTo(-30,-3); ctx.closePath(); ctx.fill();
+  ctx.fillStyle=C.planeBody;
+  ctx.beginPath(); ctx.moveTo(-20,-3); ctx.lineTo(-24,-17); ctx.lineTo(-28,-3); ctx.closePath(); ctx.fill();
+  ctx.fillStyle=C.planeLight;
+  ctx.beginPath(); ctx.moveTo(-20,-3); ctx.lineTo(-21,-14); ctx.lineTo(-22,-3); ctx.closePath(); ctx.fill();
+
+  // Cockpit window — 16-bit multi-tone
+  ctx.fillStyle='#0a2a4a';
+  ctx.beginPath(); ctx.ellipse(12,-3,8,6,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#2a6a9a';
+  ctx.beginPath(); ctx.ellipse(12,-3,7,5,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#88ccee';
+  ctx.beginPath(); ctx.ellipse(10,-5,3,3,0,0,Math.PI*2); ctx.fill();
+
+  // Propeller
+  const pa=(Date.now()/28)*Math.PI/180;
+  ctx.strokeStyle=C.planeWhite; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(28+Math.cos(pa)*15,Math.sin(pa)*15); ctx.lineTo(28+Math.cos(pa+Math.PI)*15,Math.sin(pa+Math.PI)*15); ctx.stroke();
+  ctx.strokeStyle=C.planeDark; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(28+Math.cos(pa+0.1)*15,Math.sin(pa+0.1)*15); ctx.lineTo(28+Math.cos(pa+Math.PI+0.1)*15,Math.sin(pa+Math.PI+0.1)*15); ctx.stroke();
+
+  ctx.restore();
+}
+
+// ============================================================
+// HUD
+// ============================================================
+function drawHUD() {
+  // Top bar
+  ctx.fillStyle='#00000099'; ctx.fillRect(0,0,W,38);
+  ctx.fillStyle=C.uiBorder+'44'; ctx.fillRect(0,36,W,2);
+  // Border glow
+  ctx.strokeStyle=C.uiBorder+'66'; ctx.lineWidth=1; ctx.strokeRect(0,0,W,38);
+
+  // Lives — plane icons
+  for(let i=0;i<3;i++) {
+    ctx.fillStyle = i < lives ? C.uiRed : '#331111';
+    ctx.font='14px monospace'; ctx.fillText('✈', 10+i*22, 24);
+  }
+
+  // Score
+  ctx.fillStyle='#00000066'; ctx.fillRect(W-145,4,140,28);
+  ctx.fillStyle=C.uiGold; ctx.font='9px "Press Start 2P",monospace';
+  ctx.textAlign='right';
+  ctx.fillStyle='#886600'; ctx.fillText(`SCORE ${score.toString().padStart(6,'0')}`, W-9,25);
+  ctx.fillStyle=C.uiGold; ctx.fillText(`SCORE ${score.toString().padStart(6,'0')}`, W-10,24);
+  ctx.textAlign='left';
+
+  // Level name
+  ctx.textAlign='center';
+  shadowText(`LVL ${level+1}: ${LEVELS[level].name}`, W/2, 23, C.uiCyan, '#003344', 6);
+  ctx.textAlign='left';
+
+  // Altitude bar (right edge)
+  const altPct = Math.max(0, 1-(plane.y/(H-38)));
+  const barH = H-100;
+  ctx.fillStyle='#00000077'; ctx.fillRect(W-22, 42, 16, barH);
+  ctx.strokeStyle=C.uiBorder+'88'; ctx.lineWidth=1; ctx.strokeRect(W-22,42,16,barH);
+  const barFill = barH*altPct;
+  const altCol = altPct>0.5 ? C.uiGreen : altPct>0.25 ? C.uiGold : C.uiRed;
+  ctx.fillStyle=altCol+'44'; ctx.fillRect(W-21, 42+barH-barFill, 14, barFill);
+  ctx.fillStyle=altCol; ctx.fillRect(W-21, 42+barH-Math.min(barFill,4), 14, Math.min(barFill,4));
+  shadowText('ALT', W-19, H-36, C.uiWhite, '#000033', 5);
+
+  // Progress bar
+  const prog=Math.min(1, scrollX/(TOTAL_LEVEL_WIDTH-W-300));
+  ctx.fillStyle='#00000077'; ctx.fillRect(40, H-24, W-82, 12);
+  ctx.strokeStyle=C.uiBorder+'55'; ctx.lineWidth=1; ctx.strokeRect(40,H-24,W-82,12);
+  // Progress fill with 16-bit gradient bands
+  const pw2=(W-82)*prog;
+  ctx.fillStyle=C.uiGreen+'88'; ctx.fillRect(40,H-24,pw2,6);
+  ctx.fillStyle=C.uiCyan+'55'; ctx.fillRect(40,H-18,pw2,6);
+  // Plane marker on progress bar
+  ctx.fillStyle=C.uiGold;
+  ctx.fillRect(40+pw2-2, H-26, 4, 16);
+  shadowText('LAKE UNION', 44, H-28, C.uiWhite, '#000033', 5);
+}
+
+// ============================================================
+// SCREENS
+// ============================================================
+function drawTitleScreen() {
+  drawSky(); drawStars(); drawMountains(0); drawBuildings(0); drawClouds(0); drawWater();
+  if(ASSETS.title_bg.loaded) {
+    ctx.globalAlpha=0.4;
+    drawBgAsset('title_bg', 0, 0, W, H);
+    ctx.globalAlpha=1;
+  }
+  // Title panel
+  ctx.fillStyle='#00000099'; ctx.fillRect(50,50,W-100,H-100);
+  ctx.strokeStyle=C.uiBorder; ctx.lineWidth=3; ctx.strokeRect(50,50,W-100,H-100);
+  ctx.strokeStyle=C.uiGold+'66'; ctx.lineWidth=1; ctx.strokeRect(57,57,W-114,H-114);
+
+  shadowText('LAKE UNION', W/2-96, 112, C.uiCyan, '#002244', 22);
+  shadowText('LANDING', W/2-66, 146, C.uiGold, '#442200', 18);
+
+  ctx.fillStyle=C.uiWhite+'cc'; ctx.font='7px "Press Start 2P",monospace'; ctx.textAlign='center';
+  ctx.fillText('"navigating the most passive-aggressive', W/2, 178);
+  ctx.fillText('airspace in the pacific northwest"', W/2, 194);
+
+  ctx.fillStyle=C.uiCyan+'99'; ctx.font='6px "Press Start 2P",monospace';
+  ctx.fillText('☕ GIANT LATTES    🚤 KAYAKERS', W/2, 228);
+  ctx.fillText('⚓ SAILBOATS       🌉 DRAWBRIDGES', W/2, 246);
+
+  if(Math.floor(Date.now()/550)%2) {
+    shadowText('PRESS SPACE TO FLY', W/2-90, 296, C.uiGreen, '#003300', 10);
+  }
+  ctx.fillStyle=C.uiGray; ctx.font='6px "Press Start 2P",monospace';
+  ctx.fillText('feat. chuck "floatplane" mcgee', W/2, 322);
+  ctx.fillStyle=C.uiGray+'aa'; ctx.font='5px "Press Start 2P",monospace';
+  ctx.fillText('press 1-5 to jump to any level', W/2, 342);
+  ctx.textAlign='left';
+}
+
+function drawStoryScreen() {
+  const ld=LEVELS[level];
+  drawSky(); drawStars();
+  ctx.fillStyle='#00000099'; ctx.fillRect(70,44,W-140,H-88);
+  ctx.strokeStyle=C.uiGold; ctx.lineWidth=2; ctx.strokeRect(70,44,W-140,H-88);
+  ctx.strokeStyle=C.uiBorder+'55'; ctx.lineWidth=1; ctx.strokeRect(76,50,W-152,H-100);
+
+  ctx.textAlign='center';
+  shadowText(`LEVEL ${level+1}`, W/2, 88, C.uiGold, '#443300', 11);
+  shadowText(ld.name, W/2, 112, C.uiCyan, '#002244', 9);
+  ctx.fillStyle=C.uiRed+'cc'; ctx.font='6px "Press Start 2P",monospace';
+  ctx.fillText(ld.subtitle, W/2, 130);
+
+  ctx.fillStyle=C.uiWhite; ctx.font='7px "Press Start 2P",monospace';
+  ld.story.slice(0,storyLine).forEach((line,i)=>{
+    if(line==='') return;
+    shadowText(line, W/2, 162+i*19, C.uiWhite, '#000022', 7);
+  });
+
+  if(storyLine>=ld.story.length) {
+    if(Math.floor(Date.now()/500)%2) shadowText('PRESS SPACE TO FLY!', W/2, H-70, C.uiGreen, '#003300', 8);
+  } else {
+    ctx.fillStyle=C.uiGray; ctx.font='6px "Press Start 2P",monospace';
+    ctx.fillText('[space to skip]', W/2, H-70);
+  }
+  ctx.textAlign='left';
+}
+
+function drawCrashedScreen() {
+  drawSky(); drawWater();
+  ctx.fillStyle='rgba(180,20,20,0.35)'; ctx.fillRect(0,0,W,H);
+  // Explosion particles (static decorative)
+  for(let i=0;i<12;i++) {
+    const a=i/12*Math.PI*2, r=50+i*8;
+    const ex=W/2+Math.cos(a)*r, ey=H/2-40+Math.sin(a)*r;
+    ctx.fillStyle=i%2===0?C.sparkR:C.sparkY;
+    ctx.fillRect(ex-3,ey-3,6+(i%3)*4,6+(i%3)*4);
+  }
+  ctx.textAlign='center';
+  shadowText('SPLASHDOWN!', W/2-80, H/2-48, C.uiRed, '#440000', 20);
+  const lines=crashMsg.split('\n');
+  lines.forEach((l,i)=>{ ctx.fillStyle=C.uiWhite; ctx.font='8px "Press Start 2P",monospace'; ctx.fillText(l,W/2,H/2-8+i*20); });
+  ctx.fillStyle=C.uiGold; ctx.font='8px "Press Start 2P",monospace';
+  ctx.fillText(`LIVES REMAINING: ${lives}`, W/2, H/2+40);
+  if(lives>0) { if(Math.floor(Date.now()/600)%2) shadowText('PRESS SPACE TO RETRY', W/2-82, H/2+68, C.uiCyan, '#003344', 8); }
+  else         { if(Math.floor(Date.now()/600)%2) shadowText('PRESS SPACE: GAME OVER', W/2-90, H/2+68, C.uiRed, '#440000', 8); }
+  ctx.textAlign='left';
+}
+
+function drawLandedScreen() {
+  drawSky(); drawWater();
+  ctx.fillStyle='rgba(0,180,80,0.2)'; ctx.fillRect(0,0,W,H);
+  ctx.textAlign='center';
+  shadowText('SPLASH LANDING!', W/2-78, H/2-58, C.uiGreen, '#003300', 16);
+  const rm=LAND_MSGS[level%LAND_MSGS.length];
+  rm.split('\n').forEach((l,i)=>{ shadowText(l,W/2,H/2-16+i*24,C.uiGold,'#443300',9); });
+  shadowText(`SCORE: ${score}`, W/2, H/2+54, C.uiCyan, '#003344', 8);
+  if(Math.floor(Date.now()/600)%2) {
+    const nt=level+1<LEVELS.length?'PRESS SPACE: NEXT LEVEL':'PRESS SPACE: YOU WIN!';
+    shadowText(nt, W/2, H/2+82, C.uiWhite, '#223344', 8);
+  }
+  ctx.textAlign='left';
+}
+
+function drawGameOverScreen() {
+  drawSky(); drawStars(); drawWater();
+  ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(0,0,W,H);
+  ctx.textAlign='center';
+  shadowText('GAME OVER', W/2-66, H/2-40, C.uiRed, '#440000', 22);
+  shadowText(`FINAL SCORE: ${score}`, W/2, H/2+8, C.uiGold, '#443300', 9);
+  ctx.fillStyle=C.uiGray; ctx.font='7px "Press Start 2P",monospace';
+  ctx.fillText('"The kayakers have won. This time."', W/2, H/2+38);
+  if(Math.floor(Date.now()/600)%2) shadowText('PRESS SPACE TO TRY AGAIN', W/2-98, H/2+70, C.uiGold, '#443300', 8);
+  ctx.textAlign='left';
+}
+
+// ============================================================
+// ORCA CELEBRATION — coordinated jump sequence on final win
+// ============================================================
+let winOrcaT = 0; // increments every frame on win screen
+
+const WIN_ORCA_POSITIONS = [
+  { x: W*0.15, delay: 0,   dur: 100, peak: 180 },
+  { x: W*0.33, delay: 18,  dur: 110, peak: 210 },
+  { x: W*0.50, delay: 36,  dur: 120, peak: 240 },
+  { x: W*0.67, delay: 54,  dur: 110, peak: 210 },
+  { x: W*0.85, delay: 72,  dur: 100, peak: 180 },
+];
+
+function drawWinOrcas() {
+  const waterY = H - 28;
+  WIN_ORCA_POSITIONS.forEach((o, idx) => {
+    // Each orca loops: waits for delay, then breaches and returns, then repeats
+    const cycle = 260;
+    const t = (winOrcaT - o.delay);
+    if (t < 0) return;
+    const loopT = t % cycle;
+    if (loopT > o.dur * 2) return; // resting between loops
+
+    const progress = loopT / o.dur;
+    const arcT = progress <= 1 ? progress : 2 - progress;
+    const ease = Math.sin(arcT * Math.PI * 0.5);
+    const oy = waterY - o.peak * ease;
+    const tilt = (progress <= 1 ? -0.3 : 0.2) * ease;
+
+    // Splash when entering/leaving water
+    if (arcT < 0.18) {
+      const sa = arcT / 0.18;
+      ctx.globalAlpha = (1 - sa) * 0.9;
+      ctx.fillStyle = C.waterFoam;
+      for (let i = 0; i < 5; i++) {
+        const ang = -Math.PI * 0.7 + i * (Math.PI * 0.35);
+        const d = 12 + i * 8 * sa;
+        ctx.beginPath();
+        ctx.ellipse(o.x + Math.cos(ang)*d, waterY + Math.sin(ang)*d*0.3, 3+i, 2, ang, 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    drawOrca(ctx, o.x, oy, tilt, loopT, progress);
+  });
+  winOrcaT++;
+}
+
+function drawWinScreen() {
+  drawSky(); drawStars(); drawWater();
+
+  // Draw the celebratory orcas behind the text
+  drawWinOrcas();
+
+  ctx.fillStyle='rgba(0,0,20,0.55)'; ctx.fillRect(0,0,W,H);
+  ctx.textAlign='center';
+  shadowText('YOU LANDED!', W/2-64, 96, C.uiGold, '#443300', 14);
+  shadowText('Chuck McGee:', W/2, 132, C.uiCyan, '#003344', 8);
+  ctx.fillStyle=C.uiWhite; ctx.font='7px "Press Start 2P",monospace';
+  ctx.fillText('"I\'ve never been more caffeinated"', W/2, 154);
+  ctx.fillText('"in my entire life."', W/2, 172);
+  shadowText(`FINAL SCORE: ${score}`, W/2, 212, C.uiGreen, '#003300', 10);
+  ctx.fillStyle=C.uiGold; ctx.font='7px "Press Start 2P",monospace';
+  ctx.fillText('SEATTLE SEAPLANE PILOT CERT: ACHIEVED', W/2, 254);
+
+  // Orca count credit
+  ctx.fillStyle = C.uiCyan + 'cc';
+  ctx.font = '6px "Press Start 2P",monospace';
+  ctx.fillText('the orcas are proud of you', W/2, 278);
+
+  if(Math.floor(Date.now()/600)%2) shadowText('PRESS SPACE TO PLAY AGAIN', W/2-98, 316, C.uiWhite, '#223344', 8);
+  ctx.textAlign='left';
+}
+
+// ============================================================
+// MAIN LOOP
+// ============================================================
+let lastTime=0;
+function gameLoop(ts) {
+  lastTime=ts;
+  ctx.fillStyle=C.uiBg; ctx.fillRect(0,0,W,H);
+
+  if(gameState==='title')    { drawTitleScreen(); return void requestAnimationFrame(gameLoop); }
+  if(gameState==='crashed')  { drawCrashedScreen(); return void requestAnimationFrame(gameLoop); }
+  if(gameState==='landed')   { drawLandedScreen(); return void requestAnimationFrame(gameLoop); }
+  if(gameState==='gameover') { drawGameOverScreen(); return void requestAnimationFrame(gameLoop); }
+  if(gameState==='win')      { drawWinScreen(); return void requestAnimationFrame(gameLoop); }
+
+  if(gameState==='story') {
+    storyTimer++;
+    if(storyTimer%40===0 && storyLine<LEVELS[level].story.length) storyLine++;
+    if(storyLine>=LEVELS[level].story.length) storyReady=true;
+    drawStoryScreen();
+    return void requestAnimationFrame(gameLoop);
+  }
+
+  // PLAYING
+  const speed=LEVELS[level].speed;
+  if(keys['ArrowUp']||keys['KeyW']) plane.vy+=plane.thrust;
+  if(keys['ArrowDown']||keys['KeyS']) plane.vy+=0.4;
+  plane.vy+=plane.gravity;
+  plane.vy=Math.max(-plane.maxVy, Math.min(plane.maxVy+1, plane.vy));
+  plane.y+=plane.vy; scrollX+=speed;
+  if(invincTimer>0) invincTimer--;
+  if(plane.y<12) { plane.y=12; plane.vy=0; }
+
+  if(plane.y>=H-33) {
+    const wx=plane.x+scrollX;
+    if(wx>=landingZone.x && wx<=landingZone.x+landingZone.w) {
+      score+=100*(level+1)*lives; playCoinUp(); setTimeout(playLanding,100); setTimeout(playDrumSolo, 400);
+      gameState='landed'; stopEngine(); updateTouchUI();
+    } else if(invincTimer<=0) doCrash();
+  }
+
+  obstacleCooldown-=speed;
+  if(obstacleCooldown<=0 && obstacleQueue.length>0) { spawnNextObstacle(); obstacleCooldown=OBS_SPACING+Math.random()*80; }
+  obstacles=obstacles.filter(o=>o.x>scrollX-200);
+  if(invincTimer<=0) for(const obs of obstacles) if(checkCollision(obs)) { doCrash(); break; }
+  if(scrollX>landingZone.x+landingZone.w+W) doCrash();
+
+  // RENDER
+  drawSky(); drawStars(); drawMountains(scrollX); drawClouds(scrollX);
+  drawBuildings(scrollX); drawWater(); drawLandingZone();
+  obstacles.forEach(o=>o.draw(ctx,scrollX));
+  updateAndDrawOrcas();
+  drawPlane(); drawHUD(); drawSongTitle();
+  requestAnimationFrame(gameLoop);
+}
+
+function doCrash() {
+  if(invincTimer>0) return;
+  playCrash(); lives--; stopEngine();
+  crashMsg=CRASH_MSGS[Math.floor(Math.random()*CRASH_MSGS.length)];
+  gameState='crashed'; invincTimer=0;
+  updateTouchUI();
+}
+
+updateTouchUI();
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
