@@ -688,6 +688,7 @@ function clearBeat() {
 // === CONTROLS ===
 // =====================
 async function togglePlay() {
+  Tone.start(); // must be called synchronously within the gesture — iOS drops context after first await
   if (!synths.kick) await initAudio();
   STATE.isPlaying = !STATE.isPlaying;
   const btn = document.getElementById('btn-play');
@@ -729,6 +730,7 @@ let tapTimer = null;
 let tapInterval = null;
 
 async function tapInstrument(row) {
+  Tone.start();
   if (!synths.kick) await initAudio();
   if (!STATE.tapRecording) {
     startTapRecording();
@@ -1119,6 +1121,15 @@ function switchTab(tab) {
 // =====================
 buildSequencer();
 updateStats();
+
+// iOS Web Audio unlock — pre-warm the AudioContext on first touch so it's
+// already running by the time the user hits Play.
+document.addEventListener('touchstart', () => Tone.start(), { once: true, passive: true });
+
+// Show a hint on iOS since audio requires interaction
+if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+  setTimeout(() => showToast('Tap Play to enable audio 🔊'), 800);
+}
 </script>
 </body>
 </html>
