@@ -215,6 +215,21 @@
     font-size:1rem;padding:8px 18px;border-radius:20px;opacity:0;
     transition:all .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;}
   .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+  /* AUDIO PERMISSION BANNER */
+  #audio-prompt{position:fixed;bottom:calc(56px + env(safe-area-inset-bottom));left:0;right:0;
+    z-index:300;background:var(--card2);border-top:1px solid rgba(245,197,24,.35);
+    padding:12px 14px;display:none;align-items:center;gap:10px;
+    animation:fadeSlide .3s ease;}
+  #audio-prompt .ap-text{flex:1;font-family:'Fredoka One',cursive;font-size:.9rem;color:var(--text);}
+  #audio-prompt .ap-text span{display:block;font-size:.68rem;font-family:'Nunito',sans-serif;opacity:.6;margin-top:1px;}
+  .ap-accept{background:var(--gold);color:var(--jet);border:none;border-radius:var(--radius-sm);
+    padding:9px 16px;font-family:'Fredoka One',cursive;font-size:.9rem;cursor:pointer;
+    touch-action:manipulation;white-space:nowrap;}
+  .ap-accept:active{filter:brightness(1.1);}
+  .ap-dismiss{background:transparent;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.5);
+    border-radius:var(--radius-sm);padding:9px 12px;font-family:'Fredoka One',cursive;
+    font-size:.9rem;cursor:pointer;touch-action:manipulation;}
+  .ap-dismiss:active{background:rgba(255,255,255,.08);}
   /* DESKTOP ≥ 540px */
   @media(min-width:540px){
     #app{max-width:860px;padding:16px 16px 80px;gap:14px;}
@@ -490,6 +505,13 @@
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- AUDIO PERMISSION BANNER (mobile) -->
+<div id="audio-prompt">
+  <div class="ap-text">🔇 Audio is blocked<span>Tap to enable beat sounds</span></div>
+  <button class="ap-accept" id="ap-accept">Enable Audio</button>
+  <button class="ap-dismiss" id="ap-dismiss">✕</button>
+</div>
 
 <script>
 // =====================
@@ -1120,13 +1142,29 @@ function switchTab(tab) {
 buildSequencer();
 updateStats();
 
-// iOS Web Audio unlock — resume AudioContext on first touch anywhere on the page.
-document.addEventListener('touchstart', async () => { await Tone.start(); }, { once: true, passive: true });
+// Audio permission banner — shown on any touch device where the AudioContext
+// starts suspended and needs an explicit user gesture to unlock.
+(function() {
+  const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+  if (!isTouchDevice) return;
 
-// Show a hint on iOS since audio requires interaction
-if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-  setTimeout(() => showToast('Tap Play to enable audio 🔊'), 800);
-}
+  const prompt = document.getElementById('audio-prompt');
+  const acceptBtn = document.getElementById('ap-accept');
+  const dismissBtn = document.getElementById('ap-dismiss');
+
+  prompt.style.display = 'flex';
+
+  acceptBtn.addEventListener('click', async () => {
+    await Tone.start(); // this IS the user gesture — iOS unlocks AudioContext here
+    if (!synths.kick) await initAudio();
+    prompt.style.display = 'none';
+    showToast('Audio enabled 🔊');
+  });
+
+  dismissBtn.addEventListener('click', () => {
+    prompt.style.display = 'none';
+  });
+}());
 </script>
 </body>
 </html>
