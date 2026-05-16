@@ -780,7 +780,6 @@ async function togglePlay() {
 function setBPM(val) {
   STATE.bpm = parseInt(val);
   document.getElementById('bpm-display').textContent = val;
-  if (STATE.isPlaying) Tone.Transport.bpm.value = STATE.bpm;
 }
 
 function setMode(mode) {
@@ -851,7 +850,7 @@ const HINTS = {
 };
 
 async function gradeBeat() {
-  if (!synths.kick) await initAudio();
+  await unlockAudio();
   const filled = GRID.slice(0,4).flat().filter(Boolean).length;
   if (filled < 2) { setSpeak("Add some more beats first, fam! 🎹"); return; }
 
