@@ -43,7 +43,7 @@
   .tab.active{opacity:1;background:rgba(123,47,190,.15);border-top:2px solid var(--gold);}
   /* LAYOUT */
   .main-area{display:flex;flex-direction:column;gap:10px;}
-  /* STAGE — horizontal strip on mobile */
+  /* STAGE */
   .stage{background:var(--card);border-radius:var(--radius);padding:10px 12px;
     border:1px solid rgba(245,197,24,.15);display:flex;flex-direction:row;align-items:center;gap:12px;}
   .stage h2{display:none;}
@@ -73,31 +73,154 @@
   .playing-pulse #cheese-body{animation:cheese-glow .5s ease-in-out infinite alternate;}
   .playing-pulse #w-cheese-body{animation:cheese-glow .5s ease-in-out infinite alternate;}
   @keyframes cheese-glow{from{filter:drop-shadow(0 0 3px rgba(245,197,24,.4))}to{filter:drop-shadow(0 0 10px rgba(245,197,24,.9))}}
+
   /* BEAT LAB */
   .beat-lab{background:var(--card);border-radius:var(--radius);padding:12px;border:1px solid rgba(245,197,24,.15);}
   .beat-lab-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
   .beat-lab-header h2{font-size:.95rem;color:var(--gold-light);}
+
+  /* SEQUENCER */
   .sequencer{display:flex;flex-direction:column;gap:4px;}
-  .seq-row{display:grid;grid-template-columns:36px repeat(16,1fr);gap:2px;align-items:center;}
-  .seq-label{font-size:.58rem;font-weight:800;text-transform:uppercase;text-align:right;padding-right:3px;line-height:1;}
-  .seq-label.kick{color:#FF6B35;}.seq-label.snare{color:#FFD166;}
-  .seq-label.hihat{color:#06D6A0;}.seq-label.bass{color:#B06AE0;}
+  .seq-row{display:grid;grid-template-columns:44px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr;gap:2px;align-items:center;}
   .pad{aspect-ratio:1;border-radius:3px;border:1px solid rgba(255,255,255,.08);
     cursor:pointer;background:rgba(255,255,255,.07);position:relative;overflow:hidden;min-height:24px;touch-action:manipulation;}
   .pad::after{content:'';position:absolute;inset:0;background:white;opacity:0;transition:opacity .04s;}
-  .pad.active.kick{background:#FF6B35;border-color:#FF8C5A;box-shadow:0 0 5px rgba(255,107,53,.5);}
-  .pad.active.snare{background:#FFD166;border-color:#FFE08A;box-shadow:0 0 5px rgba(255,209,102,.5);}
-  .pad.active.hihat{background:#06D6A0;border-color:#2FFFC4;box-shadow:0 0 5px rgba(6,214,160,.5);}
-  .pad.active.bass{background:#B06AE0;border-color:#C97AF5;box-shadow:0 0 5px rgba(176,106,224,.5);}
+  .pad.active.kick  {background:#FF6B35;border-color:#FF8C5A;box-shadow:0 0 5px rgba(255,107,53,.5);}
+  .pad.active.snare {background:#FFD166;border-color:#FFE08A;box-shadow:0 0 5px rgba(255,209,102,.5);}
+  .pad.active.hihat {background:#06D6A0;border-color:#2FFFC4;box-shadow:0 0 5px rgba(6,214,160,.5);}
+  .pad.active.bass  {background:#B06AE0;border-color:#C97AF5;box-shadow:0 0 5px rgba(176,106,224,.5);}
+  .pad.active.keys  {background:#00E5FF;border-color:#66F0FF;box-shadow:0 0 5px rgba(0,229,255,.5);}
   .pad.playing::after{opacity:.4;}
   .pad:active{filter:brightness(1.4);}
-  .beat-marker{height:3px;margin:1px 0;display:grid;grid-template-columns:36px repeat(16,1fr);gap:2px;}
+
+  /* PLAYHEAD + BEAT MARKER */
+  .beat-marker{height:3px;margin:1px 0;display:grid;grid-template-columns:44px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr;gap:2px;}
   .beat-marker-item{border-radius:2px;background:rgba(255,255,255,.04);}
   .beat-marker-item.bar-start{background:rgba(245,197,24,.4);}
   .beat-marker-item.beat-start{background:rgba(245,197,24,.15);}
-  .playhead-row{display:grid;grid-template-columns:36px repeat(16,1fr);gap:2px;height:3px;margin-bottom:3px;}
+  .playhead-row{display:grid;grid-template-columns:44px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr;gap:2px;height:3px;margin-bottom:3px;}
+  .beat-number-row{height:10px;margin-bottom:1px;display:grid;grid-template-columns:44px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr;gap:2px;}
+  .beat-num{font-family:'Fredoka One',cursive;font-size:.46rem;color:rgba(245,197,24,.45);text-align:center;line-height:10px;letter-spacing:.3px;}
+  .beat-num.downbeat{color:rgba(245,197,24,.8);}
+  .pad.downbeat{background:rgba(245,197,24,.06);border-color:rgba(245,197,24,.3);border-radius:4px;}
+  .pad.downbeat.active{border-color:var(--gold);box-shadow:0 0 8px rgba(245,197,24,.55),0 0 5px rgba(245,197,24,.3);}
   .playhead-cell{border-radius:2px;background:transparent;transition:background .04s;}
   .playhead-cell.active{background:var(--gold);}
+
+  /* SLOT WRAPPER + ANIMATIONS */
+  .seq-slot-wrapper{display:flex;flex-direction:column;}
+  @keyframes slotAppear{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes slotRemove{from{opacity:1;transform:scaleY(1);max-height:60px}to{opacity:0;transform:scaleY(0.85);max-height:0}}
+  .slot-appearing{animation:slotAppear .25s cubic-bezier(.34,1.56,.64,1) forwards;}
+
+  /* LABEL CELL */
+  .seq-label-cell{
+    display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+    padding:2px 3px 2px 4px;border-radius:6px;cursor:pointer;position:relative;
+    border:1px solid transparent;transition:background .12s,border-color .12s;
+    min-height:24px;
+  }
+  .seq-label-cell:active{filter:brightness(1.3);}
+  .seq-label-cell.open{background:rgba(255,255,255,.06);}
+  .seq-label-text{font-family:'Fredoka One',cursive;font-size:.52rem;text-transform:uppercase;line-height:1;letter-spacing:.3px;}
+  .seq-label-sub{font-size:.42rem;font-family:'Nunito',sans-serif;opacity:.75;line-height:1;margin-top:1px;}
+  .seq-remove-btn{
+    position:absolute;top:1px;right:2px;width:14px;height:14px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:.5rem;opacity:.45;background:transparent;border:none;
+    color:inherit;cursor:pointer;border-radius:3px;padding:0;
+    touch-action:manipulation;transition:opacity .1s,background .1s;
+  }
+  .seq-remove-btn:hover,.seq-remove-btn:active{opacity:1;background:rgba(255,255,255,.12);}
+
+  /* INSTRUMENT PICKER */
+  .inst-picker{overflow:hidden;max-height:0;opacity:0;
+    transition:max-height .22s cubic-bezier(.4,0,.2,1),opacity .18s ease;margin-bottom:0;}
+  .inst-picker.open{max-height:140px;opacity:1;margin-bottom:3px;}
+  .inst-picker-inner{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
+    border-radius:8px;padding:6px;display:flex;flex-direction:column;gap:5px;}
+  .inst-choice-row{display:flex;gap:4px;}
+  .inst-choice-btn{
+    flex:1;padding:5px 2px;border-radius:6px;border:1.5px solid transparent;
+    background:rgba(255,255,255,.06);font-family:'Fredoka One',cursive;font-size:.6rem;
+    color:var(--text);cursor:pointer;display:flex;flex-direction:column;align-items:center;
+    gap:2px;touch-action:manipulation;transition:all .1s;
+  }
+  .inst-choice-btn .ic-emoji{font-size:.85rem;line-height:1;}
+  .inst-choice-btn .ic-name{font-size:.45rem;opacity:.7;}
+  .inst-choice-btn.selected{background:rgba(255,255,255,.1);}
+  .inst-choice-btn:active{transform:scale(.94);filter:brightness(1.3);}
+
+  /* KEYS CONFIG */
+  .keys-config{overflow:hidden;max-height:0;opacity:0;
+    transition:max-height .18s ease,opacity .15s ease;}
+  .keys-config.show{max-height:72px;opacity:1;}
+  .keys-config-inner{display:flex;flex-direction:column;gap:4px;padding-top:5px;
+    border-top:1px solid rgba(0,229,255,.2);}
+  .keys-config-row{display:flex;align-items:center;gap:4px;}
+  .keys-config-label{font-size:.48rem;color:#00E5FF;opacity:.75;width:34px;flex-shrink:0;
+    font-family:'Fredoka One',cursive;text-transform:uppercase;}
+  .note-btn,.octave-btn{
+    flex:1;padding:4px 2px;border-radius:5px;border:1.5px solid rgba(0,229,255,.2);
+    background:rgba(0,229,255,.05);color:#00E5FF;font-family:'Fredoka One',cursive;
+    font-size:.58rem;cursor:pointer;touch-action:manipulation;transition:all .08s;text-align:center;
+  }
+  .note-btn.selected,.octave-btn.selected{
+    background:rgba(0,229,255,.2);border-color:#00E5FF;box-shadow:0 0 6px rgba(0,229,255,.3);}
+  .note-btn:active,.octave-btn:active{transform:scale(.93);filter:brightness(1.4);}
+
+  /* ADD ROW BAR */
+  .add-row-bar{display:flex;align-items:center;justify-content:space-between;margin:6px 0 4px;padding:0 2px;}
+  .add-row-btn{
+    background:transparent;border:1.5px dashed rgba(245,197,24,.4);border-radius:8px;
+    padding:6px 14px;color:rgba(245,197,24,.7);font-family:'Fredoka One',cursive;
+    font-size:.78rem;cursor:pointer;touch-action:manipulation;transition:all .15s;letter-spacing:.3px;
+  }
+  .add-row-btn:hover,.add-row-btn:active{
+    border-color:var(--gold);color:var(--gold);
+    background:rgba(245,197,24,.08);box-shadow:0 0 10px rgba(245,197,24,.15);}
+  .row-count-badge{font-size:.6rem;font-family:'Fredoka One',cursive;
+    color:rgba(255,255,255,.3);letter-spacing:.5px;}
+  .row-count-badge span{color:rgba(255,255,255,.6);}
+  .row-count-badge.at-max span{color:var(--gold);}
+
+  /* RANDOM BEAT GENERATOR */
+  .genre-bar{display:flex;gap:6px;margin:8px 0 4px;align-items:stretch;}
+  .btn-surprise{
+    flex:1;padding:10px 8px;border:none;border-radius:var(--radius-sm);
+    background:linear-gradient(135deg,var(--pink),var(--purple-mid));
+    color:white;font-family:'Fredoka One',cursive;font-size:.88rem;
+    cursor:pointer;touch-action:manipulation;transition:all .12s;letter-spacing:.3px;
+  }
+  .btn-surprise:active{transform:scale(.96);filter:brightness(1.15);}
+  .genre-picker-wrap{position:relative;flex:1;}
+  .btn-genre-pick{
+    width:100%;height:100%;padding:10px 8px;border:1.5px solid rgba(245,197,24,.35);
+    border-radius:var(--radius-sm);background:rgba(245,197,24,.07);
+    color:var(--gold);font-family:'Fredoka One',cursive;font-size:.88rem;
+    cursor:pointer;touch-action:manipulation;transition:all .12s;
+  }
+  .btn-genre-pick:active,.btn-genre-pick.open{
+    background:rgba(245,197,24,.14);border-color:var(--gold);}
+  .genre-picker{
+    position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:50;
+    background:var(--card2);border:1px solid rgba(245,197,24,.25);
+    border-radius:var(--radius-sm);padding:8px;
+    display:flex;flex-wrap:wrap;gap:5px;
+    opacity:0;pointer-events:none;transform:translateY(-6px);
+    transition:opacity .18s ease,transform .18s ease;
+  }
+  .genre-picker.open{opacity:1;pointer-events:all;transform:translateY(0);}
+  .genre-pill{
+    padding:5px 10px;border-radius:20px;border:1.5px solid rgba(255,255,255,.15);
+    background:rgba(255,255,255,.06);color:var(--text);
+    font-family:'Fredoka One',cursive;font-size:.72rem;
+    cursor:pointer;touch-action:manipulation;transition:all .1s;white-space:nowrap;
+  }
+  .genre-pill:hover,.genre-pill:active{border-color:var(--gold);color:var(--gold);background:rgba(245,197,24,.1);}
+  .genre-pill.swanky{border-color:var(--pink);color:var(--pink);}
+  .genre-pill.swanky:hover,.genre-pill.swanky:active{background:rgba(255,45,120,.15);}
+
   /* CONTROLS */
   .controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
   .btn{padding:13px 10px;border:none;border-radius:var(--radius-sm);
@@ -115,6 +238,7 @@
   .bpm-control label{font-size:.7rem;opacity:.6;white-space:nowrap;}
   .bpm-control input[type=range]{flex:1;accent-color:var(--gold);}
   #bpm-display{font-family:'Fredoka One',cursive;color:var(--gold);min-width:28px;font-size:.9rem;}
+
   /* GRADE PANEL */
   .grade-panel{margin-top:10px;padding:12px;background:var(--card2);border-radius:var(--radius-sm);
     border:1px solid rgba(245,197,24,.1);display:none;}
@@ -133,24 +257,12 @@
   .grade-hint strong{color:var(--gold-light);}
   .score-bars{display:flex;flex-direction:column;gap:4px;margin:8px 0;}
   .score-bar-row{display:flex;align-items:center;gap:6px;font-size:.68rem;}
-  .score-bar-label{width:76px;opacity:.7;flex-shrink:0;}
+  .score-bar-label{width:80px;opacity:.7;flex-shrink:0;}
   .score-bar-track{flex:1;height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;}
   .score-bar-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.34,1.56,.64,1);background:var(--purple-light);}
-  .score-bar-val{width:28px;text-align:right;opacity:.8;flex-shrink:0;}
-  .pad.active.melody{background:#00E5FF;border-color:#66F0FF;box-shadow:0 0 5px rgba(0,229,255,.5);}
-  .seq-label.melody{color:#00E5FF;}
-  .melody-pad{font-size:.45rem;font-weight:800;color:rgba(255,255,255,.4);line-height:1;
-    display:flex;align-items:center;justify-content:center;letter-spacing:-.5px;}
-  .melody-pad.active{color:var(--jet);}
-  .seq-row-divider{height:1px;background:rgba(0,229,255,.15);margin:4px 0;}
-  /* Scale selector */
-  .scale-selector{display:flex;align-items:center;gap:6px;margin-top:6px;padding:6px 8px;
-    background:rgba(0,229,255,.06);border-radius:var(--radius-sm);border:1px solid rgba(0,229,255,.15);}
-  .scale-selector label{font-size:.65rem;color:#00E5FF;opacity:.8;white-space:nowrap;}
-  .scale-selector select{flex:1;background:rgba(0,0,0,.4);color:var(--text);border:1px solid rgba(0,229,255,.25);
-    border-radius:4px;padding:4px 6px;font-family:'Nunito',sans-serif;font-size:.72rem;cursor:pointer;}
-  .scale-selector select:focus{outline:none;border-color:#00E5FF;}
-  /* Voice pill */
+  .score-bar-val{width:32px;text-align:right;opacity:.8;flex-shrink:0;}
+
+  /* VOICE ROW */
   .voice-row{display:flex;align-items:center;gap:6px;margin-top:6px;
     padding:5px 8px;background:rgba(255,45,120,.06);border-radius:var(--radius-sm);border:1px solid rgba(255,45,120,.15);}
   .voice-row label{font-size:.65rem;color:var(--pink);opacity:.8;white-space:nowrap;}
@@ -168,18 +280,16 @@
     color:var(--text);font-family:'Fredoka One',cursive;font-size:.78rem;
     cursor:pointer;opacity:.5;transition:all .15s;touch-action:manipulation;}
   .mode-btn.active{background:var(--purple-mid);opacity:1;}
+
   /* LIVE TAP */
   .tap-area{display:none;}
   .tap-area.show{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
   .tap-btn{height:62px;border:none;border-radius:var(--radius-sm);
     font-family:'Fredoka One',cursive;font-size:.95rem;cursor:pointer;touch-action:manipulation;transition:all .06s;}
-  .tap-btn.kick-tap{background:#FF6B35;color:white;}
-  .tap-btn.snare-tap{background:#FFD166;color:var(--jet);}
-  .tap-btn.hihat-tap{background:#06D6A0;color:var(--jet);}
-  .tap-btn.bass-tap{background:#B06AE0;color:white;}
   .tap-btn:active{transform:scale(.93);filter:brightness(1.3);}
   .tap-progress{height:5px;background:rgba(255,255,255,.1);border-radius:3px;margin-top:6px;grid-column:1/-1;}
   .tap-progress-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .1s linear;width:0%;}
+
   /* WARDROBE */
   .wardrobe-panel{display:none;}
   .wardrobe-panel.active{display:flex;flex-direction:column;gap:10px;}
@@ -208,27 +318,49 @@
   .item-cost.owned{color:#06D6A0;}
   .equipped-badge{position:absolute;top:3px;right:3px;background:var(--gold);color:var(--jet);
     font-size:.48rem;font-weight:900;padding:1px 3px;border-radius:3px;}
+
+  /* TIER NAVIGATION */
+  .tier-nav{display:flex;gap:5px;margin-bottom:8px;}
+  .tier-pill{flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid transparent;cursor:pointer;
+    font-family:'Fredoka One',cursive;text-align:center;touch-action:manipulation;transition:all .15s;position:relative;}
+  .tier-pill .tp-num{display:block;font-size:1rem;line-height:1;}
+  .tier-pill .tp-name{display:block;font-size:.38rem;opacity:.75;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .tier-pill .tp-req{display:block;font-size:.38rem;opacity:.5;margin-top:1px;}
+  .tier-pill.locked{opacity:.38;cursor:default;}
+  .tier-pill.locked::after{content:'🔒';position:absolute;top:2px;right:4px;font-size:.55rem;}
+  .tier-1-pill{background:rgba(255,45,120,.1);border-color:rgba(255,45,120,.3);color:#FF2D78;}
+  .tier-1-pill.active{background:rgba(255,45,120,.22);border-color:#FF2D78;box-shadow:0 0 8px rgba(255,45,120,.3);}
+  .tier-2-pill{background:rgba(176,106,224,.1);border-color:rgba(176,106,224,.3);color:#B06AE0;}
+  .tier-2-pill.active{background:rgba(176,106,224,.22);border-color:#B06AE0;box-shadow:0 0 8px rgba(176,106,224,.3);}
+  .tier-3-pill{background:rgba(0,229,255,.07);border-color:rgba(0,229,255,.28);color:#00E5FF;}
+  .tier-3-pill.active{background:rgba(0,229,255,.16);border-color:#00E5FF;box-shadow:0 0 8px rgba(0,229,255,.25);}
+  .tier-4-pill{background:rgba(245,197,24,.07);border-color:rgba(245,197,24,.28);color:#F5C518;}
+  .tier-4-pill.active{background:rgba(245,197,24,.16);border-color:var(--gold);box-shadow:0 0 8px rgba(245,197,24,.25);}
+  .tier-locked-notice{text-align:center;padding:24px 10px;color:rgba(255,255,255,.45);
+    font-family:'Fredoka One',cursive;grid-column:1/-1;}
+  .tier-locked-notice .lock-emoji{font-size:2rem;display:block;margin-bottom:6px;}
+  .tier-locked-notice .lock-detail{font-size:.72rem;color:var(--gold);margin-top:4px;}
+
   /* TOAST */
   .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-60px);
     z-index:999;background:var(--gold);color:var(--jet);font-family:'Fredoka One',cursive;
     font-size:1rem;padding:8px 18px;border-radius:20px;opacity:0;
     transition:all .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;}
   .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
   /* AUDIO PERMISSION BANNER */
   #audio-prompt{position:fixed;bottom:calc(56px + env(safe-area-inset-bottom));left:0;right:0;
     z-index:300;background:var(--card2);border-top:1px solid rgba(245,197,24,.35);
-    padding:12px 14px;display:none;align-items:center;gap:10px;
-    animation:fadeSlide .3s ease;}
+    padding:12px 14px;display:none;align-items:center;gap:10px;animation:fadeSlide .3s ease;}
   #audio-prompt .ap-text{flex:1;font-family:'Fredoka One',cursive;font-size:.9rem;color:var(--text);}
   #audio-prompt .ap-text span{display:block;font-size:.68rem;font-family:'Nunito',sans-serif;opacity:.6;margin-top:1px;}
   .ap-accept{background:var(--gold);color:var(--jet);border:none;border-radius:var(--radius-sm);
-    padding:9px 16px;font-family:'Fredoka One',cursive;font-size:.9rem;cursor:pointer;
-    touch-action:manipulation;white-space:nowrap;}
+    padding:9px 16px;font-family:'Fredoka One',cursive;font-size:.9rem;cursor:pointer;touch-action:manipulation;white-space:nowrap;}
   .ap-accept:active{filter:brightness(1.1);}
   .ap-dismiss{background:transparent;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.5);
-    border-radius:var(--radius-sm);padding:9px 12px;font-family:'Fredoka One',cursive;
-    font-size:.9rem;cursor:pointer;touch-action:manipulation;}
+    border-radius:var(--radius-sm);padding:9px 12px;font-family:'Fredoka One',cursive;font-size:.9rem;cursor:pointer;touch-action:manipulation;}
   .ap-dismiss:active{background:rgba(255,255,255,.08);}
+
   /* DESKTOP ≥ 540px */
   @media(min-width:540px){
     #app{max-width:860px;padding:16px 16px 80px;gap:14px;}
@@ -239,9 +371,10 @@
     .stage h2{display:block;font-size:.9rem;color:var(--gold-light);}
     .stage-right{align-items:center;}
     .swanky-container{width:140px;height:158px;}
-    .seq-row{grid-template-columns:48px repeat(16,1fr);gap:4px;}
-    .beat-marker{grid-template-columns:48px repeat(16,1fr);gap:4px;}
-    .playhead-row{grid-template-columns:48px repeat(16,1fr);gap:4px;}
+    .seq-row{grid-template-columns:56px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr;gap:4px;}
+    .beat-marker{grid-template-columns:56px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr;gap:4px;}
+    .playhead-row{grid-template-columns:56px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr;gap:4px;}
+    .beat-number-row{grid-template-columns:56px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr;gap:4px;}
     .pad{min-height:30px;}
     .items-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));}
     .wardrobe-panel.active{flex-direction:row;}
@@ -292,15 +425,30 @@
           </div>
         </div>
 
+        <!-- Beat numbers -->
+        <div class="beat-number-row">
+          <div></div>
+          <div class="beat-num downbeat">1</div><div class="beat-num"></div><div class="beat-num"></div><div class="beat-num"></div>
+          <div></div>
+          <div class="beat-num downbeat">2</div><div class="beat-num"></div><div class="beat-num"></div><div class="beat-num"></div>
+          <div></div>
+          <div class="beat-num downbeat">3</div><div class="beat-num"></div><div class="beat-num"></div><div class="beat-num"></div>
+          <div></div>
+          <div class="beat-num downbeat">4</div><div class="beat-num"></div><div class="beat-num"></div><div class="beat-num"></div>
+        </div>
+
         <!-- Playhead -->
         <div class="playhead-row" id="playhead-row">
           <div></div>
           <div class="playhead-cell" id="ph-0"></div><div class="playhead-cell" id="ph-1"></div>
           <div class="playhead-cell" id="ph-2"></div><div class="playhead-cell" id="ph-3"></div>
+          <div></div>
           <div class="playhead-cell" id="ph-4"></div><div class="playhead-cell" id="ph-5"></div>
           <div class="playhead-cell" id="ph-6"></div><div class="playhead-cell" id="ph-7"></div>
+          <div></div>
           <div class="playhead-cell" id="ph-8"></div><div class="playhead-cell" id="ph-9"></div>
           <div class="playhead-cell" id="ph-10"></div><div class="playhead-cell" id="ph-11"></div>
+          <div></div>
           <div class="playhead-cell" id="ph-12"></div><div class="playhead-cell" id="ph-13"></div>
           <div class="playhead-cell" id="ph-14"></div><div class="playhead-cell" id="ph-15"></div>
         </div>
@@ -309,36 +457,37 @@
         <div class="beat-marker">
           <div></div>
           <div class="beat-marker-item bar-start"></div>
-          <div class="beat-marker-item"></div>
-          <div class="beat-marker-item"></div>
-          <div class="beat-marker-item"></div>
+          <div class="beat-marker-item"></div><div class="beat-marker-item"></div><div class="beat-marker-item"></div>
+          <div></div>
           <div class="beat-marker-item beat-start"></div>
-          <div class="beat-marker-item"></div>
-          <div class="beat-marker-item"></div>
-          <div class="beat-marker-item"></div>
+          <div class="beat-marker-item"></div><div class="beat-marker-item"></div><div class="beat-marker-item"></div>
+          <div></div>
           <div class="beat-marker-item beat-start"></div>
-          <div class="beat-marker-item"></div>
-          <div class="beat-marker-item"></div>
-          <div class="beat-marker-item"></div>
+          <div class="beat-marker-item"></div><div class="beat-marker-item"></div><div class="beat-marker-item"></div>
+          <div></div>
           <div class="beat-marker-item beat-start"></div>
-          <div class="beat-marker-item"></div>
-          <div class="beat-marker-item"></div>
-          <div class="beat-marker-item"></div>
+          <div class="beat-marker-item"></div><div class="beat-marker-item"></div><div class="beat-marker-item"></div>
         </div>
 
-        <!-- Sequencer Grid -->
+        <!-- Sequencer Grid (built by JS) -->
         <div class="sequencer" id="sequencer"></div>
 
-        <!-- Scale + Voice controls -->
-        <div class="scale-selector">
-          <label>🎵 Scale</label>
-          <select id="scale-select" onchange="setScale(this.value)">
-            <option value="major_pent">C Major Pentatonic</option>
-            <option value="minor_pent">A Minor Pentatonic</option>
-            <option value="blues">C Blues</option>
-            <option value="dorian">D Dorian</option>
-          </select>
+        <!-- Add Row Bar -->
+        <div class="add-row-bar">
+          <button class="add-row-btn" id="add-row-btn" onclick="addSlot()">+ Add Row</button>
+          <span class="row-count-badge" id="row-count-badge"><span>6</span> / 12 rows</span>
         </div>
+
+        <!-- Random Beat Generator -->
+        <div class="genre-bar">
+          <button class="btn-surprise" id="btn-surprise" onclick="surpriseMe()">🎲 Surprise Me!</button>
+          <div class="genre-picker-wrap">
+            <button class="btn-genre-pick" id="btn-genre-pick" onclick="toggleGenrePicker()">🎵 Pick Genre ▾</button>
+            <div class="genre-picker" id="genre-picker"></div>
+          </div>
+        </div>
+
+        <!-- Voice control -->
         <div class="voice-row">
           <label>🎤 Swanky's Voice</label>
           <label class="voice-toggle">
@@ -347,12 +496,9 @@
           </label>
           <span class="voice-phrases" id="voice-phrase-preview">"Swanky!" · "Drop the beat!"</span>
         </div>
+
+        <!-- Live Tap area (buttons built dynamically) -->
         <div class="tap-area" id="tap-area">
-          <button class="tap-btn kick-tap" onpointerdown="tapInstrument(0)">KICK 🔴</button>
-          <button class="tap-btn snare-tap" onpointerdown="tapInstrument(1)">SNARE 🟡</button>
-          <button class="tap-btn hihat-tap" onpointerdown="tapInstrument(2)">HI-HAT 🟢</button>
-          <button class="tap-btn bass-tap" onpointerdown="tapInstrument(3)">BASS 🟣</button>
-          <button class="tap-btn" style="background:#00E5FF;color:#1A1A1A;grid-column:1/-1;" onpointerdown="tapInstrument(4)">MELODY 🎵 — programs notes by timing</button>
           <div class="tap-progress"><div class="tap-progress-fill" id="tap-progress-fill"></div></div>
         </div>
 
@@ -363,7 +509,7 @@
           <button class="btn btn-grade" onclick="gradeBeat()">Grade It! 🎓</button>
           <div class="bpm-control">
             <label>BPM</label>
-            <input type="range" min="70" max="120" value="90" oninput="setBPM(this.value)">
+            <input type="range" min="70" max="140" value="90" id="bpm-range" oninput="setBPM(this.value)">
             <span id="bpm-display">90</span>
           </div>
         </div>
@@ -382,7 +528,7 @@
         </div>
       </div>
 
-      <!-- Swanky Stage: horizontal strip on mobile -->
+      <!-- Swanky Stage -->
       <div class="stage">
         <div class="stage-left">
           <div class="swanky-container">
@@ -424,8 +570,10 @@
                 </g>
                 <g id="cosmetic-mouth"></g>
                 <g id="cosmetic-body"></g>
+                <g id="cosmetic-hands"></g>
                 <g id="cosmetic-eyes"></g>
                 <g id="cosmetic-head"></g>
+                <g id="cosmetic-gear"></g>
               </g>
             </svg>
           </div>
@@ -481,8 +629,10 @@
               </g>
               <g id="w-cosmetic-mouth"></g>
               <g id="w-cosmetic-body"></g>
+              <g id="w-cosmetic-hands"></g>
               <g id="w-cosmetic-eyes"></g>
               <g id="w-cosmetic-head"></g>
+              <g id="w-cosmetic-gear"></g>
             </g>
           </svg>
         </div>
@@ -494,6 +644,7 @@
       </div>
       <div class="wardrobe-items">
         <h2>Your Wardrobe</h2>
+        <div class="tier-nav" id="tier-nav"></div>
         <div class="slot-tabs" id="slot-tabs"></div>
         <div class="items-grid" id="items-grid"></div>
       </div>
@@ -526,31 +677,46 @@ const STATE = {
   mode: 'step',
   tapRecording: false,
   tapStartTime: 0,
-  tapDuration: 8000, // 8 seconds for tap recording
-  equippedItems: { head: null, eyes: null, body: null, mouth: null, feet: null },
+  tapDuration: 8000,
+  equippedItems: { head: null, eyes: null, body: null, mouth: null, feet: null, hands: null, gear: null },
   unlockedItems: new Set(),
   gradeHistory: [],
   currentDanceIndex: 0,
   dances: ['dance-idle','dance-shimmy','dance-slide','dance-shake','dance-bounce','dance-dip','dance-swagger'],
 };
 
-// Beat grid: 4 rows (kick, snare, hihat, bass) x 16 steps
-const GRID = Array.from({length:5}, () => new Array(16).fill(false));
-const LABELS = ['Kick','Snare','Hi-Hat','Bass','Melody'];
-const LABEL_CLASSES = ['kick','snare','hihat','bass','melody'];
-
 // =====================
-// === SCALES & VOICE ===
+// === INSTRUMENT DATA MODEL ===
 // =====================
-const SCALES = {
-  major_pent: ['C4','D4','E4','G4','A4','C5','D5','E5','G5','A5','C6','D6','E6','G6','A6','C6'],
-  minor_pent: ['A3','C4','D4','E4','G4','A4','C5','D5','E5','G5','A5','C6','D6','E6','G6','A6'],
-  blues:      ['C4','Eb4','F4','Gb4','G4','Bb4','C5','Eb5','F5','Gb5','G5','Bb5','C6','Eb6','F6','G6'],
-  dorian:     ['D4','E4','F4','G4','A4','B4','C5','D5','E5','F5','G5','A5','B5','C6','D6','E6'],
+const INST_META = {
+  kick:  { label: 'Kick',   short: 'KICK', color: '#FF6B35', emoji: '🔴', cssClass: 'kick'  },
+  snare: { label: 'Snare',  short: 'SNAR', color: '#FFD166', emoji: '🟡', cssClass: 'snare' },
+  hihat: { label: 'Hi-Hat', short: 'HIHT', color: '#06D6A0', emoji: '🟢', cssClass: 'hihat' },
+  bass:  { label: 'Bass',   short: 'BASS', color: '#B06AE0', emoji: '🟣', cssClass: 'bass'  },
+  keys:  { label: 'Keys',   short: 'KEYS', color: '#00E5FF', emoji: '🎹', cssClass: 'keys'  },
 };
-let currentScale = 'major_pent';
-function setScale(val) { currentScale = val; buildSequencer(); }
+const NOTES = ['C','D','E','F','G','A','B'];
+const OCTAVES = ['low','mid','high'];
+const OCTAVE_NUM = { low: 3, mid: 4, high: 5 };
 
+function makeSlot(instrument = 'kick', note = 'C', octave = 'mid') {
+  return { instrument, note, octave, pattern: new Array(16).fill(false) };
+}
+
+let SLOTS = [
+  makeSlot('kick'),
+  makeSlot('snare'),
+  makeSlot('hihat'),
+  makeSlot('bass'),
+  makeSlot('keys', 'C', 'mid'),
+  makeSlot('keys', 'G', 'mid'),
+];
+
+let openPickerIndex = -1;
+
+// =====================
+// === VOICE ===
+// =====================
 const VOICE_START = ["Swanky!","Let's get cheesy!","Drop the beat!","Gouda vibes only!","It's cheddar time!","Let's get this cheddar!"];
 const VOICE_END = ["That's a wrap, cheddar!","Aged to perfection!","Mmm, that was sharp!","Fondue that again!","Oh that was gouda!","You're on a roll-e!"];
 
@@ -560,16 +726,15 @@ function speak(phrases) {
   window.speechSynthesis.cancel();
   const msg = new SpeechSynthesisUtterance(phrases[Math.floor(Math.random()*phrases.length)]);
   msg.rate = 1.05; msg.pitch = 1.3; msg.volume = 0.9;
-  // prefer a fun voice if available
   const voices = window.speechSynthesis.getVoices();
   const pick = voices.find(v => v.name.includes('Samantha') || v.name.includes('Google UK') || v.name.includes('Karen')) || voices[0];
   if (pick) msg.voice = pick;
   window.speechSynthesis.speak(msg);
 }
-// Pre-load voices
 if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+
 // =====================
-// === NATIVE WEB AUDIO ENGINE ===
+// === AUDIO ENGINE ===
 // =====================
 let _audioCtx = null;
 function getCtx() {
@@ -582,11 +747,15 @@ async function unlockAudio() {
 }
 
 const NOTE_FREQ = {
-  'A3':220.00,'Bb3':233.08,'B3':246.94,
+  'C3':130.81,'D3':146.83,'E3':164.81,'F3':174.61,'G3':196.00,'A3':220.00,'B3':246.94,
   'C4':261.63,'D4':293.66,'Eb4':311.13,'E4':329.63,'F4':349.23,'Gb4':369.99,'G4':392.00,'Ab4':415.30,'A4':440.00,'Bb4':466.16,'B4':493.88,
   'C5':523.25,'D5':587.33,'Eb5':622.25,'E5':659.25,'F5':698.46,'Gb5':739.99,'G5':783.99,'Ab5':830.61,'A5':880.00,'Bb5':932.33,'B5':987.77,
   'C6':1046.50,'D6':1174.66,'Eb6':1244.51,'E6':1318.51,'F6':1396.91,'G6':1567.98,'A6':1760.00,
 };
+
+function getKeyFreq(note, octave) {
+  return NOTE_FREQ[note + OCTAVE_NUM[octave]] || 440;
+}
 
 function playKick(t) {
   const ctx = getCtx();
@@ -638,17 +807,25 @@ function playMelodyNote(note, t) {
   osc.start(t); osc.stop(t + 0.35);
 }
 
-function triggerSound(row, col) {
-  const ctx = getCtx();
-  if (ctx.state !== 'running') return;
-  const t = ctx.currentTime + 0.01;
-  if (row === 0) playKick(t);
-  else if (row === 1) playSnare(t);
-  else if (row === 2) playHihat(t);
-  else if (row === 3) playBass(t);
-  else if (row === 4) playMelodyNote((col !== undefined ? getMelodyNote(col) : SCALES[currentScale][0]), t);
+function playSlot(slot, t) {
+  switch (slot.instrument) {
+    case 'kick':  playKick(t);  break;
+    case 'snare': playSnare(t); break;
+    case 'hihat': playHihat(t); break;
+    case 'bass':  playBass(t);  break;
+    case 'keys':  playMelodyNote(slot.note + OCTAVE_NUM[slot.octave], t); break;
+  }
 }
 
+function triggerSound(slotIdx) {
+  const ctx = getCtx();
+  if (ctx.state !== 'running') return;
+  playSlot(SLOTS[slotIdx], ctx.currentTime + 0.01);
+}
+
+// =====================
+// === SEQUENCER ENGINE ===
+// =====================
 let _seqTimer = null, _seqStep = 0, _seqNextTime = 0;
 const SEQ_LOOKAHEAD = 0.1, SEQ_TICK = 50;
 
@@ -657,14 +834,8 @@ function _seqSchedule() {
   const stepSecs = 60 / STATE.bpm / 4;
   while (_seqNextTime < ctx.currentTime + SEQ_LOOKAHEAD) {
     const s = _seqStep, t = _seqNextTime;
-    for (let row = 0; row < 5; row++) {
-      if (GRID[row][s]) {
-        if (row === 0) playKick(t);
-        else if (row === 1) playSnare(t);
-        else if (row === 2) playHihat(t);
-        else if (row === 3) playBass(t);
-        else if (row === 4) playMelodyNote(SCALES[currentScale][s], t);
-      }
+    for (let i = 0; i < SLOTS.length; i++) {
+      if (SLOTS[i].pattern[s]) playSlot(SLOTS[i], t);
     }
     const uiDelay = Math.max(0, (t - ctx.currentTime) * 1000);
     setTimeout(() => updatePlayhead(s), uiDelay);
@@ -691,65 +862,501 @@ function updatePlayhead(step) {
   document.querySelectorAll('.playhead-cell').forEach((el, i) => {
     el.classList.toggle('active', i === step);
   });
-  // flash pads
-  for (let row = 0; row < 4; row++) {
-    if (step >= 0 && GRID[row][step]) {
-      const pad = document.getElementById(`pad-${row}-${step}`);
+  SLOTS.forEach((slot, i) => {
+    if (step >= 0 && slot.pattern[step]) {
+      const pad = document.getElementById(`pad-${i}-${step}`);
       if (pad) { pad.classList.add('playing'); setTimeout(() => pad.classList.remove('playing'), 80); }
     }
-  }
+  });
 }
 
 // =====================
 // === SEQUENCER UI ===
 // =====================
-function getMelodyNote(col) {
-  return SCALES[currentScale][col];
-}
-function shortNote(note) {
-  return note.replace(/\d/, '');
-}
-
-function buildSequencer() {
+function renderSequencer() {
   const seq = document.getElementById('sequencer');
   seq.innerHTML = '';
-  for (let row = 0; row < 5; row++) {
-    if (row === 4) {
-      const divider = document.createElement('div');
-      divider.className = 'seq-row-divider';
-      seq.appendChild(divider);
+  SLOTS.forEach((slot, i) => seq.appendChild(buildSlotWrapper(slot, i)));
+  updateAddRowBar();
+  buildTapButtons();
+}
+
+function buildSlotWrapper(slot, i) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'seq-slot-wrapper';
+  wrapper.id = `slot-wrapper-${i}`;
+  wrapper.appendChild(buildSeqRow(slot, i));
+  wrapper.appendChild(buildInstPicker(slot, i));
+  return wrapper;
+}
+
+function buildSeqRow(slot, i) {
+  const meta = INST_META[slot.instrument];
+  const row = document.createElement('div');
+  row.className = 'seq-row';
+
+  // Label cell
+  const cell = document.createElement('div');
+  cell.className = `seq-label-cell ${meta.cssClass}`;
+  cell.style.color = meta.color;
+  cell.style.background = meta.color + '14';
+  cell.setAttribute('role', 'button');
+  cell.setAttribute('aria-label', `${meta.label} — tap to change instrument`);
+  cell.onclick = () => togglePicker(i);
+
+  const text = document.createElement('div');
+  text.className = 'seq-label-text';
+  text.textContent = meta.short;
+  cell.appendChild(text);
+
+  if (slot.instrument === 'keys') {
+    const sub = document.createElement('div');
+    sub.className = 'seq-label-sub';
+    const octLabel = slot.octave.charAt(0).toUpperCase() + slot.octave.slice(1);
+    sub.textContent = `${slot.note}·${octLabel}`;
+    cell.appendChild(sub);
+  }
+
+  const rmBtn = document.createElement('button');
+  rmBtn.className = 'seq-remove-btn';
+  rmBtn.textContent = '✕';
+  rmBtn.setAttribute('aria-label', 'Remove row');
+  rmBtn.style.display = SLOTS.length === 1 ? 'none' : '';
+  rmBtn.onclick = (e) => { e.stopPropagation(); removeSlot(i); };
+  cell.appendChild(rmBtn);
+
+  row.appendChild(cell);
+
+  for (let col = 0; col < 16; col++) {
+    const pad = document.createElement('button');
+    const isDownbeat = col % 4 === 0;
+    pad.className = `pad ${meta.cssClass}${isDownbeat ? ' downbeat' : ''}${slot.pattern[col] ? ' active' : ''}`;
+    pad.id = `pad-${i}-${col}`;
+    pad.setAttribute('aria-label', `Step ${col + 1}`);
+    pad.onclick = () => togglePad(i, col);
+    row.appendChild(pad);
+    if (col === 3 || col === 7 || col === 11) {
+      row.appendChild(document.createElement('div'));
     }
-    const rowEl = document.createElement('div');
-    rowEl.className = 'seq-row';
-    const label = document.createElement('div');
-    label.className = 'seq-label ' + LABEL_CLASSES[row];
-    label.textContent = LABELS[row];
-    rowEl.appendChild(label);
-    for (let col = 0; col < 16; col++) {
-      const pad = document.createElement('button');
-      pad.className = 'pad ' + LABEL_CLASSES[row] + (GRID[row][col] ? ' active' : '');
-      pad.id = 'pad-' + row + '-' + col;
-      if (row === 4) {
-        pad.textContent = shortNote(getMelodyNote(col));
-        pad.classList.add('melody-pad');
-      }
-      pad.onclick = () => togglePad(row, col);
-      rowEl.appendChild(pad);
-    }
-    seq.appendChild(rowEl);
+  }
+
+  return row;
+}
+
+function buildInstPicker(slot, i) {
+  const picker = document.createElement('div');
+  picker.className = 'inst-picker';
+  picker.id = `picker-${i}`;
+
+  const inner = document.createElement('div');
+  inner.className = 'inst-picker-inner';
+
+  // Instrument choice row
+  const choiceRow = document.createElement('div');
+  choiceRow.className = 'inst-choice-row';
+
+  Object.entries(INST_META).forEach(([key, meta]) => {
+    const btn = document.createElement('button');
+    btn.className = `inst-choice-btn${slot.instrument === key ? ' selected' : ''}`;
+    btn.style.color = meta.color;
+    if (slot.instrument === key) btn.style.borderColor = meta.color;
+    btn.innerHTML = `<span class="ic-emoji">${meta.emoji}</span><span class="ic-name">${meta.short}</span>`;
+    btn.onclick = () => setSlotInstrument(i, key);
+    choiceRow.appendChild(btn);
+  });
+  inner.appendChild(choiceRow);
+
+  // Keys config (only visible when keys is selected)
+  const keysConfig = document.createElement('div');
+  keysConfig.className = `keys-config${slot.instrument === 'keys' ? ' show' : ''}`;
+  keysConfig.id = `keys-config-${i}`;
+
+  const keysInner = document.createElement('div');
+  keysInner.className = 'keys-config-inner';
+
+  // Note row
+  const noteRow = document.createElement('div');
+  noteRow.className = 'keys-config-row';
+  const noteLabel = document.createElement('span');
+  noteLabel.className = 'keys-config-label';
+  noteLabel.textContent = 'Note';
+  noteRow.appendChild(noteLabel);
+  NOTES.forEach(n => {
+    const btn = document.createElement('button');
+    btn.className = `note-btn${slot.note === n ? ' selected' : ''}`;
+    btn.textContent = n;
+    btn.onclick = () => setSlotNote(i, n);
+    noteRow.appendChild(btn);
+  });
+  keysInner.appendChild(noteRow);
+
+  // Octave row
+  const octRow = document.createElement('div');
+  octRow.className = 'keys-config-row';
+  const octLabel = document.createElement('span');
+  octLabel.className = 'keys-config-label';
+  octLabel.textContent = 'Octave';
+  octRow.appendChild(octLabel);
+  OCTAVES.forEach(o => {
+    const btn = document.createElement('button');
+    btn.className = `octave-btn${slot.octave === o ? ' selected' : ''}`;
+    btn.textContent = o.charAt(0).toUpperCase() + o.slice(1);
+    btn.onclick = () => setSlotOctave(i, o);
+    octRow.appendChild(btn);
+  });
+  keysInner.appendChild(octRow);
+
+  keysConfig.appendChild(keysInner);
+  inner.appendChild(keysConfig);
+  picker.appendChild(inner);
+  return picker;
+}
+
+// =====================
+// === PICKER OPEN/CLOSE ===
+// =====================
+function togglePicker(i) {
+  const isOpen = openPickerIndex === i;
+  closeAllPickers();
+  if (!isOpen) openPicker(i);
+}
+
+function openPicker(i) {
+  openPickerIndex = i;
+  const picker = document.getElementById(`picker-${i}`);
+  if (picker) picker.classList.add('open');
+  const cell = document.querySelector(`#slot-wrapper-${i} .seq-label-cell`);
+  if (cell) { cell.classList.add('open'); cell.style.borderColor = INST_META[SLOTS[i].instrument].color; }
+}
+
+function closeAllPickers() {
+  document.querySelectorAll('.inst-picker.open').forEach(p => p.classList.remove('open'));
+  document.querySelectorAll('.seq-label-cell.open').forEach(c => { c.classList.remove('open'); c.style.borderColor = 'transparent'; });
+  openPickerIndex = -1;
+}
+
+// =====================
+// === SLOT MANAGEMENT ===
+// =====================
+function addSlot() {
+  if (SLOTS.length >= 12) return;
+  closeAllPickers();
+  SLOTS.push(makeSlot('kick'));
+  const seq = document.getElementById('sequencer');
+  const newWrapper = buildSlotWrapper(SLOTS[SLOTS.length - 1], SLOTS.length - 1);
+  newWrapper.classList.add('slot-appearing');
+  seq.appendChild(newWrapper);
+  updateAddRowBar();
+  updateRemoveButtons();
+  buildTapButtons();
+}
+
+function removeSlot(i) {
+  if (SLOTS.length <= 1) return;
+  closeAllPickers();
+  const wrapper = document.getElementById(`slot-wrapper-${i}`);
+  if (!wrapper) return;
+  wrapper.style.animation = 'slotRemove 0.2s ease forwards';
+  wrapper.style.overflow = 'hidden';
+  setTimeout(() => {
+    SLOTS.splice(i, 1);
+    renderSequencer();
+  }, 200);
+}
+
+function setSlotInstrument(i, instrument) {
+  closeAllPickers();
+  SLOTS[i].instrument = instrument;
+  if (instrument === 'keys') {
+    if (!SLOTS[i].note) SLOTS[i].note = 'C';
+    if (!SLOTS[i].octave) SLOTS[i].octave = 'mid';
+  }
+  const wrapper = document.getElementById(`slot-wrapper-${i}`);
+  if (!wrapper) return;
+  const newWrapper = buildSlotWrapper(SLOTS[i], i);
+  wrapper.replaceWith(newWrapper);
+  // Re-open picker on the rebuilt wrapper
+  openPicker(i);
+  // Audio preview (only if ctx is already running)
+  const ctx = getCtx();
+  if (ctx.state === 'running') triggerSound(i);
+  buildTapButtons();
+}
+
+function setSlotNote(i, note) {
+  SLOTS[i].note = note;
+  refreshSlotLabel(i);
+  refreshPickerNoteButtons(i);
+  const ctx = getCtx();
+  if (ctx.state === 'running') triggerSound(i);
+}
+
+function setSlotOctave(i, octave) {
+  SLOTS[i].octave = octave;
+  refreshSlotLabel(i);
+  refreshPickerOctaveButtons(i);
+  const ctx = getCtx();
+  if (ctx.state === 'running') triggerSound(i);
+}
+
+function refreshSlotLabel(i) {
+  const sub = document.querySelector(`#slot-wrapper-${i} .seq-label-sub`);
+  if (sub) {
+    const oct = SLOTS[i].octave;
+    sub.textContent = `${SLOTS[i].note}·${oct.charAt(0).toUpperCase() + oct.slice(1)}`;
   }
 }
 
-function togglePad(row, col) {
-  GRID[row][col] = !GRID[row][col];
-  const pad = document.getElementById('pad-' + row + '-' + col);
-  pad.classList.toggle('active', GRID[row][col]);
-  if (GRID[row][col]) triggerSound(row, col);
+function refreshPickerNoteButtons(i) {
+  const config = document.getElementById(`keys-config-${i}`);
+  if (!config) return;
+  config.querySelectorAll('.note-btn').forEach((btn, idx) => {
+    btn.classList.toggle('selected', NOTES[idx] === SLOTS[i].note);
+  });
+}
+
+function refreshPickerOctaveButtons(i) {
+  const config = document.getElementById(`keys-config-${i}`);
+  if (!config) return;
+  config.querySelectorAll('.octave-btn').forEach((btn, idx) => {
+    btn.classList.toggle('selected', OCTAVES[idx] === SLOTS[i].octave);
+  });
+}
+
+function updateAddRowBar() {
+  const btn = document.getElementById('add-row-btn');
+  const badge = document.getElementById('row-count-badge');
+  if (btn) btn.style.display = SLOTS.length >= 12 ? 'none' : '';
+  if (badge) {
+    badge.innerHTML = `<span>${SLOTS.length}</span> / 12 rows`;
+    badge.classList.toggle('at-max', SLOTS.length === 12);
+  }
+}
+
+function updateRemoveButtons() {
+  document.querySelectorAll('.seq-remove-btn').forEach(btn => {
+    btn.style.display = SLOTS.length === 1 ? 'none' : '';
+  });
+}
+
+// =====================
+// === RANDOM BEAT GENERATOR ===
+// =====================
+const GENRE_TEMPLATES = {
+  hiphop: {
+    name:'Hip Hop', emoji:'🎤', bpm:88,
+    slots:[
+      { instrument:'kick',  note:'C', octave:'mid',  prob:[1.0,0,0,0.3, 0,0,0.8,0, 0.9,0,0,0.3, 0,0,0.5,0] },
+      { instrument:'snare', note:'C', octave:'mid',  prob:[0,0,0,0, 0.95,0,0,0.3, 0,0,0,0, 0.95,0,0,0.2] },
+      { instrument:'hihat', note:'C', octave:'mid',  prob:[0.7,0,0.6,0, 0.7,0,0.5,0, 0.7,0.3,0.6,0, 0.7,0,0.5,0.4] },
+      { instrument:'bass',  note:'C', octave:'low',  prob:[0.9,0,0,0, 0,0,0.7,0, 0.8,0,0,0, 0,0,0.5,0] },
+      { instrument:'keys',  note:'C', octave:'mid',  prob:[0,0,0,0, 0.4,0,0,0, 0,0,0,0, 0.35,0,0,0] },
+      { instrument:'keys',  note:'G', octave:'mid',  prob:[0,0,0,0, 0,0,0,0.35, 0,0,0,0, 0,0,0,0.3] },
+    ]
+  },
+  techno: {
+    name:'Techno', emoji:'🤖', bpm:128,
+    slots:[
+      { instrument:'kick',  note:'C', octave:'mid',  prob:[1.0,0,0,0, 1.0,0,0,0, 1.0,0,0,0, 1.0,0,0,0] },
+      { instrument:'snare', note:'C', octave:'mid',  prob:[0,0,0,0, 0.9,0,0,0.2, 0,0,0,0, 0.9,0,0.15,0] },
+      { instrument:'hihat', note:'C', octave:'mid',  prob:[0.8,0,0.8,0, 0.8,0,0.8,0, 0.8,0,0.8,0, 0.8,0,0.8,0.4] },
+      { instrument:'bass',  note:'C', octave:'low',  prob:[0.9,0,0,0.5, 0,0,0.5,0, 0.9,0,0,0.5, 0,0,0.5,0] },
+      { instrument:'keys',  note:'A', octave:'high', prob:[0,0,0,0, 0,0.6,0,0, 0,0,0,0, 0,0.6,0,0] },
+      { instrument:'keys',  note:'E', octave:'high', prob:[0,0,0,0, 0,0,0,0, 0,0.5,0,0, 0,0,0,0.5] },
+    ]
+  },
+  jazz: {
+    name:'Jazz', emoji:'🎷', bpm:96,
+    slots:[
+      { instrument:'kick',  note:'C', octave:'mid',  prob:[1.0,0,0,0, 0,0,0.4,0, 0.5,0,0,0, 0,0,0.35,0] },
+      { instrument:'snare', note:'C', octave:'mid',  prob:[0,0,0,0, 0.85,0,0,0.5, 0,0.4,0,0, 0.85,0,0,0.4] },
+      { instrument:'hihat', note:'C', octave:'mid',  prob:[0.5,0,0.7,0, 0.5,0,0.7,0, 0.5,0,0.7,0, 0.5,0,0.65,0] },
+      { instrument:'bass',  note:'G', octave:'low',  prob:[0.8,0,0,0.5, 0,0.4,0,0, 0.6,0,0.4,0, 0,0.5,0,0] },
+      { instrument:'keys',  note:'D', octave:'mid',  prob:[0.4,0,0,0, 0,0,0.4,0, 0,0,0,0.35, 0,0,0,0.3] },
+    ]
+  },
+  romance: {
+    name:'Slow Romance', emoji:'💕', bpm:72,
+    slots:[
+      { instrument:'kick',  note:'C', octave:'mid',  prob:[1.0,0,0,0, 0,0,0,0, 0.7,0,0,0, 0,0,0,0] },
+      { instrument:'snare', note:'C', octave:'mid',  prob:[0,0,0,0, 0.8,0,0,0, 0,0,0,0, 0.6,0,0,0] },
+      { instrument:'hihat', note:'C', octave:'mid',  prob:[0.4,0,0.3,0, 0.4,0,0.3,0, 0.4,0,0.3,0, 0.4,0,0.3,0] },
+      { instrument:'bass',  note:'C', octave:'low',  prob:[0.7,0,0,0, 0,0,0,0, 0.6,0,0,0, 0,0,0,0] },
+      { instrument:'keys',  note:'E', octave:'mid',  prob:[0,0,0.4,0, 0,0,0,0.4, 0,0,0.35,0, 0,0,0,0.35] },
+    ]
+  },
+  house: {
+    name:'Dance / House', emoji:'🕺', bpm:124,
+    slots:[
+      { instrument:'kick',  note:'C', octave:'mid',  prob:[1.0,0,0,0, 1.0,0,0,0, 1.0,0,0,0, 1.0,0,0,0] },
+      { instrument:'snare', note:'C', octave:'mid',  prob:[0,0,0,0, 0.9,0,0,0, 0,0,0,0, 0.9,0,0,0] },
+      { instrument:'hihat', note:'C', octave:'mid',  prob:[0,0.8,0,0.8, 0,0.8,0,0.8, 0,0.8,0,0.8, 0,0.8,0,0.8] },
+      { instrument:'bass',  note:'C', octave:'low',  prob:[0.8,0,0,0, 0,0.5,0,0, 0.8,0,0,0, 0,0.5,0,0] },
+      { instrument:'keys',  note:'F', octave:'mid',  prob:[0.6,0,0,0, 0,0,0,0, 0.5,0,0,0, 0,0,0,0] },
+      { instrument:'keys',  note:'A', octave:'mid',  prob:[0,0,0,0, 0.5,0,0,0, 0,0,0,0, 0.45,0,0,0] },
+      { instrument:'keys',  note:'C', octave:'high', prob:[0,0,0,0.4, 0,0,0,0, 0,0,0,0.35, 0,0,0,0] },
+    ]
+  },
+  showtunes: {
+    name:'Show Tunes', emoji:'🎭', bpm:108,
+    slots:[
+      { instrument:'kick',  note:'C', octave:'mid',  prob:[1.0,0,0,0, 0,0,0,0, 0.8,0,0,0, 0,0,0.4,0] },
+      { instrument:'snare', note:'C', octave:'mid',  prob:[0,0,0,0, 0.85,0,0,0.3, 0,0,0,0, 0.85,0,0,0.25] },
+      { instrument:'hihat', note:'C', octave:'mid',  prob:[0.6,0,0.5,0, 0.6,0,0.5,0, 0.6,0,0.5,0, 0.6,0,0.5,0] },
+      { instrument:'bass',  note:'G', octave:'low',  prob:[0.7,0,0,0, 0.5,0,0,0, 0.7,0,0,0, 0.5,0,0,0] },
+      { instrument:'keys',  note:'C', octave:'mid',  prob:[0.5,0,0,0, 0,0.4,0,0, 0.4,0,0,0, 0,0.4,0,0] },
+      { instrument:'keys',  note:'E', octave:'mid',  prob:[0,0,0.4,0, 0,0,0,0.4, 0,0,0.35,0, 0,0,0,0.35] },
+      { instrument:'keys',  note:'G', octave:'mid',  prob:[0,0,0,0.35, 0,0,0,0, 0,0,0,0.3, 0,0,0,0] },
+    ]
+  },
+  reggae: {
+    name:'Reggae', emoji:'🌴', bpm:84,
+    slots:[
+      { instrument:'kick',  note:'C', octave:'mid',  prob:[1.0,0,0,0, 0,0,0,0, 0.85,0,0,0, 0,0,0,0] },
+      { instrument:'snare', note:'C', octave:'mid',  prob:[0,0,0,0, 0.85,0,0,0, 0,0,0,0, 0.8,0,0,0] },
+      { instrument:'hihat', note:'C', octave:'mid',  prob:[0,0,0.7,0, 0,0,0.7,0, 0,0,0.7,0, 0,0,0.7,0] },
+      { instrument:'bass',  note:'C', octave:'low',  prob:[0.7,0,0,0, 0,0.6,0,0, 0.6,0,0,0, 0,0.5,0,0.3] },
+      { instrument:'keys',  note:'F', octave:'mid',  prob:[0,0,0.7,0, 0,0,0,0, 0,0,0.65,0, 0,0,0,0] },
+      { instrument:'keys',  note:'A', octave:'mid',  prob:[0,0,0,0, 0,0,0.65,0, 0,0,0,0, 0,0,0.6,0] },
+    ]
+  },
+  bossanova: {
+    name:'Bossa Nova', emoji:'🌺', bpm:100,
+    slots:[
+      { instrument:'kick',  note:'C', octave:'mid',  prob:[1.0,0,0,0, 0,0,0.5,0, 0,0.4,0,0, 0.5,0,0,0] },
+      { instrument:'snare', note:'C', octave:'mid',  prob:[0,0,0,0, 0.8,0,0,0, 0,0,0,0, 0.75,0,0.3,0] },
+      { instrument:'hihat', note:'C', octave:'mid',  prob:[0.5,0,0.5,0, 0.4,0,0.5,0, 0.5,0,0.4,0, 0.5,0,0.4,0] },
+      { instrument:'bass',  note:'C', octave:'low',  prob:[0.7,0,0,0, 0,0.5,0,0, 0.6,0,0,0.4, 0,0,0.4,0] },
+      { instrument:'keys',  note:'E', octave:'mid',  prob:[0.4,0,0,0, 0,0,0.35,0, 0,0,0,0.35, 0,0,0,0.3] },
+      { instrument:'keys',  note:'A', octave:'mid',  prob:[0,0,0.35,0, 0,0,0,0, 0,0.35,0,0, 0,0,0,0.3] },
+    ]
+  },
+  eightbit: {
+    name:'8-Bit', emoji:'👾', bpm:140,
+    slots:[
+      { instrument:'kick',  note:'C', octave:'mid',  prob:[1.0,0,0,0, 0.8,0,0,0, 1.0,0,0,0, 0.8,0,0.4,0] },
+      { instrument:'snare', note:'C', octave:'mid',  prob:[0,0,0,0, 0.9,0,0,0, 0,0,0,0, 0.9,0,0,0] },
+      { instrument:'hihat', note:'C', octave:'mid',  prob:[0.9,0,0.9,0, 0.9,0,0.9,0, 0.9,0,0.9,0, 0.9,0,0.9,0] },
+      { instrument:'bass',  note:'C', octave:'low',  prob:[0.8,0,0.6,0, 0,0.6,0,0, 0.8,0,0.5,0, 0,0.6,0,0] },
+      { instrument:'keys',  note:'C', octave:'high', prob:[0.7,0,0,0.5, 0,0,0.6,0, 0.7,0,0,0.5, 0,0,0.55,0] },
+      { instrument:'keys',  note:'E', octave:'high', prob:[0,0.5,0,0, 0.5,0,0,0.4, 0,0.5,0,0, 0.5,0,0,0.4] },
+      { instrument:'keys',  note:'G', octave:'mid',  prob:[0,0,0.5,0, 0,0.4,0,0, 0,0,0.5,0, 0,0.4,0,0] },
+      { instrument:'keys',  note:'A', octave:'high', prob:[0,0,0,0, 0,0,0.4,0, 0,0,0,0, 0,0,0.4,0.4] },
+    ]
+  },
+  swanky: {
+    name:'🧀 SWANKY MODE', emoji:'🧀', bpm:118,
+    slots:[
+      { instrument:'kick',  note:'C', octave:'mid',  prob:[1.0,0.6,0.5,0.7, 0.8,0.4,0.6,0.5, 0.9,0.6,0.4,0.7, 0.8,0.5,0.6,0.7] },
+      { instrument:'snare', note:'C', octave:'mid',  prob:[0.5,0.4,0.6,0.5, 0.9,0.6,0.4,0.7, 0.5,0.4,0.6,0.5, 0.9,0.5,0.4,0.6] },
+      { instrument:'hihat', note:'C', octave:'mid',  prob:[0.8,0.7,0.8,0.7, 0.8,0.7,0.8,0.7, 0.8,0.7,0.8,0.7, 0.8,0.7,0.8,0.7] },
+      { instrument:'bass',  note:'C', octave:'low',  prob:[0.7,0.5,0.6,0.5, 0.6,0.5,0.7,0.5, 0.7,0.5,0.6,0.5, 0.6,0.5,0.7,0.6] },
+      { instrument:'keys',  note:'C', octave:'mid',  prob:[0.6,0.5,0.6,0.5, 0.6,0.5,0.6,0.5, 0.6,0.5,0.6,0.5, 0.6,0.5,0.6,0.5] },
+      { instrument:'keys',  note:'G', octave:'mid',  prob:[0.5,0.4,0.5,0.4, 0.5,0.4,0.5,0.4, 0.5,0.4,0.5,0.4, 0.5,0.4,0.5,0.4] },
+      { instrument:'keys',  note:'E', octave:'high', prob:[0.4,0.5,0.4,0.5, 0.4,0.5,0.4,0.5, 0.4,0.5,0.4,0.5, 0.4,0.5,0.4,0.5] },
+      { instrument:'bass',  note:'G', octave:'low',  prob:[0.5,0.6,0.5,0.6, 0.5,0.6,0.5,0.6, 0.5,0.6,0.5,0.6, 0.5,0.6,0.5,0.6] },
+      { instrument:'snare', note:'C', octave:'mid',  prob:[0.4,0.6,0.4,0.6, 0.4,0.6,0.4,0.6, 0.4,0.6,0.4,0.6, 0.4,0.6,0.4,0.6] },
+      { instrument:'keys',  note:'B', octave:'high', prob:[0.5,0.5,0.5,0.5, 0.5,0.5,0.5,0.5, 0.5,0.5,0.5,0.5, 0.5,0.5,0.5,0.5] },
+    ]
+  },
+};
+
+let _swankyPressCount = 0;
+
+function generatePattern(probMap) {
+  return probMap.map(p => Math.random() < p);
+}
+
+function buildGenreSlots(key) {
+  const tmpl = GENRE_TEMPLATES[key];
+  let defs = tmpl.slots;
+  if (key === 'swanky') {
+    const count = 10 + Math.floor(Math.random() * 3);
+    defs = [...defs].sort(() => Math.random() - 0.5).slice(0, count);
+  }
+  return defs.map(s => {
+    const slot = makeSlot(s.instrument, s.note, s.octave);
+    slot.pattern = generatePattern(s.prob);
+    return slot;
+  });
+}
+
+function applyGenre(key) {
+  const tmpl = GENRE_TEMPLATES[key];
+  if (!tmpl) return;
+  closeGenrePicker();
+  if (STATE.isPlaying) {
+    stopSequencer();
+    STATE.isPlaying = false;
+    document.getElementById('btn-play').textContent = '▶ Play Beat';
+    document.getElementById('btn-play').classList.remove('playing');
+    document.getElementById('swanky-root').classList.remove('playing-pulse');
+  }
+  SLOTS = buildGenreSlots(key);
+  STATE.bpm = tmpl.bpm;
+  const bpmRange = document.getElementById('bpm-range');
+  if (bpmRange) bpmRange.value = tmpl.bpm;
+  document.getElementById('bpm-display').textContent = tmpl.bpm;
+  renderSequencer();
+  document.getElementById('grade-panel').classList.remove('show');
+  if (key === 'swanky') {
+    setSwankyDance('dance-shake');
+    setSpeak('I regret nothing!! 🧀🔥');
+    showToast('🧀 SWANKY MODE ACTIVATED!');
+    setTimeout(() => setSwankyDance('dance-idle'), 3000);
+  } else {
+    setSwankyDance('dance-bounce');
+    setSpeak(`${tmpl.name} vibes! Let's get cheesy! 🎵`);
+    showToast(`${tmpl.emoji} ${tmpl.name} loaded!`);
+    setTimeout(() => setSwankyDance('dance-idle'), 2000);
+  }
+}
+
+function surpriseMe() {
+  _swankyPressCount++;
+  const keys = Object.keys(GENRE_TEMPLATES);
+  let key;
+  if (_swankyPressCount % 5 === 0 && Math.random() < 0.5) {
+    key = 'swanky';
+  } else {
+    const nonSwanky = keys.filter(k => k !== 'swanky');
+    key = nonSwanky[Math.floor(Math.random() * nonSwanky.length)];
+  }
+  applyGenre(key);
+}
+
+function toggleGenrePicker() {
+  const picker = document.getElementById('genre-picker');
+  const btn = document.getElementById('btn-genre-pick');
+  if (picker.classList.contains('open')) {
+    closeGenrePicker();
+  } else {
+    picker.classList.add('open');
+    btn.classList.add('open');
+  }
+}
+
+function closeGenrePicker() {
+  document.getElementById('genre-picker').classList.remove('open');
+  document.getElementById('btn-genre-pick').classList.remove('open');
+}
+
+// =====================
+// === PAD TOGGLE ===
+// =====================
+function togglePad(slotIdx, col) {
+  SLOTS[slotIdx].pattern[col] = !SLOTS[slotIdx].pattern[col];
+  const pad = document.getElementById(`pad-${slotIdx}-${col}`);
+  if (pad) pad.classList.toggle('active', SLOTS[slotIdx].pattern[col]);
+  if (SLOTS[slotIdx].pattern[col]) {
+    const ctx = getCtx();
+    if (ctx.state === 'running') triggerSound(slotIdx);
+  }
 }
 
 function clearBeat() {
-  for (let r = 0; r < 5; r++) GRID[r].fill(false);
-  buildSequencer();
+  SLOTS.forEach(s => s.pattern.fill(false));
+  renderSequencer();
   document.getElementById('grade-panel').classList.remove('show');
 }
 
@@ -786,7 +1393,10 @@ function setMode(mode) {
   STATE.mode = mode;
   document.getElementById('btn-step').classList.toggle('active', mode === 'step');
   document.getElementById('btn-tap').classList.toggle('active', mode === 'tap');
-  document.getElementById('sequencer').style.display = mode === 'step' ? '' : 'none';
+  const seq = document.getElementById('sequencer');
+  const addBar = document.getElementById('add-row-btn').parentElement;
+  seq.style.display = mode === 'step' ? '' : 'none';
+  addBar.style.display = mode === 'step' ? '' : 'none';
   document.getElementById('tap-area').classList.toggle('show', mode === 'tap');
 }
 
@@ -796,24 +1406,56 @@ function setMode(mode) {
 let tapTimer = null;
 let tapInterval = null;
 
-async function tapInstrument(row) {
+function buildTapButtons() {
+  const tapArea = document.getElementById('tap-area');
+  // Remove all buttons except the progress bar
+  Array.from(tapArea.children).forEach(child => {
+    if (!child.classList.contains('tap-progress')) child.remove();
+  });
+
+  const uniqueInstruments = [...new Set(SLOTS.map(s => s.instrument))];
+  const progress = tapArea.querySelector('.tap-progress');
+
+  uniqueInstruments.forEach(inst => {
+    const meta = INST_META[inst];
+    const btn = document.createElement('button');
+    btn.className = 'tap-btn';
+    btn.style.background = meta.color;
+    btn.style.color = (inst === 'snare' || inst === 'hihat') ? '#1A1A1A' : 'white';
+    btn.innerHTML = `${meta.label} ${meta.emoji}`;
+    btn.setAttribute('data-instrument', inst);
+    btn.addEventListener('pointerdown', () => tapInstrument(inst));
+    tapArea.insertBefore(btn, progress);
+  });
+}
+
+async function tapInstrument(instrument) {
   await unlockAudio();
-  if (!STATE.tapRecording) {
-    startTapRecording();
-  }
+  if (!STATE.tapRecording) startTapRecording();
+
+  const slotIdx = SLOTS.findIndex(s => s.instrument === instrument);
+  if (slotIdx === -1) return;
+
   const elapsed = Date.now() - STATE.tapStartTime;
   const stepDuration = (60000 / STATE.bpm) / 4;
   const nearestStep = Math.round(elapsed / stepDuration) % 16;
-  triggerSound(row, nearestStep); // play the actual note at that step position
+
+  triggerSound(slotIdx);
   if (nearestStep >= 0 && nearestStep < 16) {
-    GRID[row][nearestStep] = true;
+    SLOTS[slotIdx].pattern[nearestStep] = true;
+    const pad = document.getElementById(`pad-${slotIdx}-${nearestStep}`);
+    if (pad) pad.classList.add('active');
   }
 }
 
 function startTapRecording() {
   STATE.tapRecording = true;
   STATE.tapStartTime = Date.now();
-  clearBeat();
+  SLOTS.forEach(s => s.pattern.fill(false));
+  // Clear pad visuals without full rebuild
+  document.querySelectorAll('.pad.active').forEach(p => p.classList.remove('active'));
+  document.getElementById('grade-panel').classList.remove('show');
+
   const fill = document.getElementById('tap-progress-fill');
   fill.style.width = '0%';
   tapInterval = setInterval(() => {
@@ -825,7 +1467,7 @@ function startTapRecording() {
     clearInterval(tapInterval);
     fill.style.width = '100%';
     setSpeak("Ooh, I felt that rhythm! 🎵");
-    setTimeout(() => fill.style.width = '0%', 500);
+    setTimeout(() => { fill.style.width = '0%'; }, 500);
   }, STATE.tapDuration);
 }
 
@@ -841,49 +1483,56 @@ const GRADE_MESSAGES = {
 };
 
 const HINTS = {
-  density_low: "Try filling in more beats — your grid is looking a bit empty!",
+  density_low:  "Try filling in more beats — your grid is looking a bit empty!",
   density_high: "Whoa, too many notes! Leave some breathing room in your beat.",
-  variety: "Mix it up! Try using all 4 instruments for a fuller sound.",
-  syncopation: "Spice it up! Try hitting some pads on the off-beats (steps 3, 7, 11, 15).",
-  anchor: "Pro tip: Put a Kick on step 1 and a Snare on step 5 or 9 for a solid groove.",
-  perfect: "You're nailing it! Keep experimenting with different patterns! 🔥",
+  variety:      "Mix it up! Try using more instrument types for a fuller sound.",
+  syncopation:  "Spice it up! Try hitting some pads on the off-beats.",
+  anchor:       "Pro tip: Put a Kick on step 1 and a Snare on step 5 or 9 for a solid groove.",
+  harmonic:     "Add some Keys rows and vary the notes for harmonic depth!",
+  perfect:      "You're nailing it! Keep experimenting with different patterns! 🔥",
 };
 
 async function gradeBeat() {
   await unlockAudio();
-  const filled = GRID.slice(0,4).flat().filter(Boolean).length;
-  if (filled < 2) { setSpeak("Add some more beats first, fam! 🎹"); return; }
+  const allActive = SLOTS.flatMap(s => s.pattern).filter(Boolean);
+  if (allActive.length < 2) { setSpeak("Add some more beats first, fam! 🎹"); return; }
 
-  // --- Scoring ---
-  // 1. Density (30pts) — rhythm rows only
-  const density = filled / 64;
-  let densityScore;
-  if (density < 0.15) densityScore = 10;
-  else if (density < 0.3) densityScore = 20;
-  else if (density <= 0.6) densityScore = 30;
-  else if (density <= 0.75) densityScore = 20;
-  else densityScore = 10;
+  const totalPads = SLOTS.length * 16;
+  const filled = allActive.length;
+  const density = filled / totalPads;
 
-  // 2. Variety (30pts) — rhythm rows
-  const rowsFilled = GRID.slice(0,4).filter(row => row.some(Boolean)).length;
-  const varietyScore = [0, 10, 18, 24, 30][rowsFilled] || 0;
+  // 1. Density (30)
+  const densityScore = density < 0.15 ? 10 : density < 0.3 ? 20 : density <= 0.55 ? 30 : density <= 0.75 ? 20 : 10;
 
-  // 3. Syncopation (25pts)
+  // 2. Variety (25) — distinct instrument types with ≥1 active pad
+  const activeTypes = new Set(SLOTS.filter(s => s.pattern.some(Boolean)).map(s => s.instrument));
+  const varietyScore = Math.min(25, activeTypes.size * 5);
+
+  // 3. Syncopation (20)
   const offBeats = [2,4,6,10,12,14];
   let offCount = 0;
-  for (let r = 0; r < 4; r++) offBeats.forEach(s => { if (GRID[r][s]) offCount++; });
-  const syncoScore = Math.min(25, Math.floor((offCount / 8) * 25));
+  SLOTS.forEach(s => offBeats.forEach(step => { if (s.pattern[step]) offCount++; }));
+  const syncoScore = Math.min(20, Math.floor((offCount / Math.max(1, SLOTS.length * offBeats.length)) * 40));
 
-  // 4. Rhythm anchor (15pts)
+  // 4. Rhythm Anchor (15) — scan by instrument type, not index
+  const kickSlots  = SLOTS.filter(s => s.instrument === 'kick');
+  const snareSlots = SLOTS.filter(s => s.instrument === 'snare');
   let anchorScore = 0;
-  if (GRID[0][0]) anchorScore += 8;
-  if (GRID[1][4] || GRID[1][8]) anchorScore += 7;
+  if (kickSlots.some(s => s.pattern[0]))                    anchorScore += 8;
+  if (snareSlots.some(s => s.pattern[4] || s.pattern[8]))   anchorScore += 7;
 
-  // 5. Melody bonus (up to +20 extra pts)
-  const melodyNotes = GRID[4].filter(Boolean).length;
-  const melodyBonus = Math.min(20, melodyNotes * 3);
+  // 5. Harmonic Depth (20)
+  const keysSlots = SLOTS.filter(s => s.instrument === 'keys' && s.pattern.some(Boolean));
+  const distinctPitches = new Set(keysSlots.map(s => `${s.note}${OCTAVE_NUM[s.octave]}`));
+  let harmonicScore = 0;
+  if (keysSlots.length >= 1)     harmonicScore += 8;
+  if (distinctPitches.size >= 2) harmonicScore += 7;
+  if (distinctPitches.size >= 3) harmonicScore += 5;
 
-  const total = densityScore + varietyScore + syncoScore + anchorScore + melodyBonus;
+  // 6. Slot Exploration (10)
+  const exploScore = SLOTS.length >= 10 ? 10 : SLOTS.length >= 7 ? 5 : 0;
+
+  const total = densityScore + varietyScore + syncoScore + anchorScore + harmonicScore + exploScore;
 
   let grade;
   if (total >= 90) grade = 'S';
@@ -892,7 +1541,6 @@ async function gradeBeat() {
   else if (total >= 35) grade = 'C';
   else grade = 'D';
 
-  // Points
   const pointsMap = { S:100, A:75, B:50, C:25, D:10 };
   let pts = pointsMap[grade];
   if (['S','A','B'].includes(grade)) {
@@ -907,7 +1555,6 @@ async function gradeBeat() {
   STATE.gradeHistory.push(grade);
   updateStats();
 
-  // Show grade panel
   const panel = document.getElementById('grade-panel');
   panel.classList.add('show');
 
@@ -917,13 +1564,13 @@ async function gradeBeat() {
   document.getElementById('grade-message').textContent = GRADE_MESSAGES[grade];
   document.getElementById('grade-points-earned').textContent = `+${pts} points earned`;
 
-  // Score bars
   const bars = [
-    { label: 'Density', val: densityScore, max: 30 },
-    { label: 'Variety', val: varietyScore, max: 30 },
-    { label: 'Syncopation', val: syncoScore, max: 25 },
-    { label: 'Rhythm', val: anchorScore, max: 15 },
-    { label: '🎵 Melody', val: melodyBonus, max: 20 },
+    { label: 'Density',   val: densityScore,  max: 30 },
+    { label: 'Variety',   val: varietyScore,  max: 25 },
+    { label: 'Syncopation', val: syncoScore,  max: 20 },
+    { label: 'Rhythm',    val: anchorScore,   max: 15 },
+    { label: '🎹 Harmonic', val: harmonicScore, max: 20 },
+    { label: '🎛️ Slots',   val: exploScore,   max: 10 },
   ];
   document.getElementById('score-bars').innerHTML = bars.map(b => `
     <div class="score-bar-row">
@@ -940,16 +1587,15 @@ async function gradeBeat() {
     });
   }, 50);
 
-  // Hint
   let hint = HINTS.perfect;
-  if (densityScore < 20 && density < 0.3) hint = HINTS.density_low;
-  else if (densityScore < 20 && density > 0.6) hint = HINTS.density_high;
-  else if (varietyScore < 18) hint = HINTS.variety;
-  else if (syncoScore < 12) hint = HINTS.syncopation;
-  else if (anchorScore < 8) hint = HINTS.anchor;
+  if (densityScore < 20 && density < 0.3)  hint = HINTS.density_low;
+  else if (densityScore < 20 && density > 0.55) hint = HINTS.density_high;
+  else if (varietyScore < 15)               hint = HINTS.variety;
+  else if (syncoScore < 10)                 hint = HINTS.syncopation;
+  else if (anchorScore < 8)                 hint = HINTS.anchor;
+  else if (harmonicScore < 8)               hint = HINTS.harmonic;
   document.getElementById('grade-hint').innerHTML = `<strong>💡 Tip:</strong> ${hint}`;
 
-  // Dance reaction
   const danceName = grade === 'S' ? 'dance-swagger' :
                     grade === 'A' ? 'dance-slide' :
                     grade === 'B' ? 'dance-bounce' :
@@ -976,109 +1622,267 @@ function playGradeSound(grade) {
 // =====================
 // === COSMETICS ===
 // =====================
-const ITEMS = [
-  // HEAD
-  { id:'backwards-cap', slot:'head', name:'Backwards Cap', cost:30, emoji:'🧢',
-    svg: `<g id="cosmetic-head-item">
-      <rect x="52" y="12" width="56" height="12" rx="4" fill="#FF2D78"/>
-      <rect x="36" y="18" width="30" height="6" rx="3" fill="#CC0055"/>
-      <text x="80" y="23" text-anchor="middle" font-size="7" fill="white" font-weight="bold">SC</text>
-    </g>` },
-  { id:'gold-crown', slot:'head', name:'Gold Crown', cost:75, emoji:'👑',
-    svg: `<g id="cosmetic-head-item">
-      <polygon points="57,8 65,0 73,10 80,2 87,10 95,0 103,8 105,18 55,18" fill="#F5C518" stroke="#C9920A" stroke-width="1.5"/>
-      <circle cx="65" cy="6" r="3" fill="#FF2D78"/>
-      <circle cx="80" cy="3" r="3" fill="#E8F4FF"/>
-      <circle cx="95" cy="6" r="3" fill="#FF2D78"/>
-    </g>` },
-  { id:'bucket-hat', slot:'head', name:'Bucket Hat', cost:35, emoji:'🪣',
-    svg: `<g id="cosmetic-head-item">
-      <ellipse cx="80" cy="16" rx="32" ry="6" fill="#4B0082"/>
-      <path d="M56,16 Q58,0 80,0 Q102,0 104,16" fill="#7B2FBE"/>
-    </g>` },
-  // EYES
-  { id:'diamond-shades', slot:'eyes', name:'Diamond Shades', cost:50, emoji:'😎',
-    svg: `<g id="cosmetic-eyes-item">
-      <rect x="57" y="63" width="22" height="14" rx="5" fill="#E8F4FF" stroke="#B06AE0" stroke-width="1.5" opacity="0.9"/>
-      <rect x="81" y="63" width="22" height="14" rx="5" fill="#E8F4FF" stroke="#B06AE0" stroke-width="1.5" opacity="0.9"/>
-      <line x1="79" y1="70" x2="81" y2="70" stroke="#B06AE0" stroke-width="1.5"/>
-      <line x1="55" y1="70" x2="57" y2="70" stroke="#B06AE0" stroke-width="1.5"/>
-      <line x1="103" y1="70" x2="105" y2="70" stroke="#B06AE0" stroke-width="1.5"/>
-    </g>` },
-  { id:'star-shades', slot:'eyes', name:'Star Shades', cost:40, emoji:'🌟',
-    svg: `<g id="cosmetic-eyes-item">
-      <rect x="57" y="63" width="22" height="14" rx="5" fill="#FF2D78" stroke="#FF6B9D" stroke-width="1.5" opacity="0.85"/>
-      <rect x="81" y="63" width="22" height="14" rx="5" fill="#FF2D78" stroke="#FF6B9D" stroke-width="1.5" opacity="0.85"/>
-      <text x="68" y="73" text-anchor="middle" font-size="9" fill="white">★</text>
-      <text x="92" y="73" text-anchor="middle" font-size="9" fill="white">★</text>
-    </g>` },
-  // BODY
-  { id:'platinum-chain', slot:'body', name:'Platinum Chain', cost:60, emoji:'⛓️',
-    svg: `<g id="cosmetic-body-item">
-      <path d="M60,100 Q80,110 100,100" stroke="#E8E8E8" stroke-width="4" fill="none" stroke-linecap="round"/>
-      <circle cx="80" cy="110" r="5" fill="#E8E8E8" stroke="#B0B0B0" stroke-width="1"/>
-    </g>` },
-  { id:'silver-rope', slot:'body', name:'Silver Rope', cost:45, emoji:'🔗',
-    svg: `<g id="cosmetic-body-item">
-      <path d="M55,95 Q80,108 105,95" stroke="#C0C0C0" stroke-width="3" stroke-dasharray="5,3" fill="none" stroke-linecap="round"/>
-    </g>` },
-  { id:'ruby-ring', slot:'body', name:'Ruby Ring', cost:150, emoji:'💍',
-    svg: `<g id="cosmetic-body-item">
-      <circle cx="25" cy="108" r="6" fill="#C0C0C0" stroke="#A0A0A0" stroke-width="1"/>
-      <circle cx="25" cy="108" r="3" fill="#FF2D78"/>
-    </g>` },
-  // MOUTH
-  { id:'grillz-jr', slot:'mouth', name:"Grillz Jr", cost:55, emoji:'🦷',
-    svg: `<g id="cosmetic-mouth-item">
-      <rect x="69" y="98" width="22" height="5" rx="2" fill="#FFD700" stroke="#C9920A" stroke-width="0.5"/>
-    </g>` },
-  { id:'gold-grill', slot:'mouth', name:'Gold Grill', cost:100, emoji:'😁',
-    svg: `<g id="cosmetic-mouth-item">
-      <rect x="67" y="96" width="26" height="7" rx="3" fill="#F5C518" stroke="#C9920A" stroke-width="1"/>
-      <line x1="73" y1="96" x2="73" y2="103" stroke="#C9920A" stroke-width="0.8"/>
-      <line x1="80" y1="96" x2="80" y2="103" stroke="#C9920A" stroke-width="0.8"/>
-      <line x1="87" y1="96" x2="87" y2="103" stroke="#C9920A" stroke-width="0.8"/>
-    </g>` },
-  // FEET
-  { id:'fresh-sneakers', slot:'feet', name:'Fresh Sneakers', cost:80, emoji:'👟',
-    svg: `<g id="cosmetic-feet-item">
-      <ellipse cx="63" cy="163" rx="13" ry="7" fill="#FF2D78"/>
-      <ellipse cx="97" cy="163" rx="13" ry="7" fill="#FF2D78"/>
-      <rect x="53" y="159" width="20" height="3" rx="1" fill="white" opacity="0.8"/>
-      <rect x="87" y="159" width="20" height="3" rx="1" fill="white" opacity="0.8"/>
-    </g>` },
-  { id:'light-up-kicks', slot:'feet', name:'Light-Up Kicks', cost:120, emoji:'✨',
-    svg: `<g id="cosmetic-feet-item">
-      <ellipse cx="63" cy="163" rx="13" ry="7" fill="#1A1A1A"/>
-      <ellipse cx="97" cy="163" rx="13" ry="7" fill="#1A1A1A"/>
-      <ellipse cx="63" cy="165" rx="8" ry="3" fill="#F5C518" opacity="0.8"/>
-      <ellipse cx="97" cy="165" rx="8" ry="3" fill="#F5C518" opacity="0.8"/>
-    </g>` },
+const TIERS=[
+  {id:1,name:'Street Chic',    label:'I',  levelReq:1,  color:'#FF2D78'},
+  {id:2,name:'Bougie Babe',    label:'II', levelReq:3,  color:'#B06AE0'},
+  {id:3,name:'Certified Swank',label:'III',levelReq:6,  color:'#00E5FF'},
+  {id:4,name:'Fromage Royale', label:'IV', levelReq:10, color:'#F5C518'},
+];
+
+const ITEMS=[
+  // ── TIER 1: STREET CHIC ──
+  {id:'gas-station-sunnies',tier:1,slot:'eyes',name:'Gas Station Sunnies',cost:20,emoji:'🕶️',
+    svg:`<g id="cosmetic-eyes-item"><rect x="55" y="63" width="22" height="13" rx="2" fill="#FF8C00" stroke="#CC5500" stroke-width="1.5" opacity="0.9"/><rect x="83" y="63" width="22" height="13" rx="2" fill="#FF8C00" stroke="#CC5500" stroke-width="1.5" opacity="0.9"/><line x1="77" y1="69" x2="83" y2="69" stroke="#CC5500" stroke-width="1.5"/><line x1="53" y1="68" x2="55" y2="69" stroke="#CC5500" stroke-width="1.5"/><line x1="105" y1="68" x2="107" y2="69" stroke="#CC5500" stroke-width="1.5"/></g>`},
+  {id:'dollar-store-specs',tier:1,slot:'eyes',name:'Dollar Store Specs',cost:25,emoji:'🤓',
+    svg:`<g id="cosmetic-eyes-item"><rect x="55" y="64" width="22" height="12" rx="4" fill="none" stroke="#333" stroke-width="2.5" transform="rotate(-4 66 70)"/><rect x="83" y="63" width="22" height="12" rx="4" fill="none" stroke="#333" stroke-width="2.5" transform="rotate(3 94 69)"/><line x1="77" y1="70" x2="83" y2="70" stroke="#333" stroke-width="1.5"/></g>`},
+  {id:'pink-heart-glasses',tier:1,slot:'eyes',name:'Pink Heart Glasses',cost:30,emoji:'💕',
+    svg:`<g id="cosmetic-eyes-item"><path d="M66,68 C66,65 69,63 71,66 C73,63 77,65 77,68 C77,71 72,76 71,76 C70,76 66,71 66,68Z" fill="#FF69B4" opacity="0.88"/><path d="M89,68 C89,65 92,63 95,66 C97,63 101,65 101,68 C101,71 96,76 95,76 C94,76 89,71 89,68Z" fill="#FF69B4" opacity="0.88"/></g>`},
+  {id:'wraparound-goggles',tier:1,slot:'eyes',name:'Wraparound Goggles',cost:35,emoji:'🥽',
+    svg:`<g id="cosmetic-eyes-item"><rect x="51" y="61" width="58" height="17" rx="8" fill="#3A3A3A" opacity="0.9"/><rect x="54" y="63" width="23" height="13" rx="6" fill="#00E5FF" opacity="0.4"/><rect x="83" y="63" width="23" height="13" rx="6" fill="#00E5FF" opacity="0.4"/></g>`},
+  {id:'velcro-sneakers',tier:1,slot:'feet',name:'Velcro Sneakers',cost:15,emoji:'👟',
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="163" rx="13" ry="6" fill="white" stroke="#ddd" stroke-width="1"/><ellipse cx="97" cy="163" rx="13" ry="6" fill="white" stroke="#ddd" stroke-width="1"/><rect x="53" y="158" width="20" height="3" rx="1.5" fill="#FF2D78"/><rect x="87" y="158" width="20" height="3" rx="1.5" fill="#FF2D78"/></g>`},
+  {id:'sparkle-crocs',tier:1,slot:'feet',name:'Sparkle Crocs',cost:20,emoji:'✨',
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="163" rx="13" ry="6" fill="#00C4A0" stroke="#009980" stroke-width="1"/><ellipse cx="97" cy="163" rx="13" ry="6" fill="#00C4A0" stroke="#009980" stroke-width="1"/><circle cx="58" cy="161" r="2" fill="white" opacity="0.7"/><circle cx="65" cy="163" r="1.5" fill="white" opacity="0.7"/><circle cx="92" cy="161" r="2" fill="white" opacity="0.7"/><circle cx="99" cy="163" r="1.5" fill="white" opacity="0.7"/></g>`},
+  {id:'flip-flops',tier:1,slot:'feet',name:'Flip Flops',cost:20,emoji:'🩴',
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="164" rx="12" ry="5" fill="#FF9900"/><ellipse cx="97" cy="164" rx="12" ry="5" fill="#FF9900"/><path d="M63,160 L60,164" stroke="#FF2D78" stroke-width="2" stroke-linecap="round"/><path d="M63,160 L66,164" stroke="#FF2D78" stroke-width="2" stroke-linecap="round"/><path d="M97,160 L94,164" stroke="#FF2D78" stroke-width="2" stroke-linecap="round"/><path d="M97,160 L100,164" stroke="#FF2D78" stroke-width="2" stroke-linecap="round"/></g>`},
+  {id:'platform-clogs',tier:1,slot:'feet',name:'Platform Clogs',cost:35,emoji:'🪵',
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="160" rx="13" ry="5" fill="#8B4513"/><rect x="50" y="161" width="26" height="5" rx="2" fill="#5C2D0A"/><ellipse cx="97" cy="160" rx="13" ry="5" fill="#8B4513"/><rect x="84" y="161" width="26" height="5" rx="2" fill="#5C2D0A"/></g>`},
+  {id:'backwards-cap',tier:1,slot:'head',name:'Backwards Cap',cost:20,emoji:'🧢',
+    svg:`<g id="cosmetic-head-item"><rect x="52" y="12" width="56" height="12" rx="4" fill="#FF2D78"/><rect x="36" y="18" width="30" height="6" rx="3" fill="#CC0055"/><text x="80" y="23" text-anchor="middle" font-size="7" fill="white" font-weight="bold">SC</text></g>`},
+  {id:'bucket-hat',tier:1,slot:'head',name:'Bucket Hat',cost:25,emoji:'🪣',
+    svg:`<g id="cosmetic-head-item"><ellipse cx="80" cy="16" rx="32" ry="6" fill="#4B0082"/><path d="M56,16 Q58,0 80,0 Q102,0 104,16" fill="#7B2FBE"/></g>`},
+  {id:'baseball-visor',tier:1,slot:'head',name:'Baseball Visor',cost:20,emoji:'🧢',
+    svg:`<g id="cosmetic-head-item"><ellipse cx="80" cy="22" rx="35" ry="5" fill="#FF6B35" stroke="#CC4400" stroke-width="1.2"/></g>`},
+  {id:'trucker-hat',tier:1,slot:'head',name:'Trucker Hat',cost:30,emoji:'🚚',
+    svg:`<g id="cosmetic-head-item"><path d="M50,22 Q52,2 80,2 Q108,2 110,22" fill="#F5C518"/><path d="M78,3 Q108,3 110,22 L78,22Z" fill="rgba(255,255,255,0.15)"/><ellipse cx="80" cy="22" rx="32" ry="5" fill="#C9920A"/></g>`},
+  {id:'dish-gloves',tier:1,slot:'hands',name:'Dish Gloves',cost:20,emoji:'🧤',
+    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="118" rx="11" ry="8" fill="#FFD700" stroke="#CC9900" stroke-width="1" transform="rotate(-20 18 118)"/><ellipse cx="142" cy="118" rx="11" ry="8" fill="#FFD700" stroke="#CC9900" stroke-width="1" transform="rotate(20 142 118)"/></g>`},
+  {id:'oven-mitt',tier:1,slot:'hands',name:'The Oven Mitt',cost:25,emoji:'🧤',
+    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="118" rx="11" ry="8" fill="#FF6B35" stroke="#CC4400" stroke-width="1" transform="rotate(-20 18 118)"/><ellipse cx="142" cy="118" rx="11" ry="8" fill="#8B0000" stroke="#600000" stroke-width="1" transform="rotate(20 142 118)"/></g>`},
+  {id:'fingerless-gloves',tier:1,slot:'hands',name:'Fingerless Gloves',cost:30,emoji:'🤘',
+    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="119" rx="10" ry="7" fill="#1A1A1A" transform="rotate(-20 18 119)"/><ellipse cx="142" cy="119" rx="10" ry="7" fill="#1A1A1A" transform="rotate(20 142 119)"/></g>`},
+  {id:'tiny-mittens',tier:1,slot:'hands',name:'Tiny Mittens',cost:20,emoji:'🩷',
+    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="119" rx="9" ry="7" fill="#FFB3D9" stroke="#FF69B4" stroke-width="1" transform="rotate(-20 18 119)"/><ellipse cx="142" cy="119" rx="9" ry="7" fill="#FFB3D9" stroke="#FF69B4" stroke-width="1" transform="rotate(20 142 119)"/></g>`},
+  {id:'macaroni-necklace',tier:1,slot:'body',name:'Macaroni Necklace',cost:20,emoji:'🍝',
+    svg:`<g id="cosmetic-body-item"><circle cx="63" cy="97" r="3.5" fill="#FF9500"/><circle cx="70" cy="101" r="3.5" fill="#FFB830"/><circle cx="77" cy="104" r="3.5" fill="#FF9500"/><circle cx="84" cy="104" r="3.5" fill="#FFB830"/><circle cx="91" cy="101" r="3.5" fill="#FF9500"/><circle cx="97" cy="97" r="3.5" fill="#FFB830"/></g>`},
+  {id:'plastic-beads',tier:1,slot:'body',name:'Plastic Beads',cost:15,emoji:'📿',
+    svg:`<g id="cosmetic-body-item"><circle cx="63" cy="97" r="3" fill="#FF2D78"/><circle cx="70" cy="101" r="3" fill="#F5C518"/><circle cx="77" cy="104" r="3" fill="#00E5FF"/><circle cx="84" cy="104" r="3" fill="#FF6B35"/><circle cx="91" cy="101" r="3" fill="#B06AE0"/><circle cx="97" cy="97" r="3" fill="#06D6A0"/></g>`},
+  {id:'bell-collar',tier:1,slot:'body',name:'Bell Collar',cost:25,emoji:'🔔',
+    svg:`<g id="cosmetic-body-item"><path d="M56,93 Q80,101 104,93" stroke="#C9920A" stroke-width="3.5" fill="none" stroke-linecap="round"/><circle cx="80" cy="107" r="5.5" fill="#F5C518" stroke="#C9920A" stroke-width="1.5"/><line x1="80" y1="101" x2="80" y2="112" stroke="#C9920A" stroke-width="1.2"/></g>`},
+  {id:'swim-medal',tier:1,slot:'body',name:'7th Place Medal',cost:30,emoji:'🏅',
+    svg:`<g id="cosmetic-body-item"><path d="M77,92 L77,105" stroke="#FF2D78" stroke-width="3"/><path d="M83,92 L83,105" stroke="#FF9500" stroke-width="3"/><circle cx="80" cy="111" r="7" fill="#C0C0C0" stroke="#999" stroke-width="1.5"/><text x="80" y="114" text-anchor="middle" font-size="5" fill="#555" font-weight="bold">7th</text></g>`},
+  {id:'fanny-pack',tier:1,slot:'gear',name:'Fanny Pack',cost:25,emoji:'👜',
+    svg:`<g id="cosmetic-gear-item"><rect x="62" y="112" width="36" height="16" rx="5" fill="#FF6B35" stroke="#CC4400" stroke-width="1.2"/><rect x="67" y="115" width="14" height="10" rx="3" fill="#CC4400"/></g>`},
+  {id:'novelty-pins',tier:1,slot:'gear',name:'Pin Collection',cost:20,emoji:'📌',
+    svg:`<g id="cosmetic-gear-item"><circle cx="67" cy="100" r="4" fill="#FF2D78" stroke="#CC0055" stroke-width="0.7"/><circle cx="77" cy="92" r="3.5" fill="#F5C518" stroke="#C9920A" stroke-width="0.7"/><circle cx="86" cy="103" r="3" fill="#00E5FF" stroke="#0099AA" stroke-width="0.7"/><circle cx="94" cy="94" r="3.5" fill="#B06AE0" stroke="#7B2FBE" stroke-width="0.7"/></g>`},
+  {id:'mini-briefcase',tier:1,slot:'gear',name:'Mini Briefcase',cost:30,emoji:'💼',
+    svg:`<g id="cosmetic-gear-item"><rect x="130" y="115" width="22" height="15" rx="2.5" fill="#8B6914" stroke="#6B4F10" stroke-width="1.2"/><rect x="138" y="112" width="6" height="4" rx="1" fill="none" stroke="#6B4F10" stroke-width="1.5"/><line x1="130" y1="121" x2="152" y2="121" stroke="#6B4F10" stroke-width="0.8"/></g>`},
+  {id:'dollar-boa',tier:1,slot:'gear',name:'Dollar Store Boa',cost:25,emoji:'🪶',
+    svg:`<g id="cosmetic-gear-item"><path d="M54,91 Q80,101 106,91" stroke="#FF69B4" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.7"/><path d="M54,91 Q80,101 106,91" stroke="white" stroke-width="2" stroke-linecap="round" stroke-dasharray="3,5" fill="none" opacity="0.5"/></g>`},
+  {id:'grillz-jr',tier:1,slot:'mouth',name:'Grillz Jr',cost:55,emoji:'🦷',
+    svg:`<g id="cosmetic-mouth-item"><rect x="69" y="98" width="22" height="5" rx="2" fill="#FFD700" stroke="#C9920A" stroke-width="0.5"/></g>`},
+
+  // ── TIER 2: BOUGIE BABE (Level 3) ──
+  {id:'tortoiseshell-frames',tier:2,slot:'eyes',name:'Tortoiseshell Frames',cost:80,emoji:'🤓',
+    svg:`<g id="cosmetic-eyes-item"><rect x="55" y="63" width="22" height="13" rx="5" fill="#8B4513" stroke="#5C2D0A" stroke-width="1.5" opacity="0.9"/><rect x="83" y="63" width="22" height="13" rx="5" fill="#8B4513" stroke="#5C2D0A" stroke-width="1.5" opacity="0.9"/><line x1="77" y1="69" x2="83" y2="69" stroke="#5C2D0A" stroke-width="1.5"/><rect x="57" y="65" width="5" height="4" rx="1" fill="rgba(255,180,80,.3)"/><rect x="85" y="65" width="5" height="4" rx="1" fill="rgba(255,180,80,.3)"/></g>`},
+  {id:'vintage-aviators',tier:2,slot:'eyes',name:'Vintage Aviators',cost:90,emoji:'🕶️',
+    svg:`<g id="cosmetic-eyes-item"><ellipse cx="66" cy="69" rx="12" ry="9" fill="#8B6914" stroke="#C9920A" stroke-width="1.5" opacity="0.85"/><ellipse cx="94" cy="69" rx="12" ry="9" fill="#8B6914" stroke="#C9920A" stroke-width="1.5" opacity="0.85"/><line x1="78" y1="69" x2="82" y2="69" stroke="#C9920A" stroke-width="1.5"/><line x1="52" y1="66" x2="54" y2="69" stroke="#C9920A" stroke-width="1.5"/><line x1="106" y1="66" x2="108" y2="69" stroke="#C9920A" stroke-width="1.5"/></g>`},
+  {id:'cat-eye-frames',tier:2,slot:'eyes',name:'Cat Eye Frames',cost:85,emoji:'😸',
+    svg:`<g id="cosmetic-eyes-item"><path d="M55,73 L57,62 L78,62 L81,73Z" fill="#B06AE0" stroke="#7B2FBE" stroke-width="1.5" opacity="0.9"/><path d="M83,73 L86,62 L107,62 L110,73Z" fill="#B06AE0" stroke="#7B2FBE" stroke-width="1.5" opacity="0.9"/></g>`},
+  {id:'the-monocle',tier:2,slot:'eyes',name:'The Monocle',cost:100,emoji:'🧐',
+    svg:`<g id="cosmetic-eyes-item"><circle cx="94" cy="69" r="11" fill="none" stroke="#C9920A" stroke-width="2.5"/><circle cx="94" cy="69" r="9" fill="rgba(200,180,100,0.2)"/><line x1="83" y1="78" x2="78" y2="90" stroke="#C9920A" stroke-width="1.5"/></g>`},
+  {id:'patent-loafers',tier:2,slot:'feet',name:'Patent Loafers',cost:85,emoji:'👞',
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="162" rx="14" ry="6" fill="#1A1A1A" stroke="#333" stroke-width="1"/><ellipse cx="97" cy="162" rx="14" ry="6" fill="#1A1A1A" stroke="#333" stroke-width="1"/><ellipse cx="64" cy="160" rx="8" ry="2.5" fill="rgba(255,255,255,0.15)"/><ellipse cx="98" cy="160" rx="8" ry="2.5" fill="rgba(255,255,255,0.15)"/></g>`},
+  {id:'platform-boots',tier:2,slot:'feet',name:'Platform Boots',cost:95,emoji:'👢',
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="160" rx="12" ry="5" fill="#1A0030"/><rect x="51" y="161" width="24" height="6" rx="2" fill="#7B2FBE"/><ellipse cx="97" cy="160" rx="12" ry="5" fill="#1A0030"/><rect x="85" y="161" width="24" height="6" rx="2" fill="#7B2FBE"/></g>`},
+  {id:'mule-heels',tier:2,slot:'feet',name:'Mule Heels',cost:80,emoji:'👡',
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="161" rx="13" ry="5" fill="#FF2D78"/><path d="M73,162 L74,168" stroke="#FF2D78" stroke-width="2.5"/><ellipse cx="97" cy="161" rx="13" ry="5" fill="#FF2D78"/><path d="M107,162 L108,168" stroke="#FF2D78" stroke-width="2.5"/></g>`},
+  {id:'chelsea-boots',tier:2,slot:'feet',name:'Chelsea Boots',cost:90,emoji:'🥾',
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="161" rx="13" ry="6" fill="#3D1A00" stroke="#5C2D0A" stroke-width="1"/><ellipse cx="97" cy="161" rx="13" ry="6" fill="#3D1A00" stroke="#5C2D0A" stroke-width="1"/></g>`},
+  {id:'the-beret',tier:2,slot:'head',name:'The Beret',cost:80,emoji:'🎭',
+    svg:`<g id="cosmetic-head-item"><ellipse cx="80" cy="14" rx="30" ry="10" fill="#1A1A4A"/><ellipse cx="80" cy="20" rx="32" ry="5" fill="#252555"/><circle cx="97" cy="10" r="4" fill="#1A1A4A"/></g>`},
+  {id:'wide-brim-felt',tier:2,slot:'head',name:'Wide Brim Felt Hat',cost:90,emoji:'🤠',
+    svg:`<g id="cosmetic-head-item"><path d="M55,18 Q58,2 80,2 Q102,2 105,18" fill="#4A3728"/><ellipse cx="80" cy="20" rx="40" ry="6" fill="#3A2718"/><line x1="60" y1="11" x2="100" y2="11" stroke="#F5C518" stroke-width="1.5"/></g>`},
+  {id:'newsboy-cap',tier:2,slot:'head',name:'Newsboy Cap',cost:85,emoji:'🧢',
+    svg:`<g id="cosmetic-head-item"><path d="M52,20 Q55,4 80,3 Q105,3 108,14 L96,20Z" fill="#8B6914"/><ellipse cx="80" cy="20" rx="30" ry="5" fill="#6B4F10"/></g>`},
+  {id:'tiny-fascinator',tier:2,slot:'head',name:'Tiny Fascinator',cost:100,emoji:'🌸',
+    svg:`<g id="cosmetic-head-item"><ellipse cx="88" cy="16" rx="14" ry="8" fill="#FF2D78"/><ellipse cx="88" cy="20" rx="16" ry="4" fill="#CC0055"/><circle cx="88" cy="12" r="4" fill="#FF69B4"/></g>`},
+  {id:'velvet-evening-gloves',tier:2,slot:'hands',name:'Velvet Evening Gloves',cost:85,emoji:'🧤',
+    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="118" rx="11" ry="8" fill="#4B0082" stroke="#7B2FBE" stroke-width="1.2" transform="rotate(-20 18 118)"/><ellipse cx="142" cy="118" rx="11" ry="8" fill="#4B0082" stroke="#7B2FBE" stroke-width="1.2" transform="rotate(20 142 118)"/></g>`},
+  {id:'driving-gloves',tier:2,slot:'hands',name:'Driving Gloves',cost:90,emoji:'🏎️',
+    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="118" rx="11" ry="8" fill="#8B6914" stroke="#C9920A" stroke-width="1.2" transform="rotate(-20 18 118)"/><ellipse cx="142" cy="118" rx="11" ry="8" fill="#8B6914" stroke="#C9920A" stroke-width="1.2" transform="rotate(20 142 118)"/></g>`},
+  {id:'lace-gloves',tier:2,slot:'hands',name:'Lace Gloves',cost:80,emoji:'🕊️',
+    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="118" rx="11" ry="8" fill="white" stroke="#ddd" stroke-width="1" opacity="0.9" transform="rotate(-20 18 118)"/><ellipse cx="142" cy="118" rx="11" ry="8" fill="white" stroke="#ddd" stroke-width="1" opacity="0.9" transform="rotate(20 142 118)"/></g>`},
+  {id:'silk-opera-gloves-s',tier:2,slot:'hands',name:'Silk Opera Gloves',cost:95,emoji:'✨',
+    svg:`<g id="cosmetic-hands-item"><rect x="8" y="103" width="14" height="24" rx="7" fill="#FF2D78" opacity="0.85" transform="rotate(-20 15 115)"/><rect x="138" y="103" width="14" height="24" rx="7" fill="#FF2D78" opacity="0.85" transform="rotate(20 145 115)"/></g>`},
+  {id:'silver-rope-chain',tier:2,slot:'body',name:'Silver Rope Chain',cost:80,emoji:'⛓️',
+    svg:`<g id="cosmetic-body-item"><path d="M55,95 Q80,108 105,95" stroke="#C0C0C0" stroke-width="3.5" stroke-dasharray="5,3" fill="none" stroke-linecap="round"/></g>`},
+  {id:'pearl-strand',tier:2,slot:'body',name:'Pearl Strand',cost:90,emoji:'🤍',
+    svg:`<g id="cosmetic-body-item"><circle cx="60" cy="96" r="3" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="67" cy="100" r="3" fill="#F0F0F0" stroke="#DDD" stroke-width="0.5"/><circle cx="74" cy="103" r="3" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="81" cy="104" r="3" fill="#F0F0F0" stroke="#DDD" stroke-width="0.5"/><circle cx="88" cy="103" r="3" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="95" cy="100" r="3" fill="#F0F0F0" stroke="#DDD" stroke-width="0.5"/><circle cx="100" cy="96" r="3" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/></g>`},
+  {id:'chunky-gold-chain',tier:2,slot:'body',name:'Chunky Gold Chain',cost:85,emoji:'📿',
+    svg:`<g id="cosmetic-body-item"><path d="M56,94 Q80,107 104,94" stroke="#F5C518" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M56,94 Q80,107 104,94" stroke="#C9920A" stroke-width="2" stroke-dasharray="6,5" fill="none" stroke-linecap="round"/></g>`},
+  {id:'mystery-medallion',tier:2,slot:'body',name:'Mystery Medallion',cost:100,emoji:'🪙',
+    svg:`<g id="cosmetic-body-item"><path d="M77,92 L77,106" stroke="#C9920A" stroke-width="2"/><path d="M83,92 L83,106" stroke="#C9920A" stroke-width="2"/><circle cx="80" cy="113" r="8" fill="#C9920A" stroke="#F5C518" stroke-width="1.5"/><text x="80" y="116" text-anchor="middle" font-size="6" fill="#F5C518">?</text></g>`},
+  {id:'designer-tote',tier:2,slot:'gear',name:'Designer Tote Bag',cost:85,emoji:'👜',
+    svg:`<g id="cosmetic-gear-item"><path d="M130,98 L128,128 L152,128 L150,98Z" fill="#1A1A2E" stroke="#F5C518" stroke-width="1.5"/><path d="M134,98 Q141,90 147,98" fill="none" stroke="#F5C518" stroke-width="2"/><text x="140" y="117" text-anchor="middle" font-size="5" fill="#F5C518" font-family="serif">SC</text></g>`},
+  {id:'silk-pocket-square',tier:2,slot:'gear',name:'Silk Pocket Square',cost:80,emoji:'🤵',
+    svg:`<g id="cosmetic-gear-item"><path d="M80,92 L77,80 L80,78 L83,80Z" fill="#FF2D78"/><path d="M77,80 L74,78 L80,72 L86,78 L83,80Z" fill="#FF6B9D" opacity="0.9"/></g>`},
+  {id:'opera-binoculars',tier:2,slot:'gear',name:'Opera Binoculars',cost:95,emoji:'🔭',
+    svg:`<g id="cosmetic-gear-item"><rect x="63" y="108" width="14" height="9" rx="4" fill="#C9920A" stroke="#8B6914" stroke-width="1"/><rect x="83" y="108" width="14" height="9" rx="4" fill="#C9920A" stroke="#8B6914" stroke-width="1"/><rect x="77" y="111" width="6" height="3" rx="1" fill="#8B6914"/><circle cx="70" cy="112" r="3" fill="rgba(0,229,255,0.3)"/><circle cx="90" cy="112" r="3" fill="rgba(0,229,255,0.3)"/></g>`},
+  {id:'cigarette-holder',tier:2,slot:'gear',name:'Vintage Cigarette Holder',cost:100,emoji:'🎭',
+    svg:`<g id="cosmetic-gear-item"><line x1="95" y1="90" x2="145" y2="70" stroke="#F5C518" stroke-width="2" stroke-linecap="round"/><rect x="141" y="67" width="8" height="4" rx="1" fill="white" stroke="#ddd" stroke-width="0.5"/></g>`},
+  {id:'gold-grill',tier:2,slot:'mouth',name:'Gold Grill',cost:100,emoji:'😁',
+    svg:`<g id="cosmetic-mouth-item"><rect x="67" y="96" width="26" height="7" rx="3" fill="#F5C518" stroke="#C9920A" stroke-width="1"/><line x1="73" y1="96" x2="73" y2="103" stroke="#C9920A" stroke-width="0.8"/><line x1="80" y1="96" x2="80" y2="103" stroke="#C9920A" stroke-width="0.8"/><line x1="87" y1="96" x2="87" y2="103" stroke="#C9920A" stroke-width="0.8"/></g>`},
+
+  // ── TIER 3: CERTIFIED SWANK (Level 6) ──
+  {id:'diamond-frames',tier:3,slot:'eyes',name:'Diamond-Encrusted Frames',cost:200,emoji:'💎',
+    svg:`<g id="cosmetic-eyes-item"><rect x="55" y="63" width="22" height="13" rx="5" fill="none" stroke="#E8F4FF" stroke-width="2.5"/><rect x="83" y="63" width="22" height="13" rx="5" fill="none" stroke="#E8F4FF" stroke-width="2.5"/><line x1="77" y1="69" x2="83" y2="69" stroke="#E8F4FF" stroke-width="1.5"/><circle cx="57" cy="63" r="2" fill="#E8F4FF"/><circle cx="77" cy="63" r="2" fill="#E8F4FF"/><circle cx="83" cy="63" r="2" fill="#E8F4FF"/><circle cx="105" cy="63" r="2" fill="#E8F4FF"/></g>`},
+  {id:'tinted-gradient-lenses',tier:3,slot:'eyes',name:'Tinted Gradient Lenses',cost:250,emoji:'😎',
+    svg:`<g id="cosmetic-eyes-item"><defs><linearGradient id="tgl" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4B0082" stop-opacity="0.9"/><stop offset="100%" stop-color="#B06AE0" stop-opacity="0.3"/></linearGradient></defs><rect x="55" y="63" width="22" height="13" rx="5" fill="url(#tgl)" stroke="#B06AE0" stroke-width="1.5"/><rect x="83" y="63" width="22" height="13" rx="5" fill="url(#tgl)" stroke="#B06AE0" stroke-width="1.5"/><line x1="77" y1="69" x2="83" y2="69" stroke="#B06AE0" stroke-width="1.5"/></g>`},
+  {id:'gold-rimmed-specs',tier:3,slot:'eyes',name:'Gold Rimmed Spectacles',cost:225,emoji:'🏛️',
+    svg:`<g id="cosmetic-eyes-item"><circle cx="66" cy="69" r="11" fill="rgba(245,197,24,0.15)" stroke="#F5C518" stroke-width="2"/><circle cx="94" cy="69" r="11" fill="rgba(245,197,24,0.15)" stroke="#F5C518" stroke-width="2"/><line x1="77" y1="69" x2="83" y2="69" stroke="#F5C518" stroke-width="1.5"/><line x1="52" y1="65" x2="55" y2="68" stroke="#F5C518" stroke-width="1.5"/><line x1="106" y1="65" x2="109" y2="68" stroke="#F5C518" stroke-width="1.5"/></g>`},
+  {id:'crystal-cat-eye',tier:3,slot:'eyes',name:'Crystal Encrusted Cat-Eye',cost:300,emoji:'✨',
+    svg:`<g id="cosmetic-eyes-item"><path d="M55,73 L59,61 L79,61 L82,73Z" fill="rgba(0,229,255,0.3)" stroke="#00E5FF" stroke-width="2"/><path d="M83,73 L87,61 L107,61 L110,73Z" fill="rgba(0,229,255,0.3)" stroke="#00E5FF" stroke-width="2"/><circle cx="59" cy="61" r="2" fill="#E8F4FF"/><circle cx="79" cy="61" r="2" fill="#E8F4FF"/><circle cx="107" cy="61" r="2" fill="#E8F4FF"/></g>`},
+  {id:'alligator-loafers',tier:3,slot:'feet',name:'Alligator Loafers',cost:200,emoji:'🐊',
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="162" rx="14" ry="6" fill="#2D5A27" stroke="#1A3D17" stroke-width="1.5"/><ellipse cx="97" cy="162" rx="14" ry="6" fill="#2D5A27" stroke="#1A3D17" stroke-width="1.5"/><rect x="52" y="161" width="5" height="3" rx="1" fill="#1A3D17"/><rect x="59" y="160" width="4" height="3" rx="1" fill="#1A3D17"/><rect x="66" y="161" width="5" height="3" rx="1" fill="#1A3D17"/><rect x="86" y="161" width="5" height="3" rx="1" fill="#1A3D17"/><rect x="93" y="160" width="4" height="3" rx="1" fill="#1A3D17"/><rect x="100" y="161" width="5" height="3" rx="1" fill="#1A3D17"/></g>`},
+  {id:'bespoke-oxfords',tier:3,slot:'feet',name:'Bespoke Oxford Lace-Ups',cost:275,emoji:'🤌',
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="162" rx="14" ry="6" fill="#3D1A00" stroke="#C9920A" stroke-width="1.5"/><ellipse cx="97" cy="162" rx="14" ry="6" fill="#3D1A00" stroke="#C9920A" stroke-width="1.5"/><path d="M53,160 L73,160" stroke="#C9920A" stroke-width="1" stroke-dasharray="2,2"/><path d="M87,160 L107,160" stroke="#C9920A" stroke-width="1" stroke-dasharray="2,2"/></g>`},
+  {id:'velvet-slippers',tier:3,slot:'feet',name:'Crested Velvet Slippers',cost:225,emoji:'👑',
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="162" rx="14" ry="6" fill="#4B0082"/><ellipse cx="97" cy="162" rx="14" ry="6" fill="#4B0082"/><polygon points="60,158 63,154 66,158" fill="#F5C518"/><polygon points="94,158 97,154 100,158" fill="#F5C518"/></g>`},
+  {id:'feather-mules',tier:3,slot:'feet',name:'Feather-Trim Mules',cost:300,emoji:'🪶',
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="162" rx="13" ry="5" fill="#1A1A2E"/><ellipse cx="97" cy="162" rx="13" ry="5" fill="#1A1A2E"/><path d="M52,160 Q55,154 62,157" stroke="#E8F4FF" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M55,161 Q58,155 63,159" stroke="#E8F4FF" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M86,160 Q89,154 96,157" stroke="#E8F4FF" stroke-width="2" fill="none" stroke-linecap="round"/></g>`},
+  {id:'top-hat',tier:3,slot:'head',name:'The Top Hat',cost:200,emoji:'🎩',
+    svg:`<g id="cosmetic-head-item"><rect x="62" y="-8" width="36" height="28" rx="3" fill="#1A1A1A" stroke="#333" stroke-width="1.5"/><ellipse cx="80" cy="20" rx="38" ry="7" fill="#111"/><line x1="62" y1="5" x2="98" y2="5" stroke="#F5C518" stroke-width="1.5"/></g>`},
+  {id:'pillbox-hat',tier:3,slot:'head',name:'Pillbox Hat',cost:250,emoji:'🌸',
+    svg:`<g id="cosmetic-head-item"><ellipse cx="80" cy="10" rx="26" ry="12" fill="#FF2D78"/><ellipse cx="80" cy="10" rx="26" ry="5" fill="#CC0055"/><circle cx="80" cy="2" r="4" fill="#F5C518"/></g>`},
+  {id:'ostrich-hat',tier:3,slot:'head',name:'Ostrich Feather Hat',cost:300,emoji:'🦚',
+    svg:`<g id="cosmetic-head-item"><ellipse cx="80" cy="18" rx="30" ry="6" fill="#2D1B69"/><path d="M60,-5 Q50,-20 55,-30 Q70,-10 65,5" fill="#B06AE0" opacity="0.9"/><path d="M80,-8 Q75,-28 82,-35 Q88,-25 85,5" fill="#7B2FBE" opacity="0.9"/><path d="M100,-5 Q110,-20 105,-30 Q90,-10 95,5" fill="#B06AE0" opacity="0.9"/></g>`},
+  {id:'swarovski-beret',tier:3,slot:'head',name:'Swarovski Beret',cost:225,emoji:'💎',
+    svg:`<g id="cosmetic-head-item"><ellipse cx="80" cy="14" rx="30" ry="10" fill="#1A1A4A"/><ellipse cx="80" cy="20" rx="32" ry="5" fill="#252555"/><circle cx="97" cy="10" r="4" fill="#1A1A4A"/><circle cx="68" cy="10" r="2" fill="#E8F4FF"/><circle cx="76" cy="7" r="2" fill="#E8F4FF"/><circle cx="84" cy="9" r="2" fill="#E8F4FF"/><circle cx="91" cy="7" r="2" fill="#E8F4FF"/></g>`},
+  {id:'opera-gloves-full',tier:3,slot:'hands',name:'Full-Length Opera Gloves',cost:200,emoji:'🕊️',
+    svg:`<g id="cosmetic-hands-item"><rect x="6" y="98" width="16" height="26" rx="8" fill="#E8E8E8" stroke="#ddd" stroke-width="1" transform="rotate(-20 14 111)"/><rect x="138" y="98" width="16" height="26" rx="8" fill="#E8E8E8" stroke="#ddd" stroke-width="1" transform="rotate(20 146 111)"/></g>`},
+  {id:'cashmere-driving',tier:3,slot:'hands',name:'Cashmere Driving Gloves',cost:250,emoji:'🏎️',
+    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="117" rx="12" ry="9" fill="#C8A882" stroke="#A08060" stroke-width="1.5" transform="rotate(-20 18 117)"/><ellipse cx="142" cy="117" rx="12" ry="9" fill="#C8A882" stroke="#A08060" stroke-width="1.5" transform="rotate(20 142 117)"/></g>`},
+  {id:'embroidered-satin',tier:3,slot:'hands',name:'Embroidered Satin Gloves',cost:225,emoji:'🌸',
+    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="118" rx="11" ry="8" fill="#FF69B4" stroke="#FF2D78" stroke-width="1.2" transform="rotate(-20 18 118)"/><ellipse cx="142" cy="118" rx="11" ry="8" fill="#FF69B4" stroke="#FF2D78" stroke-width="1.2" transform="rotate(20 142 118)"/><circle cx="16" cy="116" r="1.5" fill="#F5C518" transform="rotate(-20 16 116)"/><circle cx="21" cy="120" r="1.5" fill="#F5C518" transform="rotate(-20 21 120)"/><circle cx="140" cy="116" r="1.5" fill="#F5C518" transform="rotate(20 140 116)"/><circle cx="145" cy="120" r="1.5" fill="#F5C518" transform="rotate(20 145 120)"/></g>`},
+  {id:'leather-gold-cuffs',tier:3,slot:'hands',name:'Leather w/ Gold Cuffs',cost:300,emoji:'🤺',
+    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="118" rx="11" ry="8" fill="#1A0A00" stroke="#F5C518" stroke-width="2" transform="rotate(-20 18 118)"/><ellipse cx="142" cy="118" rx="11" ry="8" fill="#1A0A00" stroke="#F5C518" stroke-width="2" transform="rotate(20 142 118)"/></g>`},
+  {id:'emerald-statement',tier:3,slot:'body',name:'Emerald Statement Necklace',cost:200,emoji:'💚',
+    svg:`<g id="cosmetic-body-item"><path d="M58,94 Q80,107 102,94" stroke="#00AA55" stroke-width="2.5" fill="none"/><rect x="73" y="103" width="14" height="10" rx="2" fill="#00AA55" stroke="#008844" stroke-width="1.5"/><circle cx="66" cy="97" r="4" fill="#06D6A0" stroke="#00AA55" stroke-width="1"/><circle cx="94" cy="97" r="4" fill="#06D6A0" stroke="#00AA55" stroke-width="1"/></g>`},
+  {id:'layered-gold-pearl',tier:3,slot:'body',name:'Gold & Pearl Combo',cost:250,emoji:'🧿',
+    svg:`<g id="cosmetic-body-item"><path d="M57,93 Q80,103 103,93" stroke="#F5C518" stroke-width="3" fill="none"/><circle cx="62" cy="98" r="2.5" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="70" cy="101" r="2.5" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="78" cy="103" r="2.5" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="86" cy="103" r="2.5" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="94" cy="101" r="2.5" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/></g>`},
+  {id:'diamond-riviere',tier:3,slot:'body',name:'The Diamond Rivière',cost:300,emoji:'💎',
+    svg:`<g id="cosmetic-body-item"><circle cx="61" cy="96" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/><circle cx="68" cy="100" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/><circle cx="75" cy="103" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/><circle cx="80" cy="104" r="4" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1.2"/><circle cx="85" cy="103" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/><circle cx="92" cy="100" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/><circle cx="99" cy="96" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/></g>`},
+  {id:'chunky-gem-collar',tier:3,slot:'body',name:'Chunky Gem Collar',cost:225,emoji:'🌈',
+    svg:`<g id="cosmetic-body-item"><path d="M55,92 Q80,101 105,92" stroke="#7B2FBE" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="63" cy="95" r="4" fill="#FF2D78"/><circle cx="71" cy="99" r="4" fill="#F5C518"/><circle cx="80" cy="101" r="4.5" fill="#00E5FF"/><circle cx="89" cy="99" r="4" fill="#06D6A0"/><circle cx="97" cy="95" r="4" fill="#B06AE0"/></g>`},
+  {id:'gold-knob-cane',tier:3,slot:'gear',name:'Gold-Knob Walking Cane',cost:200,emoji:'🦯',
+    svg:`<g id="cosmetic-gear-item"><line x1="140" y1="32" x2="150" y2="168" stroke="#8B6914" stroke-width="3" stroke-linecap="round"/><circle cx="137" cy="31" r="7" fill="#F5C518" stroke="#C9920A" stroke-width="1.5"/><path d="M133,38 Q138,46 145,42" stroke="#8B6914" stroke-width="2" fill="none"/></g>`},
+  {id:'monogrammed-hanky',tier:3,slot:'gear',name:'Monogrammed Handkerchief',cost:250,emoji:'🤵',
+    svg:`<g id="cosmetic-gear-item"><path d="M80,88 L76,74 L80,70 L84,74Z" fill="#E8F4FF" stroke="#ddd" stroke-width="0.5"/><path d="M76,74 L72,70 L80,64 L88,70 L84,74Z" fill="white" opacity="0.95"/><text x="80" y="83" text-anchor="middle" font-size="5" fill="#B06AE0" font-family="serif" font-style="italic">S</text></g>`},
+  {id:'velvet-cape-short',tier:3,slot:'gear',name:'Velvet Cape (Short)',cost:275,emoji:'🦸',
+    svg:`<g id="cosmetic-gear-item"><path d="M48,86 Q22,106 22,142 Q40,136 48,118 L55,86Z" fill="#4B0082" opacity="0.75" stroke="#7B2FBE" stroke-width="1"/><path d="M112,86 L105,86 Q120,118 120,142 Q138,136 138,106Z" fill="#4B0082" opacity="0.75" stroke="#7B2FBE" stroke-width="1"/><path d="M48,86 Q80,76 112,86" stroke="#F5C518" stroke-width="1.5" fill="none"/></g>`},
+  {id:'jeweled-clutch',tier:3,slot:'gear',name:'Jeweled Clutch Bag',cost:300,emoji:'💼',
+    svg:`<g id="cosmetic-gear-item"><rect x="130" y="110" width="24" height="16" rx="3" fill="#1A0030" stroke="#B06AE0" stroke-width="1.5"/><circle cx="136" cy="116" r="2" fill="#FF2D78"/><circle cx="142" cy="114" r="2" fill="#F5C518"/><circle cx="148" cy="116" r="2" fill="#00E5FF"/><circle cx="142" cy="119" r="2" fill="#B06AE0"/><path d="M133,110 Q142,105 151,110" fill="none" stroke="#B06AE0" stroke-width="1.5"/></g>`},
+
+  // ── TIER 4: FROMAGE ROYALE (Level 10) ──
+  {id:'brie-lliant-frames',tier:4,slot:'eyes',name:'The Brie-lliant Frames',cost:500,emoji:'💎',
+    svg:`<g id="cosmetic-eyes-item"><rect x="54" y="62" width="24" height="14" rx="7" fill="rgba(245,197,24,0.2)" stroke="#F5C518" stroke-width="2.5"/><rect x="82" y="62" width="24" height="14" rx="7" fill="rgba(245,197,24,0.2)" stroke="#F5C518" stroke-width="2.5"/><line x1="78" y1="69" x2="82" y2="69" stroke="#F5C518" stroke-width="2"/><circle cx="54" cy="62" r="2.5" fill="#E8F4FF"/><circle cx="78" cy="62" r="2.5" fill="#E8F4FF"/><circle cx="82" cy="62" r="2.5" fill="#E8F4FF"/><circle cx="106" cy="62" r="2.5" fill="#E8F4FF"/></g>`},
+  {id:'regard-imperial',tier:4,slot:'eyes',name:'Le Regard Impérial',cost:600,emoji:'👁️',
+    svg:`<g id="cosmetic-eyes-item"><ellipse cx="66" cy="69" rx="13" ry="10" fill="rgba(75,0,130,0.6)" stroke="#B06AE0" stroke-width="2"/><ellipse cx="94" cy="69" rx="13" ry="10" fill="rgba(75,0,130,0.6)" stroke="#B06AE0" stroke-width="2"/><line x1="79" y1="69" x2="81" y2="69" stroke="#B06AE0" stroke-width="2"/><circle cx="66" cy="69" r="4" fill="#F5C518" opacity="0.5"/><circle cx="94" cy="69" r="4" fill="#F5C518" opacity="0.5"/></g>`},
+  {id:'fondue-goggles',tier:4,slot:'eyes',name:'The Fondue Goggles',cost:700,emoji:'🫕',
+    svg:`<g id="cosmetic-eyes-item"><rect x="51" y="60" width="58" height="18" rx="9" fill="#1A0A00" stroke="#F5C518" stroke-width="2"/><rect x="54" y="62" width="22" height="14" rx="7" fill="#FF8C00" opacity="0.5"/><rect x="84" y="62" width="22" height="14" rx="7" fill="#FF8C00" opacity="0.5"/><circle cx="53" cy="62" r="2" fill="#F5C518"/><circle cx="107" cy="62" r="2" fill="#F5C518"/><circle cx="53" cy="76" r="2" fill="#F5C518"/><circle cx="107" cy="76" r="2" fill="#F5C518"/></g>`},
+  {id:'gouda-vision',tier:4,slot:'eyes',name:'The Gouda Vision',cost:750,emoji:'🌟',
+    svg:`<g id="cosmetic-eyes-item"><rect x="53" y="61" width="24" height="15" rx="6" fill="rgba(245,197,24,0.3)" stroke="#F5C518" stroke-width="3"/><rect x="83" y="61" width="24" height="15" rx="6" fill="rgba(245,197,24,0.3)" stroke="#F5C518" stroke-width="3"/><line x1="77" y1="68" x2="83" y2="68" stroke="#F5C518" stroke-width="2"/><circle cx="65" cy="68" r="5" fill="rgba(245,197,24,0.4)"/><circle cx="95" cy="68" r="5" fill="rgba(245,197,24,0.4)"/></g>`},
+  {id:'velvet-throne-slippers',tier:4,slot:'feet',name:'Velvet Throne Slippers',cost:500,emoji:'👑',
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="162" rx="14" ry="6" fill="#4B0082" stroke="#F5C518" stroke-width="2"/><ellipse cx="97" cy="162" rx="14" ry="6" fill="#4B0082" stroke="#F5C518" stroke-width="2"/><polygon points="60,158 63,154 66,158" fill="#F5C518"/><polygon points="94,158 97,154 100,158" fill="#F5C518"/></g>`},
+  {id:'crystalline-stilettos',tier:4,slot:'feet',name:'Crystalline Stilettos',cost:650,emoji:'💎',
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="161" rx="13" ry="5" fill="rgba(232,244,255,0.6)" stroke="#E8F4FF" stroke-width="1.5"/><path d="M73,162 L74,169" stroke="#E8F4FF" stroke-width="2.5"/><ellipse cx="97" cy="161" rx="13" ry="5" fill="rgba(232,244,255,0.6)" stroke="#E8F4FF" stroke-width="1.5"/><path d="M107,162 L108,169" stroke="#E8F4FF" stroke-width="2.5"/><circle cx="58" cy="160" r="2" fill="#E8F4FF" opacity="0.8"/><circle cx="92" cy="160" r="2" fill="#E8F4FF" opacity="0.8"/></g>`},
+  {id:'aged-reserve-oxfords',tier:4,slot:'feet',name:'Aged Reserve Oxfords',cost:700,emoji:'🎩',
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="162" rx="14" ry="6" fill="#1A0500" stroke="#C9920A" stroke-width="2"/><ellipse cx="97" cy="162" rx="14" ry="6" fill="#1A0500" stroke="#C9920A" stroke-width="2"/><path d="M53,160 L73,160" stroke="#F5C518" stroke-width="1.5" stroke-dasharray="2,2"/><path d="M87,160 L107,160" stroke="#F5C518" stroke-width="1.5" stroke-dasharray="2,2"/></g>`},
+  {id:'royale-platforms',tier:4,slot:'feet',name:'The Royale Platforms',cost:750,emoji:'🌟',
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="159" rx="13" ry="5" fill="#F5C518"/><rect x="50" y="161" width="26" height="7" rx="3" fill="#C9920A"/><ellipse cx="97" cy="159" rx="13" ry="5" fill="#F5C518"/><rect x="84" y="161" width="26" height="7" rx="3" fill="#C9920A"/></g>`},
+  {id:'fromage-royale-tiara',tier:4,slot:'head',name:'Fromage Royale Tiara',cost:500,emoji:'👑',
+    svg:`<g id="cosmetic-head-item"><path d="M55,20 L60,8 L68,16 L80,4 L92,16 L100,8 L105,20Z" fill="#F5C518" stroke="#C9920A" stroke-width="1.5"/><circle cx="80" cy="4" r="4" fill="#FF2D78"/><circle cx="68" cy="16" r="3" fill="#E8F4FF"/><circle cx="92" cy="16" r="3" fill="#E8F4FF"/></g>`},
+  {id:'chapeau-magnifique',tier:4,slot:'head',name:'Le Chapeau Magnifique',cost:600,emoji:'🎩',
+    svg:`<g id="cosmetic-head-item"><rect x="60" y="-10" width="40" height="32" rx="4" fill="#1A0030" stroke="#B06AE0" stroke-width="2"/><ellipse cx="80" cy="22" rx="42" ry="7" fill="#110020" stroke="#B06AE0" stroke-width="1.5"/><line x1="60" y1="4" x2="100" y2="4" stroke="#F5C518" stroke-width="2"/></g>`},
+  {id:'grand-coronation-bonnet',tier:4,slot:'head',name:'Grand Coronation Bonnet',cost:700,emoji:'🏛️',
+    svg:`<g id="cosmetic-head-item"><path d="M45,22 Q55,-5 80,-8 Q105,-5 115,22" fill="#C9920A"/><ellipse cx="80" cy="22" rx="45" ry="8" fill="#8B6914"/><circle cx="65" cy="5" r="4" fill="#FF2D78"/><circle cx="80" cy="-2" r="5" fill="#E8F4FF"/><circle cx="95" cy="5" r="4" fill="#FF2D78"/></g>`},
+  {id:'diamond-wedge-hat',tier:4,slot:'head',name:'The Diamond Wedge',cost:750,emoji:'💎',
+    svg:`<g id="cosmetic-head-item"><path d="M55,22 L65,2 L95,2 L105,22Z" fill="rgba(232,244,255,0.2)" stroke="#E8F4FF" stroke-width="2"/><ellipse cx="80" cy="22" rx="32" ry="5" fill="rgba(232,244,255,0.3)" stroke="#E8F4FF" stroke-width="1.5"/><circle cx="65" cy="2" r="2.5" fill="#E8F4FF"/><circle cx="80" cy="-2" r="3" fill="#E8F4FF"/><circle cx="95" cy="2" r="2.5" fill="#E8F4FF"/></g>`},
+  {id:'silk-gauntlets',tier:4,slot:'hands',name:'The Silk Gauntlets',cost:500,emoji:'⚔️',
+    svg:`<g id="cosmetic-hands-item"><rect x="5" y="100" width="18" height="28" rx="9" fill="#E8E8E8" stroke="#F5C518" stroke-width="2" transform="rotate(-20 14 114)"/><rect x="137" y="100" width="18" height="28" rx="9" fill="#E8E8E8" stroke="#F5C518" stroke-width="2" transform="rotate(20 146 114)"/></g>`},
+  {id:'gants-parfaits',tier:4,slot:'hands',name:'Les Gants Parfaits',cost:600,emoji:'🕊️',
+    svg:`<g id="cosmetic-hands-item"><rect x="5" y="100" width="18" height="28" rx="9" fill="#FFF5E0" stroke="#C9920A" stroke-width="2" transform="rotate(-20 14 114)"/><rect x="137" y="100" width="18" height="28" rx="9" fill="#FFF5E0" stroke="#C9920A" stroke-width="2" transform="rotate(20 146 114)"/><circle cx="14" cy="104" r="2.5" fill="#F5C518" transform="rotate(-20 14 104)"/><circle cx="146" cy="104" r="2.5" fill="#F5C518" transform="rotate(20 146 104)"/></g>`},
+  {id:'velvet-imperials',tier:4,slot:'hands',name:'The Velvet Imperials',cost:700,emoji:'🦁',
+    svg:`<g id="cosmetic-hands-item"><rect x="5" y="100" width="18" height="28" rx="9" fill="#4B0082" stroke="#B06AE0" stroke-width="2.5" transform="rotate(-20 14 114)"/><rect x="137" y="100" width="18" height="28" rx="9" fill="#4B0082" stroke="#B06AE0" stroke-width="2.5" transform="rotate(20 146 114)"/></g>`},
+  {id:'jeweled-mantle-gloves',tier:4,slot:'hands',name:'Jeweled Mantle Gloves',cost:750,emoji:'💎',
+    svg:`<g id="cosmetic-hands-item"><rect x="5" y="100" width="18" height="28" rx="9" fill="#1A0030" stroke="#F5C518" stroke-width="3" transform="rotate(-20 14 114)"/><rect x="137" y="100" width="18" height="28" rx="9" fill="#1A0030" stroke="#F5C518" stroke-width="3" transform="rotate(20 146 114)"/><circle cx="11" cy="107" r="2.5" fill="#FF2D78" transform="rotate(-20 11 107)"/><circle cx="17" cy="104" r="2" fill="#00E5FF" transform="rotate(-20 17 104)"/><circle cx="143" cy="107" r="2.5" fill="#FF2D78" transform="rotate(20 143 107)"/><circle cx="149" cy="104" r="2" fill="#00E5FF" transform="rotate(20 149 104)"/></g>`},
+  {id:'fromage-dor-collar',tier:4,slot:'body',name:"Fromage d'Or Collar",cost:500,emoji:'🧀',
+    svg:`<g id="cosmetic-body-item"><path d="M54,91 Q80,104 106,91" stroke="#F5C518" stroke-width="4.5" fill="none" stroke-linecap="round"/><path d="M54,91 Q80,104 106,91" stroke="#FFE066" stroke-width="1.5" stroke-dasharray="3,4" fill="none"/><polygon points="77,105 80,98 83,105 80,111" fill="#F5C518" stroke="#C9920A" stroke-width="1"/></g>`},
+  {id:'collier-eternel',tier:4,slot:'body',name:'Le Collier Éternel',cost:600,emoji:'🌙',
+    svg:`<g id="cosmetic-body-item"><path d="M55,92 Q80,106 105,92" stroke="#E8F4FF" stroke-width="3" fill="none"/><circle cx="63" cy="96" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/><circle cx="80" cy="105" r="5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1.5"/><circle cx="97" cy="96" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/></g>`},
+  {id:'royal-cheese-plate',tier:4,slot:'body',name:'Royal Cheese Plate Chain',cost:700,emoji:'🧀',
+    svg:`<g id="cosmetic-body-item"><path d="M56,92 Q80,104 104,92" stroke="#C9920A" stroke-width="3" fill="none"/><rect x="73" y="103" width="14" height="9" rx="2" fill="#F5C518" stroke="#C9920A" stroke-width="1.5"/><circle cx="76" cy="107" r="2" fill="#C9920A"/><circle cx="80" cy="107" r="2" fill="#8B6914"/><circle cx="84" cy="107" r="2" fill="#C9920A"/></g>`},
+  {id:'magnificent-choker',tier:4,slot:'body',name:'The Magnificent Choker',cost:750,emoji:'💎',
+    svg:`<g id="cosmetic-body-item"><path d="M55,91 Q80,98 105,91" stroke="#E8F4FF" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M55,91 Q80,98 105,91" stroke="#1A1A1A" stroke-width="3" fill="none"/><circle cx="63" cy="93" r="2.5" fill="#E8F4FF"/><circle cx="71" cy="95" r="2.5" fill="#FF2D78"/><circle cx="80" cy="96" r="3" fill="#E8F4FF"/><circle cx="89" cy="95" r="2.5" fill="#00E5FF"/><circle cx="97" cy="93" r="2.5" fill="#E8F4FF"/></g>`},
+  {id:'solid-gold-cane',tier:4,slot:'gear',name:'The Solid Gold Cane',cost:500,emoji:'✨',
+    svg:`<g id="cosmetic-gear-item"><line x1="142" y1="28" x2="154" y2="168" stroke="#F5C518" stroke-width="4" stroke-linecap="round"/><circle cx="138" cy="27" r="9" fill="#F5C518" stroke="#C9920A" stroke-width="2"/><circle cx="138" cy="27" r="4" fill="#C9920A"/></g>`},
+  {id:'bespoke-cape',tier:4,slot:'gear',name:'The Bespoke Cape',cost:600,emoji:'🦸',
+    svg:`<g id="cosmetic-gear-item"><path d="M46,84 Q14,108 14,150 Q36,142 46,120 L52,84Z" fill="#4B0082" opacity="0.85" stroke="#F5C518" stroke-width="1.5"/><path d="M114,84 L108,84 Q122,120 122,150 Q146,142 146,108Z" fill="#4B0082" opacity="0.85" stroke="#F5C518" stroke-width="1.5"/><path d="M46,84 Q80,74 114,84" stroke="#F5C518" stroke-width="2" fill="none"/><circle cx="80" cy="80" r="5" fill="#F5C518" stroke="#C9920A" stroke-width="1.2"/></g>`},
+  {id:'royal-scepter',tier:4,slot:'gear',name:'The Royal Scepter',cost:700,emoji:'👑',
+    svg:`<g id="cosmetic-gear-item"><line x1="140" y1="45" x2="148" y2="168" stroke="#C9920A" stroke-width="3.5" stroke-linecap="round"/><circle cx="137" cy="40" r="10" fill="#F5C518" stroke="#C9920A" stroke-width="2"/><polygon points="137,26 134,36 140,36" fill="#F5C518"/><circle cx="137" cy="40" r="5" fill="#FF2D78"/></g>`},
+  {id:'crown-jewel-monocle',tier:4,slot:'gear',name:'The Crown Jewel Monocle',cost:750,emoji:'💎',
+    svg:`<g id="cosmetic-gear-item"><circle cx="88" cy="68" r="15" fill="rgba(245,197,24,0.15)" stroke="#F5C518" stroke-width="3"/><circle cx="88" cy="68" r="11" fill="rgba(232,244,255,0.2)" stroke="#E8F4FF" stroke-width="1.5"/><line x1="73" y1="80" x2="65" y2="95" stroke="#F5C518" stroke-width="2"/><circle cx="63" cy="97" r="3" fill="#F5C518" stroke="#C9920A" stroke-width="1"/></g>`},
 ];
 
 function renderWardrobe() {
-  const slots = ['All','head','eyes','body','mouth','feet'];
-  const slotLabels = { All:'All', head:'Head', eyes:'Eyes', body:'Chain', mouth:'Mouth', feet:'Feet' };
-  const activeSlot = window._activeWardrobeSlot || 'All';
-
-  // Slot tabs
-  document.getElementById('slot-tabs').innerHTML = slots.map(s =>
-    `<button class="slot-tab ${s===activeSlot?'active':''}" onclick="filterWardrobe('${s}')">${slotLabels[s]||s}</button>`
-  ).join('');
-
-  // Items
-  const items = activeSlot === 'All' ? ITEMS : ITEMS.filter(i => i.slot === activeSlot);
-  document.getElementById('items-grid').innerHTML = items.map(item => {
-    const unlocked = STATE.unlockedItems.has(item.id) || STATE.points >= item.cost;
-    const equipped = STATE.equippedItems[item.slot] === item.id;
-    const cls = equipped ? 'item-card equipped unlocked' : unlocked ? 'item-card unlocked' : 'item-card locked';
-    return `<div class="${cls}" onclick="toggleEquip('${item.id}')">
-      ${equipped ? '<div class="equipped-badge">ON</div>' : ''}
-      <div class="item-emoji">${item.emoji}</div>
-      <div class="item-name">${item.name}</div>
-      <div class="item-cost ${unlocked?'owned':''}">${unlocked ? '✓ Unlocked' : item.cost+' pts'}</div>
-    </div>`;
+  const activeTier = window._activeTier || 1;
+  const activeSlot = window._activeWardrobeSlot || 'all';
+  document.getElementById('tier-nav').innerHTML = TIERS.map(t => {
+    const unlocked = STATE.level >= t.levelReq;
+    const isActive = activeTier === t.id;
+    const onclick = unlocked ? 'selectTier('+t.id+')' : 'showToast("Reach Level '+t.levelReq+' to unlock!")';
+    return '<button class="tier-pill tier-'+t.id+'-pill '+(isActive?'active':'')+' '+(unlocked?'':'locked')+'" onclick="'+onclick+'">'
+      +'<span class="tp-num">'+t.label+'</span>'
+      +'<span class="tp-name">'+t.name+'</span>'
+      +'<span class="tp-req">Lv.'+t.levelReq+'+</span>'
+      +'</button>';
   }).join('');
+  const tier = TIERS.find(t => t.id === activeTier);
+  if (STATE.level < tier.levelReq) {
+    document.getElementById('slot-tabs').innerHTML = '';
+    document.getElementById('items-grid').innerHTML =
+      '<div class="tier-locked-notice"><span class="lock-emoji">🔒</span>'
+      +tier.name+' is locked!<div class="lock-detail">Reach Level '+tier.levelReq
+      +' to unlock · You are Level '+STATE.level+'</div></div>';
+    return;
+  }
+  const slotLabels = {all:'All',eyes:'Eyes',feet:'Shoes',head:'Hats',hands:'Gloves',body:'Chains',gear:'Gear',mouth:'Grillz'};
+  const tierSlots = [...new Set(ITEMS.filter(i => i.tier === activeTier).map(i => i.slot))];
+  document.getElementById('slot-tabs').innerHTML = ['all',...tierSlots].map(s =>
+    '<button class="slot-tab '+(s===activeSlot?'active':'')+'" onclick="filterWardrobe(\''+s+'\')">'+(slotLabels[s]||s)+'</button>'
+  ).join('');
+  const tierItems = ITEMS.filter(i => i.tier === activeTier);
+  const items = activeSlot === 'all' ? tierItems : tierItems.filter(i => i.slot === activeSlot);
+  document.getElementById('items-grid').innerHTML = items.length === 0
+    ? '<div style="grid-column:1/-1;text-align:center;opacity:.5;font-size:.7rem;padding:20px;">Nothing here yet</div>'
+    : items.map(item => {
+        const owned = STATE.unlockedItems.has(item.id) || STATE.points >= item.cost;
+        const equipped = STATE.equippedItems[item.slot] === item.id;
+        const cls = equipped ? 'item-card equipped unlocked' : owned ? 'item-card unlocked' : 'item-card locked';
+        return '<div class="'+cls+'" onclick="toggleEquip(\''+item.id+'\')">'
+          +(equipped ? '<div class="equipped-badge">ON</div>' : '')
+          +'<div class="item-emoji">'+item.emoji+'</div>'
+          +'<div class="item-name">'+item.name+'</div>'
+          +'<div class="item-cost '+(owned?'owned':'')+'">'+(owned?'✓ Owned':item.cost+' pts')+'</div>'
+          +'</div>';
+      }).join('');
+}
+
+function selectTier(id) {
+  window._activeTier = id;
+  window._activeWardrobeSlot = 'all';
+  renderWardrobe();
 }
 
 function filterWardrobe(slot) {
@@ -1089,14 +1893,12 @@ function filterWardrobe(slot) {
 function toggleEquip(itemId) {
   const item = ITEMS.find(i => i.id === itemId);
   if (!item) return;
+  const tier = TIERS.find(t => t.id === item.tier);
+  if (STATE.level < tier.levelReq) { setSpeak('Reach Level '+tier.levelReq+' to unlock '+tier.name+'! 🔒'); return; }
   const canAfford = STATE.points >= item.cost || STATE.unlockedItems.has(item.id);
   if (!canAfford) { setSpeak("Not enough points yet! Keep making beats! 💪"); return; }
   STATE.unlockedItems.add(itemId);
-  if (STATE.equippedItems[item.slot] === itemId) {
-    STATE.equippedItems[item.slot] = null;
-  } else {
-    STATE.equippedItems[item.slot] = itemId;
-  }
+  STATE.equippedItems[item.slot] = STATE.equippedItems[item.slot] === itemId ? null : itemId;
   updateSwankyCosmetics('swanky-root');
   updateSwankyCosmetics('wardrobe-swanky-root', 'w-');
   renderWardrobe();
@@ -1104,9 +1906,8 @@ function toggleEquip(itemId) {
 }
 
 function updateSwankyCosmetics(rootId, prefix='') {
-  const slots = ['head','eyes','body','mouth','feet'];
-  slots.forEach(slot => {
-    const el = document.getElementById(`${prefix ? 'w-' : ''}cosmetic-${slot}`);
+  ['head','eyes','body','mouth','feet','hands','gear'].forEach(slot => {
+    const el = document.getElementById((prefix?'w-':'')+'cosmetic-'+slot);
     if (!el) return;
     const equippedId = STATE.equippedItems[slot];
     if (equippedId) {
@@ -1178,30 +1979,38 @@ function switchTab(tab) {
 // =====================
 // === INIT ===
 // =====================
-buildSequencer();
+renderSequencer();
 updateStats();
 
-// Audio permission banner — iOS and Android only (not desktop browsers).
+// Build genre pills
+(function() {
+  const picker = document.getElementById('genre-picker');
+  Object.entries(GENRE_TEMPLATES).forEach(([key, tmpl]) => {
+    const pill = document.createElement('button');
+    pill.className = 'genre-pill' + (key === 'swanky' ? ' swanky' : '');
+    pill.textContent = `${tmpl.emoji} ${tmpl.name}`;
+    pill.onclick = () => applyGenre(key);
+    picker.appendChild(pill);
+  });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.genre-picker-wrap')) closeGenrePicker();
+  });
+}());
+
 (function() {
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS 13+
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   if (!isMobile) return;
-
   const prompt = document.getElementById('audio-prompt');
   const acceptBtn = document.getElementById('ap-accept');
   const dismissBtn = document.getElementById('ap-dismiss');
-
   prompt.style.display = 'flex';
-
   acceptBtn.addEventListener('click', async () => {
     await unlockAudio();
     prompt.style.display = 'none';
     showToast('Audio enabled 🔊');
   });
-
-  dismissBtn.addEventListener('click', () => {
-    prompt.style.display = 'none';
-  });
+  dismissBtn.addEventListener('click', () => { prompt.style.display = 'none'; });
 }());
 </script>
 </body>
