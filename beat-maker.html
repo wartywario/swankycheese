@@ -368,7 +368,23 @@
     .wardrobe-swanky{flex-direction:column;width:200px;flex-shrink:0;align-items:center;}
     .wardrobe-swanky .swanky-container{width:140px;height:158px;}
     .wardrobe-swanky-right{align-items:center;}
+    .beats-8 .seq-row,.beats-8 .beat-marker,.beats-8 .playhead-row,.beats-8 .beat-number-row{grid-template-columns:56px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr;gap:4px;}
+    .beats-32 .seq-row,.beats-32 .beat-marker,.beats-32 .playhead-row,.beats-32 .beat-number-row{grid-template-columns:56px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr 8px 1fr 1fr 1fr 1fr;gap:4px;}
   }
+
+  /* BEAT COUNT OVERRIDES */
+  .beats-8 .seq-row,.beats-8 .beat-marker,.beats-8 .playhead-row,.beats-8 .beat-number-row{grid-template-columns:44px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr;}
+  .beats-32 .seq-row,.beats-32 .beat-marker,.beats-32 .playhead-row,.beats-32 .beat-number-row{grid-template-columns:44px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr 6px 1fr 1fr 1fr 1fr;}
+  .beats-32 .pad{min-height:18px;}
+
+  /* BEAT COUNT TOGGLE */
+  .beat-lab-header{flex-direction:column;gap:6px;align-items:stretch;justify-content:flex-start;}
+  .beat-lab-header-top{display:flex;align-items:center;justify-content:space-between;}
+  .beat-count-row{display:flex;align-items:center;gap:8px;}
+  .beat-count-label{font-size:.65rem;opacity:.6;white-space:nowrap;}
+  .beat-count-toggle{display:flex;background:rgba(255,255,255,.05);border-radius:var(--radius-sm);overflow:hidden;border:1px solid rgba(255,255,255,.1);}
+  .beat-count-btn{flex:1;padding:5px 12px;border:none;background:transparent;color:var(--text);font-family:'Fredoka One',cursive;font-size:.78rem;cursor:pointer;opacity:.5;transition:all .15s;touch-action:manipulation;}
+  .beat-count-btn.active{background:var(--purple-mid);opacity:1;}
 </style>
 </head>
 <body>
@@ -405,56 +421,31 @@
       <!-- LEFT: Sequencer -->
       <div class="beat-lab">
         <div class="beat-lab-header">
-          <h2>🎹 Beat Lab</h2>
-          <div class="mode-toggle">
-            <button class="mode-btn active" onclick="setMode('step')" id="btn-step">Step</button>
-            <button class="mode-btn" onclick="setMode('tap')" id="btn-tap">Live Tap</button>
+          <div class="beat-lab-header-top">
+            <h2>🎹 Beat Lab</h2>
+            <div class="mode-toggle">
+              <button class="mode-btn active" onclick="setMode('step')" id="btn-step">Step</button>
+              <button class="mode-btn" onclick="setMode('tap')" id="btn-tap">Live Tap</button>
+            </div>
+          </div>
+          <div class="beat-count-row">
+            <span class="beat-count-label">Beats:</span>
+            <div class="beat-count-toggle">
+              <button class="beat-count-btn" data-beats="8" onclick="changeBeatCount(8)">8</button>
+              <button class="beat-count-btn active" data-beats="16" onclick="changeBeatCount(16)">16</button>
+              <button class="beat-count-btn" data-beats="32" onclick="changeBeatCount(32)">32</button>
+            </div>
           </div>
         </div>
 
-        <!-- Beat numbers -->
-        <div class="beat-number-row">
-          <div></div>
-          <div class="beat-num downbeat">1</div><div class="beat-num"></div><div class="beat-num"></div><div class="beat-num"></div>
-          <div></div>
-          <div class="beat-num downbeat">2</div><div class="beat-num"></div><div class="beat-num"></div><div class="beat-num"></div>
-          <div></div>
-          <div class="beat-num downbeat">3</div><div class="beat-num"></div><div class="beat-num"></div><div class="beat-num"></div>
-          <div></div>
-          <div class="beat-num downbeat">4</div><div class="beat-num"></div><div class="beat-num"></div><div class="beat-num"></div>
-        </div>
+        <!-- Beat numbers (built by JS) -->
+        <div class="beat-number-row" id="beat-number-row"></div>
 
-        <!-- Playhead -->
-        <div class="playhead-row" id="playhead-row">
-          <div></div>
-          <div class="playhead-cell" id="ph-0"></div><div class="playhead-cell" id="ph-1"></div>
-          <div class="playhead-cell" id="ph-2"></div><div class="playhead-cell" id="ph-3"></div>
-          <div></div>
-          <div class="playhead-cell" id="ph-4"></div><div class="playhead-cell" id="ph-5"></div>
-          <div class="playhead-cell" id="ph-6"></div><div class="playhead-cell" id="ph-7"></div>
-          <div></div>
-          <div class="playhead-cell" id="ph-8"></div><div class="playhead-cell" id="ph-9"></div>
-          <div class="playhead-cell" id="ph-10"></div><div class="playhead-cell" id="ph-11"></div>
-          <div></div>
-          <div class="playhead-cell" id="ph-12"></div><div class="playhead-cell" id="ph-13"></div>
-          <div class="playhead-cell" id="ph-14"></div><div class="playhead-cell" id="ph-15"></div>
-        </div>
+        <!-- Playhead (built by JS) -->
+        <div class="playhead-row" id="playhead-row"></div>
 
-        <!-- Beat marker -->
-        <div class="beat-marker">
-          <div></div>
-          <div class="beat-marker-item bar-start"></div>
-          <div class="beat-marker-item"></div><div class="beat-marker-item"></div><div class="beat-marker-item"></div>
-          <div></div>
-          <div class="beat-marker-item beat-start"></div>
-          <div class="beat-marker-item"></div><div class="beat-marker-item"></div><div class="beat-marker-item"></div>
-          <div></div>
-          <div class="beat-marker-item beat-start"></div>
-          <div class="beat-marker-item"></div><div class="beat-marker-item"></div><div class="beat-marker-item"></div>
-          <div></div>
-          <div class="beat-marker-item beat-start"></div>
-          <div class="beat-marker-item"></div><div class="beat-marker-item"></div><div class="beat-marker-item"></div>
-        </div>
+        <!-- Beat marker (built by JS) -->
+        <div class="beat-marker" id="beat-marker"></div>
 
         <!-- Sequencer Grid (built by JS) -->
         <div class="sequencer" id="sequencer"></div>
@@ -520,6 +511,10 @@
         <div class="stage-left">
           <div class="swanky-container">
             <svg id="swanky-svg" viewBox="0 0 160 180" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <clipPath id="cp-left"><rect x="-200" y="-200" width="280" height="600"/></clipPath>
+                <clipPath id="cp-right"><rect x="80" y="-200" width="280" height="600"/></clipPath>
+              </defs>
               <g id="swanky-root">
                 <!-- ground shadow -->
                 <ellipse cx="80" cy="176" rx="46" ry="7" fill="rgba(0,0,0,0.32)"/>
@@ -562,7 +557,9 @@
                 <!-- feet -->
                 <ellipse id="foot-l" cx="44"  cy="173" rx="15" ry="6" fill="#F5C518" stroke="#3D1A00" stroke-width="2"/>
                 <ellipse id="foot-r" cx="116" cy="173" rx="15" ry="6" fill="#F5C518" stroke="#3D1A00" stroke-width="2"/>
-                <g id="cosmetic-feet"></g>
+                <g id="cosmetic-feet-l" clip-path="url(#cp-left)"></g>
+                <g id="cosmetic-feet-r" clip-path="url(#cp-right)"></g>
+                <g id="cosmetic-body"></g>
                 <!-- eyes -->
                 <g id="eye-l">
                   <ellipse cx="67" cy="70" rx="12" ry="13.5" fill="#FFF8EE" stroke="#3D1A00" stroke-width="1.5"/>
@@ -586,8 +583,8 @@
                   <path d="M70,98 Q80,108 90,98" stroke="#3D1A00" stroke-width="2.5" fill="none" stroke-linecap="round"/>
                 </g>
                 <g id="cosmetic-mouth"></g>
-                <g id="cosmetic-body"></g>
-                <g id="cosmetic-hands"></g>
+                <g id="cosmetic-hands-l" clip-path="url(#cp-left)"></g>
+                <g id="cosmetic-hands-r" clip-path="url(#cp-right)"></g>
                 <g id="cosmetic-eyes"></g>
                 <g id="cosmetic-head"></g>
                 <g id="cosmetic-gear"></g>
@@ -610,6 +607,10 @@
       <div class="wardrobe-swanky">
         <div class="swanky-container">
           <svg id="wardrobe-swanky-svg" viewBox="0 0 160 180" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <clipPath id="wcp-left"><rect x="-200" y="-200" width="280" height="600"/></clipPath>
+              <clipPath id="wcp-right"><rect x="80" y="-200" width="280" height="600"/></clipPath>
+            </defs>
             <g id="wardrobe-swanky-root">
               <ellipse cx="80" cy="176" rx="46" ry="7" fill="rgba(0,0,0,0.32)"/>
               <path id="w-arm-l-out" d="M 22,115 C 40,110 65,118 75,125" fill="none" stroke="#3D1A00" stroke-width="18" stroke-linecap="round"/>
@@ -644,7 +645,9 @@
               <path id="w-leg-r-hi" d="M 100,148 C 108,158 114,165 116,172" fill="none" stroke="#FFF0A0" stroke-width="4" stroke-linecap="round"/>
               <ellipse id="w-foot-l" cx="44"  cy="173" rx="15" ry="6" fill="#F5C518" stroke="#3D1A00" stroke-width="2"/>
               <ellipse id="w-foot-r" cx="116" cy="173" rx="15" ry="6" fill="#F5C518" stroke="#3D1A00" stroke-width="2"/>
-              <g id="w-cosmetic-feet"></g>
+              <g id="w-cosmetic-feet-l" clip-path="url(#wcp-left)"></g>
+              <g id="w-cosmetic-feet-r" clip-path="url(#wcp-right)"></g>
+              <g id="w-cosmetic-body"></g>
               <g id="w-eye-l">
                 <ellipse cx="67" cy="70" rx="12" ry="13.5" fill="#FFF8EE" stroke="#3D1A00" stroke-width="1.5"/>
                 <circle  cx="67" cy="72" r="8.5" fill="#B07020"/>
@@ -667,8 +670,8 @@
                 <path d="M70,98 Q80,108 90,98" stroke="#3D1A00" stroke-width="2.5" fill="none" stroke-linecap="round"/>
               </g>
               <g id="w-cosmetic-mouth"></g>
-              <g id="w-cosmetic-body"></g>
-              <g id="w-cosmetic-hands"></g>
+              <g id="w-cosmetic-hands-l" clip-path="url(#wcp-left)"></g>
+              <g id="w-cosmetic-hands-r" clip-path="url(#wcp-right)"></g>
               <g id="w-cosmetic-eyes"></g>
               <g id="w-cosmetic-head"></g>
               <g id="w-cosmetic-gear"></g>
@@ -714,6 +717,7 @@ const STATE = {
   isPlaying: false,
   currentStep: -1,
   mode: 'step',
+  beatCount: 16,
   tapRecording: false,
   tapStartTime: 0,
   tapDuration: 8000,
@@ -739,7 +743,7 @@ const OCTAVES = ['low','mid','high'];
 const OCTAVE_NUM = { low: 3, mid: 4, high: 5 };
 
 function makeSlot(instrument = 'kick', note = 'C', octave = 'mid') {
-  return { instrument, note, octave, pattern: new Array(16).fill(false) };
+  return { instrument, note, octave, pattern: new Array(STATE.beatCount).fill(false) };
 }
 
 let SLOTS = [
@@ -879,7 +883,7 @@ function _seqSchedule() {
     const uiDelay = Math.max(0, (t - ctx.currentTime) * 1000);
     setTimeout(() => updatePlayhead(s), uiDelay);
     _seqNextTime += stepSecs;
-    _seqStep = (_seqStep + 1) % 16;
+    _seqStep = (_seqStep + 1) % STATE.beatCount;
   }
   _seqTimer = setTimeout(_seqSchedule, SEQ_TICK);
 }
@@ -966,7 +970,7 @@ function buildSeqRow(slot, i) {
 
   row.appendChild(cell);
 
-  for (let col = 0; col < 16; col++) {
+  for (let col = 0; col < STATE.beatCount; col++) {
     const pad = document.createElement('button');
     const isDownbeat = col % 4 === 0;
     pad.className = `pad ${meta.cssClass}${isDownbeat ? ' downbeat' : ''}${slot.pattern[col] ? ' active' : ''}`;
@@ -974,7 +978,7 @@ function buildSeqRow(slot, i) {
     pad.setAttribute('aria-label', `Step ${col + 1}`);
     pad.onclick = () => togglePad(i, col);
     row.appendChild(pad);
-    if (col === 3 || col === 7 || col === 11) {
+    if ((col + 1) % 4 === 0 && col < STATE.beatCount - 1) {
       row.appendChild(document.createElement('div'));
     }
   }
@@ -1179,6 +1183,93 @@ function updateRemoveButtons() {
 }
 
 // =====================
+// === BEAT COUNT ===
+// =====================
+function rebuildBeatHeader() {
+  const n = STATE.beatCount;
+  const numGroups = n / 4;
+
+  const bnr = document.getElementById('beat-number-row');
+  bnr.innerHTML = '';
+  bnr.appendChild(document.createElement('div'));
+  for (let g = 0; g < numGroups; g++) {
+    const num = document.createElement('div');
+    num.className = 'beat-num downbeat';
+    num.textContent = g + 1;
+    bnr.appendChild(num);
+    for (let p = 1; p < 4; p++) {
+      const d = document.createElement('div');
+      d.className = 'beat-num';
+      bnr.appendChild(d);
+    }
+    if (g < numGroups - 1) bnr.appendChild(document.createElement('div'));
+  }
+
+  const pr = document.getElementById('playhead-row');
+  pr.innerHTML = '';
+  pr.appendChild(document.createElement('div'));
+  for (let g = 0; g < numGroups; g++) {
+    for (let p = 0; p < 4; p++) {
+      const cell = document.createElement('div');
+      cell.className = 'playhead-cell';
+      cell.id = `ph-${g * 4 + p}`;
+      pr.appendChild(cell);
+    }
+    if (g < numGroups - 1) pr.appendChild(document.createElement('div'));
+  }
+
+  const bm = document.getElementById('beat-marker');
+  bm.innerHTML = '';
+  bm.appendChild(document.createElement('div'));
+  for (let g = 0; g < numGroups; g++) {
+    const isBarStart = g === 0 || (n === 32 && g === 4);
+    for (let p = 0; p < 4; p++) {
+      const item = document.createElement('div');
+      item.className = 'beat-marker-item' + (p === 0 ? ' ' + (isBarStart ? 'bar-start' : 'beat-start') : '');
+      bm.appendChild(item);
+    }
+    if (g < numGroups - 1) bm.appendChild(document.createElement('div'));
+  }
+}
+
+function changeBeatCount(n) {
+  if (STATE.beatCount === n) return;
+  if (STATE.isPlaying) {
+    stopSequencer();
+    STATE.isPlaying = false;
+    document.getElementById('btn-play').textContent = '▶ Play Beat';
+    document.getElementById('btn-play').classList.remove('playing');
+    document.getElementById('swanky-root').classList.remove('playing-pulse');
+  }
+  STATE.beatCount = n;
+  SLOTS.forEach(s => {
+    if (n > s.pattern.length) {
+      while (s.pattern.length < n) s.pattern.push(false);
+    } else {
+      s.pattern.length = n;
+    }
+  });
+  const beatLab = document.querySelector('.beat-lab');
+  beatLab.classList.remove('beats-8', 'beats-32');
+  if (n === 8) beatLab.classList.add('beats-8');
+  if (n === 32) beatLab.classList.add('beats-32');
+  document.querySelectorAll('.beat-count-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.beats) === n);
+  });
+  rebuildBeatHeader();
+  renderSequencer();
+  document.getElementById('grade-panel').classList.remove('show');
+}
+
+function downsampleTo8(prob16) {
+  return [0, 2, 4, 6, 8, 10, 12, 14].map(i => prob16[i] || 0);
+}
+
+function upsampleTo32(prob16) {
+  return [...prob16, ...prob16];
+}
+
+// =====================
 // === RANDOM BEAT GENERATOR ===
 // =====================
 const GENRE_TEMPLATES = {
@@ -1298,6 +1389,59 @@ const GENRE_TEMPLATES = {
       { instrument:'keys',  note:'B', octave:'high', prob:[0.5,0.5,0.5,0.5, 0.5,0.5,0.5,0.5, 0.5,0.5,0.5,0.5, 0.5,0.5,0.5,0.5] },
     ]
   },
+  grunge: {
+    name:'Grunge', emoji:'🎸', bpm:92,
+    slots8:[
+      { instrument:'kick',  note:'C', octave:'mid',  prob:[1.0, 0, 0, 0.6, 0.9, 0, 0, 0.2] },
+      { instrument:'snare', note:'C', octave:'mid',  prob:[0,   0, 0.9, 0,  0,   0, 0.85, 0.2] },
+      { instrument:'hihat', note:'C', octave:'mid',  prob:[0,   0.5, 0, 0.5, 0, 0.5, 0, 0.4] },
+      { instrument:'bass',  note:'E', octave:'low',  prob:[0.8, 0, 0.4, 0,  0.8, 0, 0.4, 0] },
+      { instrument:'keys',  note:'E', octave:'mid',  prob:[0.6, 0, 0,   0,  0.5, 0, 0,   0] },
+    ],
+    slots:[
+      { instrument:'kick',  note:'C', octave:'mid',  prob:[1.0,0,0.3,0, 0,0,0.7,0, 0.9,0,0.3,0, 0,0,0.5,0.2] },
+      { instrument:'snare', note:'C', octave:'mid',  prob:[0,0,0,0, 0.9,0,0,0.3, 0,0,0,0, 0.9,0,0,0.2] },
+      { instrument:'hihat', note:'C', octave:'mid',  prob:[0,0,0.5,0, 0,0,0.5,0, 0,0,0.5,0, 0,0,0.5,0.3] },
+      { instrument:'bass',  note:'E', octave:'low',  prob:[0.8,0,0,0.4, 0,0.5,0,0, 0.8,0,0,0.4, 0,0.4,0,0] },
+      { instrument:'keys',  note:'E', octave:'mid',  prob:[0.6,0,0,0, 0,0,0,0, 0.6,0,0,0, 0,0,0,0] },
+    ]
+  },
+  disco: {
+    name:'Disco', emoji:'🕺', bpm:116,
+    slots8:[
+      { instrument:'kick',  note:'C', octave:'mid',  prob:[1.0, 0, 0, 0, 1.0, 0, 0, 0] },
+      { instrument:'snare', note:'C', octave:'mid',  prob:[0,   0, 0.9, 0, 0,  0, 0.85, 0] },
+      { instrument:'hihat', note:'C', octave:'mid',  prob:[0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.7] },
+      { instrument:'bass',  note:'F', octave:'low',  prob:[0.8, 0, 0.5, 0, 0.8, 0, 0.5, 0.3] },
+      { instrument:'keys',  note:'F', octave:'mid',  prob:[0.5, 0, 0,   0, 0.45, 0, 0,  0] },
+    ],
+    slots:[
+      { instrument:'kick',  note:'C', octave:'mid',  prob:[1.0,0,0,0, 1.0,0,0,0, 1.0,0,0,0, 1.0,0,0,0] },
+      { instrument:'snare', note:'C', octave:'mid',  prob:[0,0,0,0, 0.9,0,0,0, 0,0,0,0, 0.9,0,0,0] },
+      { instrument:'hihat', note:'C', octave:'mid',  prob:[0.6,0.6,0.6,0.6, 0.6,0.6,0.6,0.6, 0.6,0.6,0.6,0.6, 0.6,0.6,0.6,0.7] },
+      { instrument:'bass',  note:'F', octave:'low',  prob:[0.8,0,0,0.6, 0,0.5,0,0, 0.8,0,0,0.6, 0,0.5,0,0.3] },
+      { instrument:'keys',  note:'F', octave:'mid',  prob:[0.5,0,0,0, 0.45,0,0,0, 0.5,0,0,0, 0.45,0,0,0] },
+      { instrument:'keys',  note:'A', octave:'mid',  prob:[0,0,0.4,0, 0,0,0.4,0, 0,0,0.4,0, 0,0,0.4,0] },
+    ]
+  },
+  swing: {
+    name:'Swing', emoji:'🎺', bpm:104,
+    slots8:[
+      { instrument:'kick',  note:'C', octave:'mid',  prob:[1.0, 0, 0, 0, 0.5, 0, 0, 0] },
+      { instrument:'snare', note:'C', octave:'mid',  prob:[0,   0, 0.85, 0.4, 0, 0, 0.8, 0.3] },
+      { instrument:'hihat', note:'C', octave:'mid',  prob:[0.8, 0, 0.6, 0, 0.8, 0, 0.6, 0] },
+      { instrument:'bass',  note:'G', octave:'low',  prob:[0.8, 0, 0.4, 0, 0.6, 0, 0.4, 0] },
+      { instrument:'keys',  note:'D', octave:'mid',  prob:[0.4, 0, 0, 0.35, 0, 0, 0, 0.3] },
+    ],
+    slots:[
+      { instrument:'kick',  note:'C', octave:'mid',  prob:[1.0,0,0,0, 0,0,0,0, 0.5,0,0,0, 0,0,0,0] },
+      { instrument:'snare', note:'C', octave:'mid',  prob:[0,0,0,0, 0.85,0,0,0.4, 0,0,0,0, 0.85,0,0,0.3] },
+      { instrument:'hihat', note:'C', octave:'mid',  prob:[0.8,0,0,0.6, 0.8,0,0,0.6, 0.8,0,0,0.6, 0.8,0,0,0.6] },
+      { instrument:'bass',  note:'G', octave:'low',  prob:[0.8,0,0.4,0, 0,0.4,0,0, 0.6,0,0.4,0, 0,0.5,0,0] },
+      { instrument:'keys',  note:'D', octave:'mid',  prob:[0.4,0,0,0, 0,0,0.35,0, 0,0,0,0.35, 0,0,0,0.3] },
+      { instrument:'keys',  note:'B', octave:'mid',  prob:[0,0,0.35,0, 0,0,0,0.3, 0,0,0.3,0, 0,0,0,0.25] },
+    ]
+  },
 };
 
 let _swankyPressCount = 0;
@@ -1308,11 +1452,23 @@ function generatePattern(probMap) {
 
 function buildGenreSlots(key) {
   const tmpl = GENRE_TEMPLATES[key];
-  let defs = tmpl.slots;
+  let baseDefs = tmpl.slots;
   if (key === 'swanky') {
     const count = 10 + Math.floor(Math.random() * 3);
-    defs = [...defs].sort(() => Math.random() - 0.5).slice(0, count);
+    baseDefs = [...baseDefs].sort(() => Math.random() - 0.5).slice(0, count);
   }
+  const defs = baseDefs.map(s => {
+    let prob;
+    if (STATE.beatCount === 8) {
+      prob = (tmpl.slots8 ? tmpl.slots8.find(d => d.instrument === s.instrument && d.note === s.note)?.prob : null)
+             || downsampleTo8(s.prob);
+    } else if (STATE.beatCount === 32) {
+      prob = upsampleTo32(s.prob);
+    } else {
+      prob = s.prob;
+    }
+    return { ...s, prob };
+  });
   return defs.map(s => {
     const slot = makeSlot(s.instrument, s.note, s.octave);
     slot.pattern = generatePattern(s.prob);
@@ -1476,10 +1632,10 @@ async function tapInstrument(instrument) {
 
   const elapsed = Date.now() - STATE.tapStartTime;
   const stepDuration = (60000 / STATE.bpm) / 4;
-  const nearestStep = Math.round(elapsed / stepDuration) % 16;
+  const nearestStep = Math.round(elapsed / stepDuration) % STATE.beatCount;
 
   triggerSound(slotIdx);
-  if (nearestStep >= 0 && nearestStep < 16) {
+  if (nearestStep >= 0 && nearestStep < STATE.beatCount) {
     SLOTS[slotIdx].pattern[nearestStep] = true;
     const pad = document.getElementById(`pad-${slotIdx}-${nearestStep}`);
     if (pad) pad.classList.add('active');
@@ -1535,7 +1691,7 @@ async function gradeBeat() {
   const allActive = SLOTS.flatMap(s => s.pattern).filter(Boolean);
   if (allActive.length < 2) { setSpeak("Add some more beats first, fam! 🎹"); return; }
 
-  const totalPads = SLOTS.length * 16;
+  const totalPads = SLOTS.length * STATE.beatCount;
   const filled = allActive.length;
   const density = filled / totalPads;
 
@@ -1546,8 +1702,12 @@ async function gradeBeat() {
   const activeTypes = new Set(SLOTS.filter(s => s.pattern.some(Boolean)).map(s => s.instrument));
   const varietyScore = Math.min(25, activeTypes.size * 5);
 
-  // 3. Syncopation (20)
-  const offBeats = [2,4,6,10,12,14];
+  // 3. Syncopation (20) — off-beats scaled to beatCount
+  const offBeats = [];
+  for (let i = 0; i < STATE.beatCount; i++) {
+    const mod = i % 8;
+    if (mod === 2 || mod === 4 || mod === 6) offBeats.push(i);
+  }
   let offCount = 0;
   SLOTS.forEach(s => offBeats.forEach(step => { if (s.pattern[step]) offCount++; }));
   const syncoScore = Math.min(20, Math.floor((offCount / Math.max(1, SLOTS.length * offBeats.length)) * 40));
@@ -1697,13 +1857,13 @@ const ITEMS=[
   {id:'tiny-mittens',tier:1,slot:'hands',name:'Tiny Mittens',cost:20,emoji:'🩷',
     svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="12" fill="#FFB3D9" stroke="#FF69B4" stroke-width="2"/><circle cx="152" cy="162" r="12" fill="#FFB3D9" stroke="#FF69B4" stroke-width="2"/><circle cx="4" cy="158" r="4" fill="rgba(255,220,240,0.6)"/><circle cx="148" cy="158" r="4" fill="rgba(255,220,240,0.6)"/><ellipse cx="8" cy="166" rx="10" ry="3.5" fill="none" stroke="#FF69B4" stroke-width="1.5"/><ellipse cx="152" cy="166" rx="10" ry="3.5" fill="none" stroke="#FF69B4" stroke-width="1.5"/></g>`},
   {id:'macaroni-necklace',tier:1,slot:'body',name:'Macaroni Necklace',cost:20,emoji:'🍝',
-    svg:`<g id="cosmetic-body-item"><circle cx="63" cy="97" r="3.5" fill="#FF9500"/><circle cx="70" cy="101" r="3.5" fill="#FFB830"/><circle cx="77" cy="104" r="3.5" fill="#FF9500"/><circle cx="84" cy="104" r="3.5" fill="#FFB830"/><circle cx="91" cy="101" r="3.5" fill="#FF9500"/><circle cx="97" cy="97" r="3.5" fill="#FFB830"/></g>`},
+    svg:`<g id="cosmetic-body-item"><circle cx="63" cy="124" r="3.5" fill="#FF9500"/><circle cx="70" cy="128" r="3.5" fill="#FFB830"/><circle cx="77" cy="131" r="3.5" fill="#FF9500"/><circle cx="84" cy="131" r="3.5" fill="#FFB830"/><circle cx="91" cy="128" r="3.5" fill="#FF9500"/><circle cx="97" cy="124" r="3.5" fill="#FFB830"/></g>`},
   {id:'plastic-beads',tier:1,slot:'body',name:'Plastic Beads',cost:15,emoji:'📿',
-    svg:`<g id="cosmetic-body-item"><circle cx="63" cy="97" r="3" fill="#FF2D78"/><circle cx="70" cy="101" r="3" fill="#F5C518"/><circle cx="77" cy="104" r="3" fill="#00E5FF"/><circle cx="84" cy="104" r="3" fill="#FF6B35"/><circle cx="91" cy="101" r="3" fill="#B06AE0"/><circle cx="97" cy="97" r="3" fill="#06D6A0"/></g>`},
+    svg:`<g id="cosmetic-body-item"><circle cx="63" cy="124" r="3" fill="#FF2D78"/><circle cx="70" cy="128" r="3" fill="#F5C518"/><circle cx="77" cy="131" r="3" fill="#00E5FF"/><circle cx="84" cy="131" r="3" fill="#FF6B35"/><circle cx="91" cy="128" r="3" fill="#B06AE0"/><circle cx="97" cy="124" r="3" fill="#06D6A0"/></g>`},
   {id:'bell-collar',tier:1,slot:'body',name:'Bell Collar',cost:25,emoji:'🔔',
-    svg:`<g id="cosmetic-body-item"><path d="M56,93 Q80,101 104,93" stroke="#C9920A" stroke-width="3.5" fill="none" stroke-linecap="round"/><circle cx="80" cy="107" r="5.5" fill="#F5C518" stroke="#C9920A" stroke-width="1.5"/><line x1="80" y1="101" x2="80" y2="112" stroke="#C9920A" stroke-width="1.2"/></g>`},
+    svg:`<g id="cosmetic-body-item"><path d="M56,120 Q80,128 104,120" stroke="#C9920A" stroke-width="3.5" fill="none" stroke-linecap="round"/><circle cx="80" cy="134" r="5.5" fill="#F5C518" stroke="#C9920A" stroke-width="1.5"/><line x1="80" y1="128" x2="80" y2="139" stroke="#C9920A" stroke-width="1.2"/></g>`},
   {id:'swim-medal',tier:1,slot:'body',name:'7th Place Medal',cost:30,emoji:'🏅',
-    svg:`<g id="cosmetic-body-item"><path d="M77,92 L77,105" stroke="#FF2D78" stroke-width="3"/><path d="M83,92 L83,105" stroke="#FF9500" stroke-width="3"/><circle cx="80" cy="111" r="7" fill="#C0C0C0" stroke="#999" stroke-width="1.5"/><text x="80" y="114" text-anchor="middle" font-size="5" fill="#555" font-weight="bold">7th</text></g>`},
+    svg:`<g id="cosmetic-body-item"><path d="M77,119 L77,132" stroke="#FF2D78" stroke-width="3"/><path d="M83,119 L83,132" stroke="#FF9500" stroke-width="3"/><circle cx="80" cy="138" r="7" fill="#C0C0C0" stroke="#999" stroke-width="1.5"/><text x="80" y="141" text-anchor="middle" font-size="5" fill="#555" font-weight="bold">7th</text></g>`},
   {id:'fanny-pack',tier:1,slot:'gear',name:'Fanny Pack',cost:25,emoji:'👜',
     svg:`<g id="cosmetic-gear-item"><rect x="62" y="112" width="36" height="16" rx="5" fill="#FF6B35" stroke="#CC4400" stroke-width="1.2"/><rect x="67" y="115" width="14" height="10" rx="3" fill="#CC4400"/></g>`},
   {id:'novelty-pins',tier:1,slot:'gear',name:'Pin Collection',cost:20,emoji:'📌',
@@ -1749,13 +1909,13 @@ const ITEMS=[
   {id:'silk-opera-gloves-s',tier:2,slot:'hands',name:'Silk Opera Gloves',cost:95,emoji:'✨',
     svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="13" fill="#FF2D78" stroke="#CC0055" stroke-width="2.2" opacity="0.88"/><circle cx="152" cy="162" r="13" fill="#FF2D78" stroke="#CC0055" stroke-width="2.2" opacity="0.88"/><circle cx="4" cy="158" r="4.5" fill="rgba(255,160,200,0.5)"/><circle cx="148" cy="158" r="4.5" fill="rgba(255,160,200,0.5)"/><ellipse cx="8" cy="165" rx="11" ry="4" fill="none" stroke="#FF69B4" stroke-width="1.5"/><ellipse cx="152" cy="165" rx="11" ry="4" fill="none" stroke="#FF69B4" stroke-width="1.5"/></g>`},
   {id:'silver-rope-chain',tier:2,slot:'body',name:'Silver Rope Chain',cost:80,emoji:'⛓️',
-    svg:`<g id="cosmetic-body-item"><path d="M55,95 Q80,108 105,95" stroke="#C0C0C0" stroke-width="3.5" stroke-dasharray="5,3" fill="none" stroke-linecap="round"/></g>`},
+    svg:`<g id="cosmetic-body-item"><path d="M55,122 Q80,135 105,122" stroke="#C0C0C0" stroke-width="3.5" stroke-dasharray="5,3" fill="none" stroke-linecap="round"/></g>`},
   {id:'pearl-strand',tier:2,slot:'body',name:'Pearl Strand',cost:90,emoji:'🤍',
-    svg:`<g id="cosmetic-body-item"><circle cx="60" cy="96" r="3" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="67" cy="100" r="3" fill="#F0F0F0" stroke="#DDD" stroke-width="0.5"/><circle cx="74" cy="103" r="3" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="81" cy="104" r="3" fill="#F0F0F0" stroke="#DDD" stroke-width="0.5"/><circle cx="88" cy="103" r="3" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="95" cy="100" r="3" fill="#F0F0F0" stroke="#DDD" stroke-width="0.5"/><circle cx="100" cy="96" r="3" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/></g>`},
+    svg:`<g id="cosmetic-body-item"><circle cx="60" cy="123" r="3" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="67" cy="127" r="3" fill="#F0F0F0" stroke="#DDD" stroke-width="0.5"/><circle cx="74" cy="130" r="3" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="81" cy="131" r="3" fill="#F0F0F0" stroke="#DDD" stroke-width="0.5"/><circle cx="88" cy="130" r="3" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="95" cy="127" r="3" fill="#F0F0F0" stroke="#DDD" stroke-width="0.5"/><circle cx="100" cy="123" r="3" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/></g>`},
   {id:'chunky-gold-chain',tier:2,slot:'body',name:'Chunky Gold Chain',cost:85,emoji:'📿',
-    svg:`<g id="cosmetic-body-item"><path d="M56,94 Q80,107 104,94" stroke="#F5C518" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M56,94 Q80,107 104,94" stroke="#C9920A" stroke-width="2" stroke-dasharray="6,5" fill="none" stroke-linecap="round"/></g>`},
+    svg:`<g id="cosmetic-body-item"><path d="M56,121 Q80,134 104,121" stroke="#F5C518" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M56,121 Q80,134 104,121" stroke="#C9920A" stroke-width="2" stroke-dasharray="6,5" fill="none" stroke-linecap="round"/></g>`},
   {id:'mystery-medallion',tier:2,slot:'body',name:'Mystery Medallion',cost:100,emoji:'🪙',
-    svg:`<g id="cosmetic-body-item"><path d="M77,92 L77,106" stroke="#C9920A" stroke-width="2"/><path d="M83,92 L83,106" stroke="#C9920A" stroke-width="2"/><circle cx="80" cy="113" r="8" fill="#C9920A" stroke="#F5C518" stroke-width="1.5"/><text x="80" y="116" text-anchor="middle" font-size="6" fill="#F5C518">?</text></g>`},
+    svg:`<g id="cosmetic-body-item"><path d="M77,119 L77,133" stroke="#C9920A" stroke-width="2"/><path d="M83,119 L83,133" stroke="#C9920A" stroke-width="2"/><circle cx="80" cy="140" r="8" fill="#C9920A" stroke="#F5C518" stroke-width="1.5"/><text x="80" y="143" text-anchor="middle" font-size="6" fill="#F5C518">?</text></g>`},
   {id:'designer-tote',tier:2,slot:'gear',name:'Designer Tote Bag',cost:85,emoji:'👜',
     svg:`<g id="cosmetic-gear-item"><path d="M130,98 L128,128 L152,128 L150,98Z" fill="#1A1A2E" stroke="#F5C518" stroke-width="1.5"/><path d="M134,98 Q141,90 147,98" fill="none" stroke="#F5C518" stroke-width="2"/><text x="140" y="117" text-anchor="middle" font-size="5" fill="#F5C518" font-family="serif">SC</text></g>`},
   {id:'silk-pocket-square',tier:2,slot:'gear',name:'Silk Pocket Square',cost:80,emoji:'🤵',
@@ -1801,13 +1961,13 @@ const ITEMS=[
   {id:'leather-gold-cuffs',tier:3,slot:'hands',name:'Leather w/ Gold Cuffs',cost:300,emoji:'🤺',
     svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="13" fill="#1A0A00" stroke="#F5C518" stroke-width="3"/><circle cx="152" cy="162" r="13" fill="#1A0A00" stroke="#F5C518" stroke-width="3"/><circle cx="4" cy="158" r="5" fill="rgba(200,140,40,0.3)"/><circle cx="148" cy="158" r="5" fill="rgba(200,140,40,0.3)"/><ellipse cx="8" cy="166" rx="11" ry="4" fill="none" stroke="#F5C518" stroke-width="1.5"/><ellipse cx="152" cy="166" rx="11" ry="4" fill="none" stroke="#F5C518" stroke-width="1.5"/><path d="M1,157 L15,157" stroke="#C9920A" stroke-width="1.2"/><path d="M145,157 L159,157" stroke="#C9920A" stroke-width="1.2"/></g>`},
   {id:'emerald-statement',tier:3,slot:'body',name:'Emerald Statement Necklace',cost:200,emoji:'💚',
-    svg:`<g id="cosmetic-body-item"><path d="M58,94 Q80,107 102,94" stroke="#00AA55" stroke-width="2.5" fill="none"/><rect x="73" y="103" width="14" height="10" rx="2" fill="#00AA55" stroke="#008844" stroke-width="1.5"/><circle cx="66" cy="97" r="4" fill="#06D6A0" stroke="#00AA55" stroke-width="1"/><circle cx="94" cy="97" r="4" fill="#06D6A0" stroke="#00AA55" stroke-width="1"/></g>`},
+    svg:`<g id="cosmetic-body-item"><path d="M58,121 Q80,134 102,121" stroke="#00AA55" stroke-width="2.5" fill="none"/><rect x="73" y="130" width="14" height="10" rx="2" fill="#00AA55" stroke="#008844" stroke-width="1.5"/><circle cx="66" cy="124" r="4" fill="#06D6A0" stroke="#00AA55" stroke-width="1"/><circle cx="94" cy="124" r="4" fill="#06D6A0" stroke="#00AA55" stroke-width="1"/></g>`},
   {id:'layered-gold-pearl',tier:3,slot:'body',name:'Gold & Pearl Combo',cost:250,emoji:'🧿',
-    svg:`<g id="cosmetic-body-item"><path d="M57,93 Q80,103 103,93" stroke="#F5C518" stroke-width="3" fill="none"/><circle cx="62" cy="98" r="2.5" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="70" cy="101" r="2.5" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="78" cy="103" r="2.5" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="86" cy="103" r="2.5" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="94" cy="101" r="2.5" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/></g>`},
+    svg:`<g id="cosmetic-body-item"><path d="M57,120 Q80,130 103,120" stroke="#F5C518" stroke-width="3" fill="none"/><circle cx="62" cy="125" r="2.5" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="70" cy="128" r="2.5" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="78" cy="130" r="2.5" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="86" cy="130" r="2.5" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/><circle cx="94" cy="128" r="2.5" fill="#F5F5F5" stroke="#DDD" stroke-width="0.5"/></g>`},
   {id:'diamond-riviere',tier:3,slot:'body',name:'The Diamond Rivière',cost:300,emoji:'💎',
-    svg:`<g id="cosmetic-body-item"><circle cx="61" cy="96" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/><circle cx="68" cy="100" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/><circle cx="75" cy="103" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/><circle cx="80" cy="104" r="4" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1.2"/><circle cx="85" cy="103" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/><circle cx="92" cy="100" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/><circle cx="99" cy="96" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/></g>`},
+    svg:`<g id="cosmetic-body-item"><circle cx="61" cy="123" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/><circle cx="68" cy="127" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/><circle cx="75" cy="130" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/><circle cx="80" cy="131" r="4" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1.2"/><circle cx="85" cy="130" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/><circle cx="92" cy="127" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/><circle cx="99" cy="123" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/></g>`},
   {id:'chunky-gem-collar',tier:3,slot:'body',name:'Chunky Gem Collar',cost:225,emoji:'🌈',
-    svg:`<g id="cosmetic-body-item"><path d="M55,92 Q80,101 105,92" stroke="#7B2FBE" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="63" cy="95" r="4" fill="#FF2D78"/><circle cx="71" cy="99" r="4" fill="#F5C518"/><circle cx="80" cy="101" r="4.5" fill="#00E5FF"/><circle cx="89" cy="99" r="4" fill="#06D6A0"/><circle cx="97" cy="95" r="4" fill="#B06AE0"/></g>`},
+    svg:`<g id="cosmetic-body-item"><path d="M55,119 Q80,128 105,119" stroke="#7B2FBE" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="63" cy="122" r="4" fill="#FF2D78"/><circle cx="71" cy="126" r="4" fill="#F5C518"/><circle cx="80" cy="128" r="4.5" fill="#00E5FF"/><circle cx="89" cy="126" r="4" fill="#06D6A0"/><circle cx="97" cy="122" r="4" fill="#B06AE0"/></g>`},
   {id:'gold-knob-cane',tier:3,slot:'gear',name:'Gold-Knob Walking Cane',cost:200,emoji:'🦯',
     svg:`<g id="cosmetic-gear-item"><line x1="140" y1="32" x2="150" y2="168" stroke="#8B6914" stroke-width="3" stroke-linecap="round"/><circle cx="137" cy="31" r="7" fill="#F5C518" stroke="#C9920A" stroke-width="1.5"/><path d="M133,38 Q138,46 145,42" stroke="#8B6914" stroke-width="2" fill="none"/></g>`},
   {id:'monogrammed-hanky',tier:3,slot:'gear',name:'Monogrammed Handkerchief',cost:250,emoji:'🤵',
@@ -1851,13 +2011,13 @@ const ITEMS=[
   {id:'jeweled-mantle-gloves',tier:4,slot:'hands',name:'Jeweled Mantle Gloves',cost:750,emoji:'💎',
     svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="14" fill="#1A0030" stroke="#F5C518" stroke-width="3.5"/><circle cx="152" cy="162" r="14" fill="#1A0030" stroke="#F5C518" stroke-width="3.5"/><circle cx="4" cy="157" r="5.5" fill="rgba(245,197,24,0.25)"/><circle cx="148" cy="157" r="5.5" fill="rgba(245,197,24,0.25)"/><circle cx="8" cy="155" r="2.5" fill="#FF2D78"/><circle cx="13" cy="159" r="2" fill="#00E5FF"/><circle cx="3" cy="159" r="2" fill="#F5C518"/><circle cx="152" cy="155" r="2.5" fill="#FF2D78"/><circle cx="157" cy="159" r="2" fill="#00E5FF"/><circle cx="147" cy="159" r="2" fill="#F5C518"/><ellipse cx="8" cy="167" rx="12" ry="4.5" fill="none" stroke="#F5C518" stroke-width="2"/><ellipse cx="152" cy="167" rx="12" ry="4.5" fill="none" stroke="#F5C518" stroke-width="2"/></g>`},
   {id:'fromage-dor-collar',tier:4,slot:'body',name:"Fromage d'Or Collar",cost:500,emoji:'🧀',
-    svg:`<g id="cosmetic-body-item"><path d="M54,91 Q80,104 106,91" stroke="#F5C518" stroke-width="4.5" fill="none" stroke-linecap="round"/><path d="M54,91 Q80,104 106,91" stroke="#FFE066" stroke-width="1.5" stroke-dasharray="3,4" fill="none"/><polygon points="77,105 80,98 83,105 80,111" fill="#F5C518" stroke="#C9920A" stroke-width="1"/></g>`},
+    svg:`<g id="cosmetic-body-item"><path d="M54,118 Q80,131 106,118" stroke="#F5C518" stroke-width="4.5" fill="none" stroke-linecap="round"/><path d="M54,118 Q80,131 106,118" stroke="#FFE066" stroke-width="1.5" stroke-dasharray="3,4" fill="none"/><polygon points="77,132 80,125 83,132 80,138" fill="#F5C518" stroke="#C9920A" stroke-width="1"/></g>`},
   {id:'collier-eternel',tier:4,slot:'body',name:'Le Collier Éternel',cost:600,emoji:'🌙',
-    svg:`<g id="cosmetic-body-item"><path d="M55,92 Q80,106 105,92" stroke="#E8F4FF" stroke-width="3" fill="none"/><circle cx="63" cy="96" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/><circle cx="80" cy="105" r="5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1.5"/><circle cx="97" cy="96" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/></g>`},
+    svg:`<g id="cosmetic-body-item"><path d="M55,119 Q80,133 105,119" stroke="#E8F4FF" stroke-width="3" fill="none"/><circle cx="63" cy="123" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/><circle cx="80" cy="132" r="5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1.5"/><circle cx="97" cy="123" r="3.5" fill="#E8F4FF" stroke="#B0D4FF" stroke-width="1"/></g>`},
   {id:'royal-cheese-plate',tier:4,slot:'body',name:'Royal Cheese Plate Chain',cost:700,emoji:'🧀',
-    svg:`<g id="cosmetic-body-item"><path d="M56,92 Q80,104 104,92" stroke="#C9920A" stroke-width="3" fill="none"/><rect x="73" y="103" width="14" height="9" rx="2" fill="#F5C518" stroke="#C9920A" stroke-width="1.5"/><circle cx="76" cy="107" r="2" fill="#C9920A"/><circle cx="80" cy="107" r="2" fill="#8B6914"/><circle cx="84" cy="107" r="2" fill="#C9920A"/></g>`},
+    svg:`<g id="cosmetic-body-item"><path d="M56,119 Q80,131 104,119" stroke="#C9920A" stroke-width="3" fill="none"/><rect x="73" y="130" width="14" height="9" rx="2" fill="#F5C518" stroke="#C9920A" stroke-width="1.5"/><circle cx="76" cy="134" r="2" fill="#C9920A"/><circle cx="80" cy="134" r="2" fill="#8B6914"/><circle cx="84" cy="134" r="2" fill="#C9920A"/></g>`},
   {id:'magnificent-choker',tier:4,slot:'body',name:'The Magnificent Choker',cost:750,emoji:'💎',
-    svg:`<g id="cosmetic-body-item"><path d="M55,91 Q80,98 105,91" stroke="#E8F4FF" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M55,91 Q80,98 105,91" stroke="#1A1A1A" stroke-width="3" fill="none"/><circle cx="63" cy="93" r="2.5" fill="#E8F4FF"/><circle cx="71" cy="95" r="2.5" fill="#FF2D78"/><circle cx="80" cy="96" r="3" fill="#E8F4FF"/><circle cx="89" cy="95" r="2.5" fill="#00E5FF"/><circle cx="97" cy="93" r="2.5" fill="#E8F4FF"/></g>`},
+    svg:`<g id="cosmetic-body-item"><path d="M55,118 Q80,125 105,118" stroke="#E8F4FF" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M55,118 Q80,125 105,118" stroke="#1A1A1A" stroke-width="3" fill="none"/><circle cx="63" cy="120" r="2.5" fill="#E8F4FF"/><circle cx="71" cy="122" r="2.5" fill="#FF2D78"/><circle cx="80" cy="123" r="3" fill="#E8F4FF"/><circle cx="89" cy="122" r="2.5" fill="#00E5FF"/><circle cx="97" cy="120" r="2.5" fill="#E8F4FF"/></g>`},
   {id:'solid-gold-cane',tier:4,slot:'gear',name:'The Solid Gold Cane',cost:500,emoji:'✨',
     svg:`<g id="cosmetic-gear-item"><line x1="142" y1="28" x2="154" y2="168" stroke="#F5C518" stroke-width="4" stroke-linecap="round"/><circle cx="138" cy="27" r="9" fill="#F5C518" stroke="#C9920A" stroke-width="2"/><circle cx="138" cy="27" r="4" fill="#C9920A"/></g>`},
   {id:'bespoke-cape',tier:4,slot:'gear',name:'The Bespoke Cape',cost:600,emoji:'🦸',
@@ -1943,7 +2103,7 @@ function toggleEquip(itemId) {
 
 function updateSwankyCosmetics(rootId, prefix='') {
   const pfx = prefix || '';
-  ['head','eyes','body','mouth','feet','hands','gear'].forEach(slot => {
+  ['head','eyes','body','mouth','gear'].forEach(slot => {
     const el = document.getElementById(pfx+'cosmetic-'+slot);
     if (!el) return;
     const equippedId = STATE.equippedItems[slot];
@@ -1952,6 +2112,14 @@ function updateSwankyCosmetics(rootId, prefix='') {
       if (item) { el.innerHTML = item.svg; return; }
     }
     el.innerHTML = '';
+  });
+  ['hands','feet'].forEach(slot => {
+    const el_l = document.getElementById(pfx+'cosmetic-'+slot+'-l');
+    const el_r = document.getElementById(pfx+'cosmetic-'+slot+'-r');
+    const equippedId = STATE.equippedItems[slot];
+    const content = equippedId ? (ITEMS.find(i => i.id === equippedId)?.svg || '') : '';
+    if (el_l) el_l.innerHTML = content;
+    if (el_r) el_r.innerHTML = content;
   });
 }
 
@@ -2150,7 +2318,7 @@ function applyPose(pose) {
   _updateEndpoints(pose);
 }
 
-// Move hand-blob and foot ellipses to limb endpoints
+// Move hand-blob and foot ellipses to limb endpoints, and translate cosmetic overlays
 function _updateEndpoints(pose) {
   const endpt = d => { const n = parseBezier(d); return {x:n[6],y:n[7]}; };
   const lh = endpt(pose.armL), rh = endpt(pose.armR);
@@ -2166,6 +2334,16 @@ function _updateEndpoints(pose) {
       const el = document.getElementById(pfx+id);
       if (el) { el.setAttribute('cx', pt.x); el.setAttribute('cy', pt.y); }
     });
+  });
+  ['','w-'].forEach(pfx => {
+    const chl = document.getElementById(pfx+'cosmetic-hands-l');
+    const chr = document.getElementById(pfx+'cosmetic-hands-r');
+    const cfl = document.getElementById(pfx+'cosmetic-feet-l');
+    const cfr = document.getElementById(pfx+'cosmetic-feet-r');
+    if (chl) chl.setAttribute('transform', `translate(${lh.x-8},${lh.y-162})`);
+    if (chr) chr.setAttribute('transform', `translate(${rh.x-152},${rh.y-162})`);
+    if (cfl) cfl.setAttribute('transform', `translate(${lf.x-44},${lf.y-173})`);
+    if (cfr) cfr.setAttribute('transform', `translate(${rf.x-116},${rf.y-173})`);
   });
 }
 
@@ -2226,6 +2404,7 @@ const GENRE_DANCE_MAP = {
   hiphop:'hiphop', jazz:'jazz', techno:'techno', reggae:'reggae',
   house:'house', bossanova:'bossanova', eightbit:'techno',
   romance:'jazz', showtunes:'hiphop', swanky:'hiphop',
+  grunge:'hiphop', disco:'house', swing:'jazz',
 };
 
 function startDance(name) {
@@ -2323,6 +2502,7 @@ function switchTab(tab) {
 // =====================
 // === INIT ===
 // =====================
+rebuildBeatHeader();
 renderSequencer();
 updateStats();
 startDance('idle');
