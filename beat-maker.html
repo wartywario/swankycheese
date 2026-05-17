@@ -56,20 +56,7 @@
     font-family:'Fredoka One',cursive;font-size:.7rem;color:var(--gold);}
   .speech-bubble{background:var(--card2);border:1px solid rgba(245,197,24,.25);
     border-radius:10px;padding:7px 10px;font-size:.75rem;line-height:1.3;}
-  /* DANCE */
-  .dance-idle{animation:shimmy 2s ease-in-out infinite;}
-  .dance-shimmy{animation:shimmy .4s ease-in-out infinite;}
-  .dance-slide{animation:gouda-slide .8s ease-in-out 3;}
-  .dance-shake{animation:cheddar-shake .3s ease-in-out infinite;}
-  .dance-bounce{animation:brie-bounce .5s ease-in-out 4;}
-  .dance-dip{animation:fondue-dip 1s ease-in-out 2;}
-  .dance-swagger{animation:aged-swagger 1.2s ease-in-out 2;}
-  @keyframes shimmy{0%,100%{transform:translateX(0) rotate(0deg)}25%{transform:translateX(-4px) rotate(-2deg)}75%{transform:translateX(4px) rotate(2deg)}}
-  @keyframes gouda-slide{0%{transform:translateX(0)}30%{transform:translateX(-22px) rotate(-5deg)}60%{transform:translateX(22px) rotate(5deg)}100%{transform:translateX(0)}}
-  @keyframes cheddar-shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg) scale(1.05)}75%{transform:rotate(8deg) scale(1.05)}}
-  @keyframes brie-bounce{0%,100%{transform:translateY(0) scaleY(1)}40%{transform:translateY(-16px) scaleY(1.1)}55%{transform:translateY(0) scaleY(.9)}70%{transform:translateY(-6px)}}
-  @keyframes fondue-dip{0%,100%{transform:rotate(0) translateY(0)}30%{transform:rotate(-15deg) translateY(5px)}60%{transform:rotate(10deg) translateY(-5px)}}
-  @keyframes aged-swagger{0%{transform:translateX(0) rotate(0)}20%{transform:translateX(-8px) rotate(-3deg)}40%{transform:translateX(8px) rotate(3deg) scale(1.05)}60%{transform:translateX(-4px)}80%{transform:translateX(4px) scale(1.03)}100%{transform:translateX(0)}}
+  /* DANCE — JS-driven pose system; only glow pulse remains in CSS */
   .playing-pulse #cheese-body{animation:cheese-glow .5s ease-in-out infinite alternate;}
   .playing-pulse #w-cheese-body{animation:cheese-glow .5s ease-in-out infinite alternate;}
   @keyframes cheese-glow{from{filter:drop-shadow(0 0 3px rgba(245,197,24,.4))}to{filter:drop-shadow(0 0 10px rgba(245,197,24,.9))}}
@@ -533,40 +520,70 @@
         <div class="stage-left">
           <div class="swanky-container">
             <svg id="swanky-svg" viewBox="0 0 160 180" xmlns="http://www.w3.org/2000/svg">
-              <g id="swanky-root" class="dance-idle">
-                <ellipse cx="80" cy="170" rx="45" ry="8" fill="rgba(0,0,0,0.3)"/>
+              <g id="swanky-root">
+                <!-- ground shadow -->
+                <ellipse cx="80" cy="176" rx="46" ry="7" fill="rgba(0,0,0,0.32)"/>
+                <!-- arm outlines (dark backing, renders behind body) -->
+                <path id="arm-l-out" d="M 22,115 C 5,130 -2,148 8,162" fill="none" stroke="#3D1A00" stroke-width="18" stroke-linecap="round"/>
+                <path id="arm-r-out" d="M 138,115 C 155,130 162,148 152,162" fill="none" stroke="#3D1A00" stroke-width="18" stroke-linecap="round"/>
+                <!-- leg outlines -->
+                <path id="leg-l-out" d="M 60,148 C 52,158 46,165 44,172" fill="none" stroke="#3D1A00" stroke-width="14" stroke-linecap="round"/>
+                <path id="leg-r-out" d="M 100,148 C 108,158 114,165 116,172" fill="none" stroke="#3D1A00" stroke-width="14" stroke-linecap="round"/>
+                <!-- cheese body -->
                 <g id="cheese-body">
-                  <polygon points="80,20 145,145 15,145" fill="#F5C518" stroke="#C9920A" stroke-width="2"/>
-                  <polygon points="80,28 137,140 23,140" fill="#FFE066"/>
-                  <circle cx="75" cy="90" r="8" fill="#C9920A" opacity="0.6"/>
-                  <circle cx="95" cy="115" r="6" fill="#C9920A" opacity="0.5"/>
-                  <circle cx="65" cy="118" r="5" fill="#C9920A" opacity="0.5"/>
-                  <circle cx="88" cy="75" r="4" fill="#C9920A" opacity="0.4"/>
+                  <polygon points="80,18 148,148 12,148" fill="#C9920A"/>
+                  <polygon points="80,18 136,142 24,142" fill="#F5C518"/>
+                  <polygon points="80,26 118,110 42,110" fill="#FFF0A0" opacity="0.52"/>
+                  <circle cx="72" cy="88"  r="9"   fill="#8B6400"/>
+                  <circle cx="72" cy="88"  r="6"   fill="#6B4A00" opacity="0.75"/>
+                  <circle cx="96" cy="112" r="7"   fill="#8B6400"/>
+                  <circle cx="96" cy="112" r="4.5" fill="#6B4A00" opacity="0.75"/>
+                  <circle cx="62" cy="118" r="5.5" fill="#8B6400"/>
+                  <circle cx="62" cy="118" r="3.5" fill="#6B4A00" opacity="0.75"/>
+                  <circle cx="91" cy="72"  r="5"   fill="#8B6400"/>
+                  <circle cx="91" cy="72"  r="3"   fill="#6B4A00" opacity="0.75"/>
+                  <polygon points="80,18 148,148 12,148" fill="none" stroke="#3D1A00" stroke-width="2.5" stroke-linejoin="round"/>
                 </g>
-                <g id="legs">
-                  <rect x="55" y="140" width="16" height="22" rx="8" fill="#C9920A"/>
-                  <rect x="89" y="140" width="16" height="22" rx="8" fill="#C9920A"/>
+                <!-- arm fills + highlights -->
+                <path id="arm-l" d="M 22,115 C 5,130 -2,148 8,162" fill="none" stroke="#F5C518" stroke-width="14" stroke-linecap="round"/>
+                <path id="arm-r" d="M 138,115 C 155,130 162,148 152,162" fill="none" stroke="#F5C518" stroke-width="14" stroke-linecap="round"/>
+                <path id="arm-l-hi" d="M 22,115 C 5,130 -2,148 8,162" fill="none" stroke="#FFF0A0" stroke-width="5" stroke-linecap="round"/>
+                <path id="arm-r-hi" d="M 138,115 C 155,130 162,148 152,162" fill="none" stroke="#FFF0A0" stroke-width="5" stroke-linecap="round"/>
+                <!-- hand blobs -->
+                <circle id="hand-l" cx="8"   cy="162" r="11" fill="#F5C518" stroke="#3D1A00" stroke-width="2"/>
+                <circle cx="4"   cy="158" r="4"  fill="#FFF0A0" opacity="0.5"/>
+                <circle id="hand-r" cx="152" cy="162" r="11" fill="#F5C518" stroke="#3D1A00" stroke-width="2"/>
+                <circle cx="148" cy="158" r="4"  fill="#FFF0A0" opacity="0.5"/>
+                <!-- leg fills + highlights -->
+                <path id="leg-l" d="M 60,148 C 52,158 46,165 44,172" fill="none" stroke="#F5C518" stroke-width="10" stroke-linecap="round"/>
+                <path id="leg-r" d="M 100,148 C 108,158 114,165 116,172" fill="none" stroke="#F5C518" stroke-width="10" stroke-linecap="round"/>
+                <path id="leg-l-hi" d="M 60,148 C 52,158 46,165 44,172" fill="none" stroke="#FFF0A0" stroke-width="4" stroke-linecap="round"/>
+                <path id="leg-r-hi" d="M 100,148 C 108,158 114,165 116,172" fill="none" stroke="#FFF0A0" stroke-width="4" stroke-linecap="round"/>
+                <!-- feet -->
+                <ellipse id="foot-l" cx="44"  cy="173" rx="15" ry="6" fill="#F5C518" stroke="#3D1A00" stroke-width="2"/>
+                <ellipse id="foot-r" cx="116" cy="173" rx="15" ry="6" fill="#F5C518" stroke="#3D1A00" stroke-width="2"/>
+                <g id="cosmetic-feet"></g>
+                <!-- eyes -->
+                <g id="eye-l">
+                  <ellipse cx="67" cy="70" rx="12" ry="13.5" fill="#FFF8EE" stroke="#3D1A00" stroke-width="1.5"/>
+                  <circle  cx="67" cy="72" r="8.5" fill="#B07020"/>
+                  <circle  cx="67" cy="72" r="6"   fill="#1A0800"/>
+                  <circle  cx="71" cy="68" r="2.5" fill="white"/>
+                  <circle  cx="64" cy="75" r="1.2" fill="white" opacity="0.6"/>
                 </g>
-                <g id="cosmetic-feet">
-                  <ellipse cx="63" cy="163" rx="12" ry="6" fill="#1A1A1A"/>
-                  <ellipse cx="97" cy="163" rx="12" ry="6" fill="#1A1A1A"/>
+                <g id="eye-r">
+                  <ellipse cx="93" cy="70" rx="12" ry="13.5" fill="#FFF8EE" stroke="#3D1A00" stroke-width="1.5"/>
+                  <circle  cx="93" cy="72" r="8.5" fill="#B07020"/>
+                  <circle  cx="93" cy="72" r="6"   fill="#1A0800"/>
+                  <circle  cx="97" cy="68" r="2.5" fill="white"/>
+                  <circle  cx="90" cy="75" r="1.2" fill="white" opacity="0.6"/>
                 </g>
-                <g id="arms">
-                  <ellipse cx="22" cy="110" rx="10" ry="18" fill="#F5C518" stroke="#C9920A" stroke-width="1.5" transform="rotate(-20 22 110)"/>
-                  <ellipse cx="138" cy="110" rx="10" ry="18" fill="#F5C518" stroke="#C9920A" stroke-width="1.5" transform="rotate(20 138 110)"/>
-                </g>
-                <g id="eyes">
-                  <ellipse cx="68" cy="70" rx="10" ry="12" fill="white"/>
-                  <ellipse cx="92" cy="70" rx="10" ry="12" fill="white"/>
-                  <circle cx="70" cy="72" r="6" fill="#1A1A1A"/>
-                  <circle cx="94" cy="72" r="6" fill="#1A1A1A"/>
-                  <circle cx="72" cy="70" r="2" fill="white"/>
-                  <circle cx="96" cy="70" r="2" fill="white"/>
-                  <path d="M60 59 Q68 54 76 59" stroke="#C9920A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-                  <path d="M84 59 Q92 54 100 59" stroke="#C9920A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                <g id="eyebrows">
+                  <path d="M57,57 Q67,52 77,57" stroke="#3D1A00" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+                  <path d="M83,57 Q93,52 103,57" stroke="#3D1A00" stroke-width="3.5" fill="none" stroke-linecap="round"/>
                 </g>
                 <g id="mouth-base">
-                  <path d="M70 98 Q80 108 90 98" stroke="#C9920A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                  <path d="M70,98 Q80,108 90,98" stroke="#3D1A00" stroke-width="2.5" fill="none" stroke-linecap="round"/>
                 </g>
                 <g id="cosmetic-mouth"></g>
                 <g id="cosmetic-body"></g>
@@ -593,39 +610,61 @@
       <div class="wardrobe-swanky">
         <div class="swanky-container">
           <svg id="wardrobe-swanky-svg" viewBox="0 0 160 180" xmlns="http://www.w3.org/2000/svg">
-            <g id="wardrobe-swanky-root" class="dance-idle">
-              <ellipse cx="80" cy="170" rx="45" ry="8" fill="rgba(0,0,0,0.3)"/>
+            <g id="wardrobe-swanky-root">
+              <ellipse cx="80" cy="176" rx="46" ry="7" fill="rgba(0,0,0,0.32)"/>
+              <path id="w-arm-l-out" d="M 22,115 C 40,110 65,118 75,125" fill="none" stroke="#3D1A00" stroke-width="18" stroke-linecap="round"/>
+              <path id="w-arm-r-out" d="M 138,115 C 145,128 145,148 140,162" fill="none" stroke="#3D1A00" stroke-width="18" stroke-linecap="round"/>
+              <path id="w-leg-l-out" d="M 60,148 C 52,158 46,165 44,172" fill="none" stroke="#3D1A00" stroke-width="14" stroke-linecap="round"/>
+              <path id="w-leg-r-out" d="M 100,148 C 108,158 114,165 116,172" fill="none" stroke="#3D1A00" stroke-width="14" stroke-linecap="round"/>
               <g id="w-cheese-body">
-                <polygon points="80,20 145,145 15,145" fill="#F5C518" stroke="#C9920A" stroke-width="2"/>
-                <polygon points="80,28 137,140 23,140" fill="#FFE066"/>
-                <circle cx="75" cy="90" r="8" fill="#C9920A" opacity="0.6"/>
-                <circle cx="95" cy="115" r="6" fill="#C9920A" opacity="0.5"/>
-                <circle cx="65" cy="118" r="5" fill="#C9920A" opacity="0.5"/>
+                <polygon points="80,18 148,148 12,148" fill="#C9920A"/>
+                <polygon points="80,18 136,142 24,142" fill="#F5C518"/>
+                <polygon points="80,26 118,110 42,110" fill="#FFF0A0" opacity="0.52"/>
+                <circle cx="72" cy="88"  r="9"   fill="#8B6400"/>
+                <circle cx="72" cy="88"  r="6"   fill="#6B4A00" opacity="0.75"/>
+                <circle cx="96" cy="112" r="7"   fill="#8B6400"/>
+                <circle cx="96" cy="112" r="4.5" fill="#6B4A00" opacity="0.75"/>
+                <circle cx="62" cy="118" r="5.5" fill="#8B6400"/>
+                <circle cx="62" cy="118" r="3.5" fill="#6B4A00" opacity="0.75"/>
+                <circle cx="91" cy="72"  r="5"   fill="#8B6400"/>
+                <circle cx="91" cy="72"  r="3"   fill="#6B4A00" opacity="0.75"/>
+                <polygon points="80,18 148,148 12,148" fill="none" stroke="#3D1A00" stroke-width="2.5" stroke-linejoin="round"/>
               </g>
-              <g id="w-legs">
-                <rect x="55" y="140" width="16" height="22" rx="8" fill="#C9920A"/>
-                <rect x="89" y="140" width="16" height="22" rx="8" fill="#C9920A"/>
+              <path id="w-arm-l" d="M 22,115 C 40,110 65,118 75,125" fill="none" stroke="#F5C518" stroke-width="14" stroke-linecap="round"/>
+              <path id="w-arm-r" d="M 138,115 C 145,128 145,148 140,162" fill="none" stroke="#F5C518" stroke-width="14" stroke-linecap="round"/>
+              <path id="w-arm-l-hi" d="M 22,115 C 40,110 65,118 75,125" fill="none" stroke="#FFF0A0" stroke-width="5" stroke-linecap="round"/>
+              <path id="w-arm-r-hi" d="M 138,115 C 145,128 145,148 140,162" fill="none" stroke="#FFF0A0" stroke-width="5" stroke-linecap="round"/>
+              <circle id="w-hand-l" cx="75"  cy="125" r="11" fill="#F5C518" stroke="#3D1A00" stroke-width="2"/>
+              <circle cx="71"  cy="121" r="4"  fill="#FFF0A0" opacity="0.5"/>
+              <circle id="w-hand-r" cx="140" cy="162" r="11" fill="#F5C518" stroke="#3D1A00" stroke-width="2"/>
+              <circle cx="136" cy="158" r="4"  fill="#FFF0A0" opacity="0.5"/>
+              <path id="w-leg-l" d="M 60,148 C 52,158 46,165 44,172" fill="none" stroke="#F5C518" stroke-width="10" stroke-linecap="round"/>
+              <path id="w-leg-r" d="M 100,148 C 108,158 114,165 116,172" fill="none" stroke="#F5C518" stroke-width="10" stroke-linecap="round"/>
+              <path id="w-leg-l-hi" d="M 60,148 C 52,158 46,165 44,172" fill="none" stroke="#FFF0A0" stroke-width="4" stroke-linecap="round"/>
+              <path id="w-leg-r-hi" d="M 100,148 C 108,158 114,165 116,172" fill="none" stroke="#FFF0A0" stroke-width="4" stroke-linecap="round"/>
+              <ellipse id="w-foot-l" cx="44"  cy="173" rx="15" ry="6" fill="#F5C518" stroke="#3D1A00" stroke-width="2"/>
+              <ellipse id="w-foot-r" cx="116" cy="173" rx="15" ry="6" fill="#F5C518" stroke="#3D1A00" stroke-width="2"/>
+              <g id="w-cosmetic-feet"></g>
+              <g id="w-eye-l">
+                <ellipse cx="67" cy="70" rx="12" ry="13.5" fill="#FFF8EE" stroke="#3D1A00" stroke-width="1.5"/>
+                <circle  cx="67" cy="72" r="8.5" fill="#B07020"/>
+                <circle  cx="67" cy="72" r="6"   fill="#1A0800"/>
+                <circle  cx="71" cy="68" r="2.5" fill="white"/>
+                <circle  cx="64" cy="75" r="1.2" fill="white" opacity="0.6"/>
               </g>
-              <g id="w-cosmetic-feet">
-                <ellipse cx="63" cy="163" rx="12" ry="6" fill="#1A1A1A"/>
-                <ellipse cx="97" cy="163" rx="12" ry="6" fill="#1A1A1A"/>
+              <g id="w-eye-r">
+                <ellipse cx="93" cy="70" rx="12" ry="13.5" fill="#FFF8EE" stroke="#3D1A00" stroke-width="1.5"/>
+                <circle  cx="93" cy="72" r="8.5" fill="#B07020"/>
+                <circle  cx="93" cy="72" r="6"   fill="#1A0800"/>
+                <circle  cx="97" cy="68" r="2.5" fill="white"/>
+                <circle  cx="90" cy="75" r="1.2" fill="white" opacity="0.6"/>
               </g>
-              <g id="w-arms">
-                <ellipse cx="22" cy="110" rx="10" ry="18" fill="#F5C518" stroke="#C9920A" stroke-width="1.5" transform="rotate(-20 22 110)"/>
-                <ellipse cx="138" cy="110" rx="10" ry="18" fill="#F5C518" stroke="#C9920A" stroke-width="1.5" transform="rotate(20 138 110)"/>
-              </g>
-              <g id="w-eyes">
-                <ellipse cx="68" cy="70" rx="10" ry="12" fill="white"/>
-                <ellipse cx="92" cy="70" rx="10" ry="12" fill="white"/>
-                <circle cx="70" cy="72" r="6" fill="#1A1A1A"/>
-                <circle cx="94" cy="72" r="6" fill="#1A1A1A"/>
-                <circle cx="72" cy="70" r="2" fill="white"/>
-                <circle cx="96" cy="70" r="2" fill="white"/>
-                <path d="M60 59 Q68 54 76 59" stroke="#C9920A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-                <path d="M84 59 Q92 54 100 59" stroke="#C9920A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              <g id="w-eyebrows">
+                <path d="M57,57 Q67,52 77,57" stroke="#3D1A00" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+                <path d="M83,57 Q93,52 103,57" stroke="#3D1A00" stroke-width="3.5" fill="none" stroke-linecap="round"/>
               </g>
               <g id="w-mouth-base">
-                <path d="M70 98 Q80 108 90 98" stroke="#C9920A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                <path d="M70,98 Q80,108 90,98" stroke="#3D1A00" stroke-width="2.5" fill="none" stroke-linecap="round"/>
               </g>
               <g id="w-cosmetic-mouth"></g>
               <g id="w-cosmetic-body"></g>
@@ -1299,16 +1338,15 @@ function applyGenre(key) {
   document.getElementById('bpm-display').textContent = tmpl.bpm;
   renderSequencer();
   document.getElementById('grade-panel').classList.remove('show');
+  const dance = GENRE_DANCE_MAP[key] || 'idle';
+  _ambientDance = dance;
+  startDance(dance);
   if (key === 'swanky') {
-    setSwankyDance('dance-shake');
     setSpeak('I regret nothing!! 🧀🔥');
     showToast('🧀 SWANKY MODE ACTIVATED!');
-    setTimeout(() => setSwankyDance('dance-idle'), 3000);
   } else {
-    setSwankyDance('dance-bounce');
     setSpeak(`${tmpl.name} vibes! Let's get cheesy! 🎵`);
     showToast(`${tmpl.emoji} ${tmpl.name} loaded!`);
-    setTimeout(() => setSwankyDance('dance-idle'), 2000);
   }
 }
 
@@ -1372,7 +1410,7 @@ async function togglePlay() {
     btn.textContent = '⏹ Stop';
     btn.classList.add('playing');
     document.getElementById('swanky-root').classList.add('playing-pulse');
-    setSwankyDance('dance-shimmy');
+    startDance(_ambientDance || 'shimmy');
     setTimeout(() => speak(VOICE_START), 200);
   } else {
     speak(VOICE_END);
@@ -1380,7 +1418,7 @@ async function togglePlay() {
     btn.textContent = '▶ Play Beat';
     btn.classList.remove('playing');
     document.getElementById('swanky-root').classList.remove('playing-pulse');
-    setSwankyDance('dance-idle');
+    startDance('idle');
   }
 }
 
@@ -1596,12 +1634,7 @@ async function gradeBeat() {
   else if (harmonicScore < 8)               hint = HINTS.harmonic;
   document.getElementById('grade-hint').innerHTML = `<strong>💡 Tip:</strong> ${hint}`;
 
-  const danceName = grade === 'S' ? 'dance-swagger' :
-                    grade === 'A' ? 'dance-slide' :
-                    grade === 'B' ? 'dance-bounce' :
-                    grade === 'C' ? 'dance-shake' : 'dance-idle';
-  setSwankyDance(danceName);
-  setTimeout(() => setSwankyDance('dance-idle'), 4000);
+  playGradeReaction(grade);
 
   setSpeak(GRADE_MESSAGES[grade]);
   playGradeSound(grade);
@@ -1640,13 +1673,13 @@ const ITEMS=[
   {id:'wraparound-goggles',tier:1,slot:'eyes',name:'Wraparound Goggles',cost:35,emoji:'🥽',
     svg:`<g id="cosmetic-eyes-item"><rect x="51" y="61" width="58" height="17" rx="8" fill="#3A3A3A" opacity="0.9"/><rect x="54" y="63" width="23" height="13" rx="6" fill="#00E5FF" opacity="0.4"/><rect x="83" y="63" width="23" height="13" rx="6" fill="#00E5FF" opacity="0.4"/></g>`},
   {id:'velcro-sneakers',tier:1,slot:'feet',name:'Velcro Sneakers',cost:15,emoji:'👟',
-    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="163" rx="13" ry="6" fill="white" stroke="#ddd" stroke-width="1"/><ellipse cx="97" cy="163" rx="13" ry="6" fill="white" stroke="#ddd" stroke-width="1"/><rect x="53" y="158" width="20" height="3" rx="1.5" fill="#FF2D78"/><rect x="87" y="158" width="20" height="3" rx="1.5" fill="#FF2D78"/></g>`},
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="44" cy="173" rx="16" ry="7" fill="white" stroke="#ddd" stroke-width="2"/><ellipse cx="116" cy="173" rx="16" ry="7" fill="white" stroke="#ddd" stroke-width="2"/><rect x="33" y="168" width="22" height="3.5" rx="1.5" fill="#FF2D78" stroke="#CC0055" stroke-width="0.5"/><rect x="105" y="168" width="22" height="3.5" rx="1.5" fill="#FF2D78" stroke="#CC0055" stroke-width="0.5"/><ellipse cx="38" cy="171" rx="5" ry="2" fill="rgba(255,255,255,0.5)"/><ellipse cx="110" cy="171" rx="5" ry="2" fill="rgba(255,255,255,0.5)"/></g>`},
   {id:'sparkle-crocs',tier:1,slot:'feet',name:'Sparkle Crocs',cost:20,emoji:'✨',
-    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="163" rx="13" ry="6" fill="#00C4A0" stroke="#009980" stroke-width="1"/><ellipse cx="97" cy="163" rx="13" ry="6" fill="#00C4A0" stroke="#009980" stroke-width="1"/><circle cx="58" cy="161" r="2" fill="white" opacity="0.7"/><circle cx="65" cy="163" r="1.5" fill="white" opacity="0.7"/><circle cx="92" cy="161" r="2" fill="white" opacity="0.7"/><circle cx="99" cy="163" r="1.5" fill="white" opacity="0.7"/></g>`},
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="44" cy="173" rx="16" ry="7" fill="#00C4A0" stroke="#009980" stroke-width="2"/><ellipse cx="116" cy="173" rx="16" ry="7" fill="#00C4A0" stroke="#009980" stroke-width="2"/><circle cx="38" cy="171" r="2" fill="white" opacity="0.8"/><circle cx="45" cy="173" r="1.5" fill="white" opacity="0.7"/><circle cx="51" cy="171" r="2" fill="white" opacity="0.6"/><circle cx="110" cy="171" r="2" fill="white" opacity="0.8"/><circle cx="117" cy="173" r="1.5" fill="white" opacity="0.7"/><circle cx="123" cy="171" r="2" fill="white" opacity="0.6"/><ellipse cx="38" cy="171" rx="5" ry="2" fill="rgba(255,255,255,0.28)"/><ellipse cx="110" cy="171" rx="5" ry="2" fill="rgba(255,255,255,0.28)"/></g>`},
   {id:'flip-flops',tier:1,slot:'feet',name:'Flip Flops',cost:20,emoji:'🩴',
-    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="164" rx="12" ry="5" fill="#FF9900"/><ellipse cx="97" cy="164" rx="12" ry="5" fill="#FF9900"/><path d="M63,160 L60,164" stroke="#FF2D78" stroke-width="2" stroke-linecap="round"/><path d="M63,160 L66,164" stroke="#FF2D78" stroke-width="2" stroke-linecap="round"/><path d="M97,160 L94,164" stroke="#FF2D78" stroke-width="2" stroke-linecap="round"/><path d="M97,160 L100,164" stroke="#FF2D78" stroke-width="2" stroke-linecap="round"/></g>`},
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="44" cy="174" rx="15" ry="6" fill="#FF9900" stroke="#CC7700" stroke-width="2"/><ellipse cx="116" cy="174" rx="15" ry="6" fill="#FF9900" stroke="#CC7700" stroke-width="2"/><path d="M44,169 L41,173" stroke="#FF2D78" stroke-width="2.5" stroke-linecap="round"/><path d="M44,169 L47,173" stroke="#FF2D78" stroke-width="2.5" stroke-linecap="round"/><path d="M116,169 L113,173" stroke="#FF2D78" stroke-width="2.5" stroke-linecap="round"/><path d="M116,169 L119,173" stroke="#FF2D78" stroke-width="2.5" stroke-linecap="round"/></g>`},
   {id:'platform-clogs',tier:1,slot:'feet',name:'Platform Clogs',cost:35,emoji:'🪵',
-    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="160" rx="13" ry="5" fill="#8B4513"/><rect x="50" y="161" width="26" height="5" rx="2" fill="#5C2D0A"/><ellipse cx="97" cy="160" rx="13" ry="5" fill="#8B4513"/><rect x="84" y="161" width="26" height="5" rx="2" fill="#5C2D0A"/></g>`},
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="44" cy="170" rx="14" ry="5" fill="#8B4513" stroke="#5C2D0A" stroke-width="2"/><rect x="30" y="171" width="28" height="5" rx="2" fill="#5C2D0A" stroke="#3D1A00" stroke-width="1.5"/><ellipse cx="116" cy="170" rx="14" ry="5" fill="#8B4513" stroke="#5C2D0A" stroke-width="2"/><rect x="102" y="171" width="28" height="5" rx="2" fill="#5C2D0A" stroke="#3D1A00" stroke-width="1.5"/><ellipse cx="38" cy="169" rx="4" ry="2" fill="rgba(255,200,100,0.3)"/><ellipse cx="110" cy="169" rx="4" ry="2" fill="rgba(255,200,100,0.3)"/></g>`},
   {id:'backwards-cap',tier:1,slot:'head',name:'Backwards Cap',cost:20,emoji:'🧢',
     svg:`<g id="cosmetic-head-item"><rect x="52" y="12" width="56" height="12" rx="4" fill="#FF2D78"/><rect x="36" y="18" width="30" height="6" rx="3" fill="#CC0055"/><text x="80" y="23" text-anchor="middle" font-size="7" fill="white" font-weight="bold">SC</text></g>`},
   {id:'bucket-hat',tier:1,slot:'head',name:'Bucket Hat',cost:25,emoji:'🪣',
@@ -1656,13 +1689,13 @@ const ITEMS=[
   {id:'trucker-hat',tier:1,slot:'head',name:'Trucker Hat',cost:30,emoji:'🚚',
     svg:`<g id="cosmetic-head-item"><path d="M50,22 Q52,2 80,2 Q108,2 110,22" fill="#F5C518"/><path d="M78,3 Q108,3 110,22 L78,22Z" fill="rgba(255,255,255,0.15)"/><ellipse cx="80" cy="22" rx="32" ry="5" fill="#C9920A"/></g>`},
   {id:'dish-gloves',tier:1,slot:'hands',name:'Dish Gloves',cost:20,emoji:'🧤',
-    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="118" rx="11" ry="8" fill="#FFD700" stroke="#CC9900" stroke-width="1" transform="rotate(-20 18 118)"/><ellipse cx="142" cy="118" rx="11" ry="8" fill="#FFD700" stroke="#CC9900" stroke-width="1" transform="rotate(20 142 118)"/></g>`},
+    svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="13" fill="#FFD700" stroke="#CC9900" stroke-width="2"/><circle cx="152" cy="162" r="13" fill="#FFD700" stroke="#CC9900" stroke-width="2"/><circle cx="4" cy="158" r="4.5" fill="#FFF5A0" opacity="0.6"/><circle cx="148" cy="158" r="4.5" fill="#FFF5A0" opacity="0.6"/><ellipse cx="8" cy="166" rx="11" ry="4" fill="none" stroke="#CC9900" stroke-width="1.5"/><ellipse cx="152" cy="166" rx="11" ry="4" fill="none" stroke="#CC9900" stroke-width="1.5"/></g>`},
   {id:'oven-mitt',tier:1,slot:'hands',name:'The Oven Mitt',cost:25,emoji:'🧤',
-    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="118" rx="11" ry="8" fill="#FF6B35" stroke="#CC4400" stroke-width="1" transform="rotate(-20 18 118)"/><ellipse cx="142" cy="118" rx="11" ry="8" fill="#8B0000" stroke="#600000" stroke-width="1" transform="rotate(20 142 118)"/></g>`},
+    svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="13" fill="#FF6B35" stroke="#CC4400" stroke-width="2"/><circle cx="152" cy="162" r="13" fill="#8B0000" stroke="#600000" stroke-width="2"/><circle cx="4" cy="158" r="4" fill="rgba(255,180,120,0.5)"/><circle cx="148" cy="158" r="4" fill="rgba(200,100,100,0.4)"/><ellipse cx="8" cy="166" rx="11" ry="4" fill="none" stroke="#CC4400" stroke-width="1.5"/><ellipse cx="152" cy="166" rx="11" ry="4" fill="none" stroke="#600000" stroke-width="1.5"/></g>`},
   {id:'fingerless-gloves',tier:1,slot:'hands',name:'Fingerless Gloves',cost:30,emoji:'🤘',
-    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="119" rx="10" ry="7" fill="#1A1A1A" transform="rotate(-20 18 119)"/><ellipse cx="142" cy="119" rx="10" ry="7" fill="#1A1A1A" transform="rotate(20 142 119)"/></g>`},
+    svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="12" fill="#1A1A1A" stroke="#444" stroke-width="2"/><circle cx="152" cy="162" r="12" fill="#1A1A1A" stroke="#444" stroke-width="2"/><circle cx="4" cy="158" r="4" fill="rgba(255,255,255,0.1)"/><circle cx="148" cy="158" r="4" fill="rgba(255,255,255,0.1)"/><path d="M3,155 L13,155" stroke="#444" stroke-width="2" stroke-linecap="round"/><path d="M147,155 L157,155" stroke="#444" stroke-width="2" stroke-linecap="round"/></g>`},
   {id:'tiny-mittens',tier:1,slot:'hands',name:'Tiny Mittens',cost:20,emoji:'🩷',
-    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="119" rx="9" ry="7" fill="#FFB3D9" stroke="#FF69B4" stroke-width="1" transform="rotate(-20 18 119)"/><ellipse cx="142" cy="119" rx="9" ry="7" fill="#FFB3D9" stroke="#FF69B4" stroke-width="1" transform="rotate(20 142 119)"/></g>`},
+    svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="12" fill="#FFB3D9" stroke="#FF69B4" stroke-width="2"/><circle cx="152" cy="162" r="12" fill="#FFB3D9" stroke="#FF69B4" stroke-width="2"/><circle cx="4" cy="158" r="4" fill="rgba(255,220,240,0.6)"/><circle cx="148" cy="158" r="4" fill="rgba(255,220,240,0.6)"/><ellipse cx="8" cy="166" rx="10" ry="3.5" fill="none" stroke="#FF69B4" stroke-width="1.5"/><ellipse cx="152" cy="166" rx="10" ry="3.5" fill="none" stroke="#FF69B4" stroke-width="1.5"/></g>`},
   {id:'macaroni-necklace',tier:1,slot:'body',name:'Macaroni Necklace',cost:20,emoji:'🍝',
     svg:`<g id="cosmetic-body-item"><circle cx="63" cy="97" r="3.5" fill="#FF9500"/><circle cx="70" cy="101" r="3.5" fill="#FFB830"/><circle cx="77" cy="104" r="3.5" fill="#FF9500"/><circle cx="84" cy="104" r="3.5" fill="#FFB830"/><circle cx="91" cy="101" r="3.5" fill="#FF9500"/><circle cx="97" cy="97" r="3.5" fill="#FFB830"/></g>`},
   {id:'plastic-beads',tier:1,slot:'body',name:'Plastic Beads',cost:15,emoji:'📿',
@@ -1692,13 +1725,13 @@ const ITEMS=[
   {id:'the-monocle',tier:2,slot:'eyes',name:'The Monocle',cost:100,emoji:'🧐',
     svg:`<g id="cosmetic-eyes-item"><circle cx="94" cy="69" r="11" fill="none" stroke="#C9920A" stroke-width="2.5"/><circle cx="94" cy="69" r="9" fill="rgba(200,180,100,0.2)"/><line x1="83" y1="78" x2="78" y2="90" stroke="#C9920A" stroke-width="1.5"/></g>`},
   {id:'patent-loafers',tier:2,slot:'feet',name:'Patent Loafers',cost:85,emoji:'👞',
-    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="162" rx="14" ry="6" fill="#1A1A1A" stroke="#333" stroke-width="1"/><ellipse cx="97" cy="162" rx="14" ry="6" fill="#1A1A1A" stroke="#333" stroke-width="1"/><ellipse cx="64" cy="160" rx="8" ry="2.5" fill="rgba(255,255,255,0.15)"/><ellipse cx="98" cy="160" rx="8" ry="2.5" fill="rgba(255,255,255,0.15)"/></g>`},
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="44" cy="173" rx="16" ry="7" fill="#1A1A1A" stroke="#444" stroke-width="2"/><ellipse cx="116" cy="173" rx="16" ry="7" fill="#1A1A1A" stroke="#444" stroke-width="2"/><ellipse cx="38" cy="170" rx="8" ry="2.5" fill="rgba(255,255,255,0.18)"/><ellipse cx="110" cy="170" rx="8" ry="2.5" fill="rgba(255,255,255,0.18)"/><ellipse cx="57" cy="173" rx="3" ry="5" fill="#111" stroke="#555" stroke-width="0.5"/><ellipse cx="129" cy="173" rx="3" ry="5" fill="#111" stroke="#555" stroke-width="0.5"/></g>`},
   {id:'platform-boots',tier:2,slot:'feet',name:'Platform Boots',cost:95,emoji:'👢',
-    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="160" rx="12" ry="5" fill="#1A0030"/><rect x="51" y="161" width="24" height="6" rx="2" fill="#7B2FBE"/><ellipse cx="97" cy="160" rx="12" ry="5" fill="#1A0030"/><rect x="85" y="161" width="24" height="6" rx="2" fill="#7B2FBE"/></g>`},
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="44" cy="170" rx="13" ry="5" fill="#1A0030" stroke="#7B2FBE" stroke-width="1.5"/><rect x="30" y="171" width="28" height="6" rx="2" fill="#7B2FBE" stroke="#4B0082" stroke-width="1.5"/><ellipse cx="116" cy="170" rx="13" ry="5" fill="#1A0030" stroke="#7B2FBE" stroke-width="1.5"/><rect x="102" y="171" width="28" height="6" rx="2" fill="#7B2FBE" stroke="#4B0082" stroke-width="1.5"/><ellipse cx="38" cy="169" rx="4" ry="2" fill="rgba(176,106,224,0.35)"/><ellipse cx="110" cy="169" rx="4" ry="2" fill="rgba(176,106,224,0.35)"/></g>`},
   {id:'mule-heels',tier:2,slot:'feet',name:'Mule Heels',cost:80,emoji:'👡',
-    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="161" rx="13" ry="5" fill="#FF2D78"/><path d="M73,162 L74,168" stroke="#FF2D78" stroke-width="2.5"/><ellipse cx="97" cy="161" rx="13" ry="5" fill="#FF2D78"/><path d="M107,162 L108,168" stroke="#FF2D78" stroke-width="2.5"/></g>`},
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="44" cy="173" rx="14" ry="5.5" fill="#FF2D78" stroke="#CC0055" stroke-width="2"/><path d="M57,174 L58,180" stroke="#FF2D78" stroke-width="3" stroke-linecap="round"/><ellipse cx="116" cy="173" rx="14" ry="5.5" fill="#FF2D78" stroke="#CC0055" stroke-width="2"/><path d="M129,174 L130,180" stroke="#FF2D78" stroke-width="3" stroke-linecap="round"/><ellipse cx="38" cy="171" rx="5" ry="2" fill="rgba(255,255,255,0.25)"/><ellipse cx="110" cy="171" rx="5" ry="2" fill="rgba(255,255,255,0.25)"/></g>`},
   {id:'chelsea-boots',tier:2,slot:'feet',name:'Chelsea Boots',cost:90,emoji:'🥾',
-    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="161" rx="13" ry="6" fill="#3D1A00" stroke="#5C2D0A" stroke-width="1"/><ellipse cx="97" cy="161" rx="13" ry="6" fill="#3D1A00" stroke="#5C2D0A" stroke-width="1"/></g>`},
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="44" cy="173" rx="15" ry="7" fill="#3D1A00" stroke="#5C2D0A" stroke-width="2"/><ellipse cx="116" cy="173" rx="15" ry="7" fill="#3D1A00" stroke="#5C2D0A" stroke-width="2"/><ellipse cx="38" cy="170" rx="6" ry="2" fill="rgba(180,100,50,0.25)"/><ellipse cx="110" cy="170" rx="6" ry="2" fill="rgba(180,100,50,0.25)"/><ellipse cx="57" cy="173" rx="3" ry="6" fill="#2A1200" stroke="#5C2D0A" stroke-width="0.5"/><ellipse cx="129" cy="173" rx="3" ry="6" fill="#2A1200" stroke="#5C2D0A" stroke-width="0.5"/></g>`},
   {id:'the-beret',tier:2,slot:'head',name:'The Beret',cost:80,emoji:'🎭',
     svg:`<g id="cosmetic-head-item"><ellipse cx="80" cy="14" rx="30" ry="10" fill="#1A1A4A"/><ellipse cx="80" cy="20" rx="32" ry="5" fill="#252555"/><circle cx="97" cy="10" r="4" fill="#1A1A4A"/></g>`},
   {id:'wide-brim-felt',tier:2,slot:'head',name:'Wide Brim Felt Hat',cost:90,emoji:'🤠',
@@ -1708,13 +1741,13 @@ const ITEMS=[
   {id:'tiny-fascinator',tier:2,slot:'head',name:'Tiny Fascinator',cost:100,emoji:'🌸',
     svg:`<g id="cosmetic-head-item"><ellipse cx="88" cy="16" rx="14" ry="8" fill="#FF2D78"/><ellipse cx="88" cy="20" rx="16" ry="4" fill="#CC0055"/><circle cx="88" cy="12" r="4" fill="#FF69B4"/></g>`},
   {id:'velvet-evening-gloves',tier:2,slot:'hands',name:'Velvet Evening Gloves',cost:85,emoji:'🧤',
-    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="118" rx="11" ry="8" fill="#4B0082" stroke="#7B2FBE" stroke-width="1.2" transform="rotate(-20 18 118)"/><ellipse cx="142" cy="118" rx="11" ry="8" fill="#4B0082" stroke="#7B2FBE" stroke-width="1.2" transform="rotate(20 142 118)"/></g>`},
+    svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="13" fill="#4B0082" stroke="#7B2FBE" stroke-width="2.2"/><circle cx="152" cy="162" r="13" fill="#4B0082" stroke="#7B2FBE" stroke-width="2.2"/><circle cx="4" cy="158" r="4.5" fill="rgba(176,106,224,0.4)"/><circle cx="148" cy="158" r="4.5" fill="rgba(176,106,224,0.4)"/><ellipse cx="8" cy="166" rx="11" ry="4" fill="none" stroke="#B06AE0" stroke-width="1.5"/><ellipse cx="152" cy="166" rx="11" ry="4" fill="none" stroke="#B06AE0" stroke-width="1.5"/></g>`},
   {id:'driving-gloves',tier:2,slot:'hands',name:'Driving Gloves',cost:90,emoji:'🏎️',
-    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="118" rx="11" ry="8" fill="#8B6914" stroke="#C9920A" stroke-width="1.2" transform="rotate(-20 18 118)"/><ellipse cx="142" cy="118" rx="11" ry="8" fill="#8B6914" stroke="#C9920A" stroke-width="1.2" transform="rotate(20 142 118)"/></g>`},
+    svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="13" fill="#8B6914" stroke="#C9920A" stroke-width="2.2"/><circle cx="152" cy="162" r="13" fill="#8B6914" stroke="#C9920A" stroke-width="2.2"/><circle cx="4" cy="158" r="4.5" fill="rgba(200,160,80,0.45)"/><circle cx="148" cy="158" r="4.5" fill="rgba(200,160,80,0.45)"/><path d="M1,158 L15,158" stroke="#C9920A" stroke-width="1.5" stroke-dasharray="3,2"/><path d="M145,158 L159,158" stroke="#C9920A" stroke-width="1.5" stroke-dasharray="3,2"/></g>`},
   {id:'lace-gloves',tier:2,slot:'hands',name:'Lace Gloves',cost:80,emoji:'🕊️',
-    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="118" rx="11" ry="8" fill="white" stroke="#ddd" stroke-width="1" opacity="0.9" transform="rotate(-20 18 118)"/><ellipse cx="142" cy="118" rx="11" ry="8" fill="white" stroke="#ddd" stroke-width="1" opacity="0.9" transform="rotate(20 142 118)"/></g>`},
+    svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="13" fill="white" stroke="#ddd" stroke-width="2" opacity="0.92"/><circle cx="152" cy="162" r="13" fill="white" stroke="#ddd" stroke-width="2" opacity="0.92"/><circle cx="4" cy="158" r="4.5" fill="rgba(255,255,255,0.7)"/><circle cx="148" cy="158" r="4.5" fill="rgba(255,255,255,0.7)"/><circle cx="8" cy="162" r="9" fill="none" stroke="#ddd" stroke-width="0.5" stroke-dasharray="2,2"/><circle cx="152" cy="162" r="9" fill="none" stroke="#ddd" stroke-width="0.5" stroke-dasharray="2,2"/></g>`},
   {id:'silk-opera-gloves-s',tier:2,slot:'hands',name:'Silk Opera Gloves',cost:95,emoji:'✨',
-    svg:`<g id="cosmetic-hands-item"><rect x="8" y="103" width="14" height="24" rx="7" fill="#FF2D78" opacity="0.85" transform="rotate(-20 15 115)"/><rect x="138" y="103" width="14" height="24" rx="7" fill="#FF2D78" opacity="0.85" transform="rotate(20 145 115)"/></g>`},
+    svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="13" fill="#FF2D78" stroke="#CC0055" stroke-width="2.2" opacity="0.88"/><circle cx="152" cy="162" r="13" fill="#FF2D78" stroke="#CC0055" stroke-width="2.2" opacity="0.88"/><circle cx="4" cy="158" r="4.5" fill="rgba(255,160,200,0.5)"/><circle cx="148" cy="158" r="4.5" fill="rgba(255,160,200,0.5)"/><ellipse cx="8" cy="165" rx="11" ry="4" fill="none" stroke="#FF69B4" stroke-width="1.5"/><ellipse cx="152" cy="165" rx="11" ry="4" fill="none" stroke="#FF69B4" stroke-width="1.5"/></g>`},
   {id:'silver-rope-chain',tier:2,slot:'body',name:'Silver Rope Chain',cost:80,emoji:'⛓️',
     svg:`<g id="cosmetic-body-item"><path d="M55,95 Q80,108 105,95" stroke="#C0C0C0" stroke-width="3.5" stroke-dasharray="5,3" fill="none" stroke-linecap="round"/></g>`},
   {id:'pearl-strand',tier:2,slot:'body',name:'Pearl Strand',cost:90,emoji:'🤍',
@@ -1744,13 +1777,13 @@ const ITEMS=[
   {id:'crystal-cat-eye',tier:3,slot:'eyes',name:'Crystal Encrusted Cat-Eye',cost:300,emoji:'✨',
     svg:`<g id="cosmetic-eyes-item"><path d="M55,73 L59,61 L79,61 L82,73Z" fill="rgba(0,229,255,0.3)" stroke="#00E5FF" stroke-width="2"/><path d="M83,73 L87,61 L107,61 L110,73Z" fill="rgba(0,229,255,0.3)" stroke="#00E5FF" stroke-width="2"/><circle cx="59" cy="61" r="2" fill="#E8F4FF"/><circle cx="79" cy="61" r="2" fill="#E8F4FF"/><circle cx="107" cy="61" r="2" fill="#E8F4FF"/></g>`},
   {id:'alligator-loafers',tier:3,slot:'feet',name:'Alligator Loafers',cost:200,emoji:'🐊',
-    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="162" rx="14" ry="6" fill="#2D5A27" stroke="#1A3D17" stroke-width="1.5"/><ellipse cx="97" cy="162" rx="14" ry="6" fill="#2D5A27" stroke="#1A3D17" stroke-width="1.5"/><rect x="52" y="161" width="5" height="3" rx="1" fill="#1A3D17"/><rect x="59" y="160" width="4" height="3" rx="1" fill="#1A3D17"/><rect x="66" y="161" width="5" height="3" rx="1" fill="#1A3D17"/><rect x="86" y="161" width="5" height="3" rx="1" fill="#1A3D17"/><rect x="93" y="160" width="4" height="3" rx="1" fill="#1A3D17"/><rect x="100" y="161" width="5" height="3" rx="1" fill="#1A3D17"/></g>`},
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="44" cy="173" rx="16" ry="7" fill="#2D5A27" stroke="#1A3D17" stroke-width="2.5"/><ellipse cx="116" cy="173" rx="16" ry="7" fill="#2D5A27" stroke="#1A3D17" stroke-width="2.5"/><rect x="30" y="171" width="5" height="3" rx="1" fill="#1A3D17"/><rect x="37" y="170" width="4" height="3" rx="1" fill="#1A3D17"/><rect x="44" y="171" width="5" height="3" rx="1" fill="#1A3D17"/><rect x="102" y="171" width="5" height="3" rx="1" fill="#1A3D17"/><rect x="109" y="170" width="4" height="3" rx="1" fill="#1A3D17"/><rect x="116" y="171" width="5" height="3" rx="1" fill="#1A3D17"/><ellipse cx="34" cy="170" rx="5" ry="2" fill="rgba(100,200,80,0.2)"/><ellipse cx="106" cy="170" rx="5" ry="2" fill="rgba(100,200,80,0.2)"/></g>`},
   {id:'bespoke-oxfords',tier:3,slot:'feet',name:'Bespoke Oxford Lace-Ups',cost:275,emoji:'🤌',
-    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="162" rx="14" ry="6" fill="#3D1A00" stroke="#C9920A" stroke-width="1.5"/><ellipse cx="97" cy="162" rx="14" ry="6" fill="#3D1A00" stroke="#C9920A" stroke-width="1.5"/><path d="M53,160 L73,160" stroke="#C9920A" stroke-width="1" stroke-dasharray="2,2"/><path d="M87,160 L107,160" stroke="#C9920A" stroke-width="1" stroke-dasharray="2,2"/></g>`},
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="44" cy="173" rx="16" ry="7" fill="#3D1A00" stroke="#C9920A" stroke-width="2.5"/><ellipse cx="116" cy="173" rx="16" ry="7" fill="#3D1A00" stroke="#C9920A" stroke-width="2.5"/><path d="M30,171 L58,171" stroke="#C9920A" stroke-width="1.2" stroke-dasharray="2,2"/><path d="M102,171 L130,171" stroke="#C9920A" stroke-width="1.2" stroke-dasharray="2,2"/><ellipse cx="34" cy="170" rx="6" ry="2" fill="rgba(200,140,50,0.3)"/><ellipse cx="106" cy="170" rx="6" ry="2" fill="rgba(200,140,50,0.3)"/></g>`},
   {id:'velvet-slippers',tier:3,slot:'feet',name:'Crested Velvet Slippers',cost:225,emoji:'👑',
-    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="162" rx="14" ry="6" fill="#4B0082"/><ellipse cx="97" cy="162" rx="14" ry="6" fill="#4B0082"/><polygon points="60,158 63,154 66,158" fill="#F5C518"/><polygon points="94,158 97,154 100,158" fill="#F5C518"/></g>`},
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="44" cy="173" rx="16" ry="7" fill="#4B0082" stroke="#7B2FBE" stroke-width="2.5"/><ellipse cx="116" cy="173" rx="16" ry="7" fill="#4B0082" stroke="#7B2FBE" stroke-width="2.5"/><polygon points="41,168 44,163 47,168" fill="#F5C518" stroke="#C9920A" stroke-width="0.5"/><polygon points="113,168 116,163 119,168" fill="#F5C518" stroke="#C9920A" stroke-width="0.5"/><ellipse cx="34" cy="171" rx="5" ry="2" fill="rgba(176,106,224,0.4)"/><ellipse cx="106" cy="171" rx="5" ry="2" fill="rgba(176,106,224,0.4)"/></g>`},
   {id:'feather-mules',tier:3,slot:'feet',name:'Feather-Trim Mules',cost:300,emoji:'🪶',
-    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="162" rx="13" ry="5" fill="#1A1A2E"/><ellipse cx="97" cy="162" rx="13" ry="5" fill="#1A1A2E"/><path d="M52,160 Q55,154 62,157" stroke="#E8F4FF" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M55,161 Q58,155 63,159" stroke="#E8F4FF" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M86,160 Q89,154 96,157" stroke="#E8F4FF" stroke-width="2" fill="none" stroke-linecap="round"/></g>`},
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="44" cy="173" rx="15" ry="6" fill="#1A1A2E" stroke="#333" stroke-width="2.5"/><ellipse cx="116" cy="173" rx="15" ry="6" fill="#1A1A2E" stroke="#333" stroke-width="2.5"/><path d="M30,170 Q33,164 41,167" stroke="#E8F4FF" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M33,171 Q36,165 44,169" stroke="#E8F4FF" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M102,170 Q105,164 113,167" stroke="#E8F4FF" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M105,171 Q108,165 116,169" stroke="#E8F4FF" stroke-width="2" fill="none" stroke-linecap="round"/></g>`},
   {id:'top-hat',tier:3,slot:'head',name:'The Top Hat',cost:200,emoji:'🎩',
     svg:`<g id="cosmetic-head-item"><rect x="62" y="-8" width="36" height="28" rx="3" fill="#1A1A1A" stroke="#333" stroke-width="1.5"/><ellipse cx="80" cy="20" rx="38" ry="7" fill="#111"/><line x1="62" y1="5" x2="98" y2="5" stroke="#F5C518" stroke-width="1.5"/></g>`},
   {id:'pillbox-hat',tier:3,slot:'head',name:'Pillbox Hat',cost:250,emoji:'🌸',
@@ -1760,13 +1793,13 @@ const ITEMS=[
   {id:'swarovski-beret',tier:3,slot:'head',name:'Swarovski Beret',cost:225,emoji:'💎',
     svg:`<g id="cosmetic-head-item"><ellipse cx="80" cy="14" rx="30" ry="10" fill="#1A1A4A"/><ellipse cx="80" cy="20" rx="32" ry="5" fill="#252555"/><circle cx="97" cy="10" r="4" fill="#1A1A4A"/><circle cx="68" cy="10" r="2" fill="#E8F4FF"/><circle cx="76" cy="7" r="2" fill="#E8F4FF"/><circle cx="84" cy="9" r="2" fill="#E8F4FF"/><circle cx="91" cy="7" r="2" fill="#E8F4FF"/></g>`},
   {id:'opera-gloves-full',tier:3,slot:'hands',name:'Full-Length Opera Gloves',cost:200,emoji:'🕊️',
-    svg:`<g id="cosmetic-hands-item"><rect x="6" y="98" width="16" height="26" rx="8" fill="#E8E8E8" stroke="#ddd" stroke-width="1" transform="rotate(-20 14 111)"/><rect x="138" y="98" width="16" height="26" rx="8" fill="#E8E8E8" stroke="#ddd" stroke-width="1" transform="rotate(20 146 111)"/></g>`},
+    svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="13" fill="#E8E8E8" stroke="#ccc" stroke-width="2.5"/><circle cx="152" cy="162" r="13" fill="#E8E8E8" stroke="#ccc" stroke-width="2.5"/><circle cx="4" cy="158" r="5" fill="rgba(255,255,255,0.7)"/><circle cx="148" cy="158" r="5" fill="rgba(255,255,255,0.7)"/><ellipse cx="8" cy="166" rx="11" ry="4" fill="none" stroke="#bbb" stroke-width="1.5"/><ellipse cx="152" cy="166" rx="11" ry="4" fill="none" stroke="#bbb" stroke-width="1.5"/><path d="M1,155 L15,155" stroke="#ccc" stroke-width="1.5"/><path d="M145,155 L159,155" stroke="#ccc" stroke-width="1.5"/></g>`},
   {id:'cashmere-driving',tier:3,slot:'hands',name:'Cashmere Driving Gloves',cost:250,emoji:'🏎️',
-    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="117" rx="12" ry="9" fill="#C8A882" stroke="#A08060" stroke-width="1.5" transform="rotate(-20 18 117)"/><ellipse cx="142" cy="117" rx="12" ry="9" fill="#C8A882" stroke="#A08060" stroke-width="1.5" transform="rotate(20 142 117)"/></g>`},
+    svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="13" fill="#C8A882" stroke="#A08060" stroke-width="2.5"/><circle cx="152" cy="162" r="13" fill="#C8A882" stroke="#A08060" stroke-width="2.5"/><circle cx="4" cy="158" r="5" fill="rgba(230,200,160,0.55)"/><circle cx="148" cy="158" r="5" fill="rgba(230,200,160,0.55)"/><path d="M1,158 L15,158" stroke="#A08060" stroke-width="1.5" stroke-dasharray="3,2"/><path d="M145,158 L159,158" stroke="#A08060" stroke-width="1.5" stroke-dasharray="3,2"/><ellipse cx="8" cy="166" rx="11" ry="4" fill="none" stroke="#A08060" stroke-width="1.5"/><ellipse cx="152" cy="166" rx="11" ry="4" fill="none" stroke="#A08060" stroke-width="1.5"/></g>`},
   {id:'embroidered-satin',tier:3,slot:'hands',name:'Embroidered Satin Gloves',cost:225,emoji:'🌸',
-    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="118" rx="11" ry="8" fill="#FF69B4" stroke="#FF2D78" stroke-width="1.2" transform="rotate(-20 18 118)"/><ellipse cx="142" cy="118" rx="11" ry="8" fill="#FF69B4" stroke="#FF2D78" stroke-width="1.2" transform="rotate(20 142 118)"/><circle cx="16" cy="116" r="1.5" fill="#F5C518" transform="rotate(-20 16 116)"/><circle cx="21" cy="120" r="1.5" fill="#F5C518" transform="rotate(-20 21 120)"/><circle cx="140" cy="116" r="1.5" fill="#F5C518" transform="rotate(20 140 116)"/><circle cx="145" cy="120" r="1.5" fill="#F5C518" transform="rotate(20 145 120)"/></g>`},
+    svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="13" fill="#FF69B4" stroke="#FF2D78" stroke-width="2.5"/><circle cx="152" cy="162" r="13" fill="#FF69B4" stroke="#FF2D78" stroke-width="2.5"/><circle cx="4" cy="158" r="5" fill="rgba(255,200,220,0.5)"/><circle cx="148" cy="158" r="5" fill="rgba(255,200,220,0.5)"/><circle cx="8" cy="156" r="2" fill="#F5C518"/><circle cx="4" cy="163" r="1.5" fill="#F5C518"/><circle cx="12" cy="165" r="1.5" fill="#F5C518"/><circle cx="152" cy="156" r="2" fill="#F5C518"/><circle cx="148" cy="163" r="1.5" fill="#F5C518"/><circle cx="156" cy="165" r="1.5" fill="#F5C518"/></g>`},
   {id:'leather-gold-cuffs',tier:3,slot:'hands',name:'Leather w/ Gold Cuffs',cost:300,emoji:'🤺',
-    svg:`<g id="cosmetic-hands-item"><ellipse cx="18" cy="118" rx="11" ry="8" fill="#1A0A00" stroke="#F5C518" stroke-width="2" transform="rotate(-20 18 118)"/><ellipse cx="142" cy="118" rx="11" ry="8" fill="#1A0A00" stroke="#F5C518" stroke-width="2" transform="rotate(20 142 118)"/></g>`},
+    svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="13" fill="#1A0A00" stroke="#F5C518" stroke-width="3"/><circle cx="152" cy="162" r="13" fill="#1A0A00" stroke="#F5C518" stroke-width="3"/><circle cx="4" cy="158" r="5" fill="rgba(200,140,40,0.3)"/><circle cx="148" cy="158" r="5" fill="rgba(200,140,40,0.3)"/><ellipse cx="8" cy="166" rx="11" ry="4" fill="none" stroke="#F5C518" stroke-width="1.5"/><ellipse cx="152" cy="166" rx="11" ry="4" fill="none" stroke="#F5C518" stroke-width="1.5"/><path d="M1,157 L15,157" stroke="#C9920A" stroke-width="1.2"/><path d="M145,157 L159,157" stroke="#C9920A" stroke-width="1.2"/></g>`},
   {id:'emerald-statement',tier:3,slot:'body',name:'Emerald Statement Necklace',cost:200,emoji:'💚',
     svg:`<g id="cosmetic-body-item"><path d="M58,94 Q80,107 102,94" stroke="#00AA55" stroke-width="2.5" fill="none"/><rect x="73" y="103" width="14" height="10" rx="2" fill="#00AA55" stroke="#008844" stroke-width="1.5"/><circle cx="66" cy="97" r="4" fill="#06D6A0" stroke="#00AA55" stroke-width="1"/><circle cx="94" cy="97" r="4" fill="#06D6A0" stroke="#00AA55" stroke-width="1"/></g>`},
   {id:'layered-gold-pearl',tier:3,slot:'body',name:'Gold & Pearl Combo',cost:250,emoji:'🧿',
@@ -1794,13 +1827,13 @@ const ITEMS=[
   {id:'gouda-vision',tier:4,slot:'eyes',name:'The Gouda Vision',cost:750,emoji:'🌟',
     svg:`<g id="cosmetic-eyes-item"><rect x="53" y="61" width="24" height="15" rx="6" fill="rgba(245,197,24,0.3)" stroke="#F5C518" stroke-width="3"/><rect x="83" y="61" width="24" height="15" rx="6" fill="rgba(245,197,24,0.3)" stroke="#F5C518" stroke-width="3"/><line x1="77" y1="68" x2="83" y2="68" stroke="#F5C518" stroke-width="2"/><circle cx="65" cy="68" r="5" fill="rgba(245,197,24,0.4)"/><circle cx="95" cy="68" r="5" fill="rgba(245,197,24,0.4)"/></g>`},
   {id:'velvet-throne-slippers',tier:4,slot:'feet',name:'Velvet Throne Slippers',cost:500,emoji:'👑',
-    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="162" rx="14" ry="6" fill="#4B0082" stroke="#F5C518" stroke-width="2"/><ellipse cx="97" cy="162" rx="14" ry="6" fill="#4B0082" stroke="#F5C518" stroke-width="2"/><polygon points="60,158 63,154 66,158" fill="#F5C518"/><polygon points="94,158 97,154 100,158" fill="#F5C518"/></g>`},
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="44" cy="173" rx="16" ry="7" fill="#4B0082" stroke="#F5C518" stroke-width="3"/><ellipse cx="116" cy="173" rx="16" ry="7" fill="#4B0082" stroke="#F5C518" stroke-width="3"/><polygon points="41,168 44,163 47,168" fill="#F5C518" stroke="#C9920A" stroke-width="0.8"/><polygon points="113,168 116,163 119,168" fill="#F5C518" stroke="#C9920A" stroke-width="0.8"/><ellipse cx="34" cy="171" rx="6" ry="2.5" fill="rgba(176,106,224,0.5)"/><ellipse cx="106" cy="171" rx="6" ry="2.5" fill="rgba(176,106,224,0.5)"/><circle cx="44" cy="173" r="2.5" fill="#F5C518" opacity="0.6"/><circle cx="116" cy="173" r="2.5" fill="#F5C518" opacity="0.6"/></g>`},
   {id:'crystalline-stilettos',tier:4,slot:'feet',name:'Crystalline Stilettos',cost:650,emoji:'💎',
-    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="161" rx="13" ry="5" fill="rgba(232,244,255,0.6)" stroke="#E8F4FF" stroke-width="1.5"/><path d="M73,162 L74,169" stroke="#E8F4FF" stroke-width="2.5"/><ellipse cx="97" cy="161" rx="13" ry="5" fill="rgba(232,244,255,0.6)" stroke="#E8F4FF" stroke-width="1.5"/><path d="M107,162 L108,169" stroke="#E8F4FF" stroke-width="2.5"/><circle cx="58" cy="160" r="2" fill="#E8F4FF" opacity="0.8"/><circle cx="92" cy="160" r="2" fill="#E8F4FF" opacity="0.8"/></g>`},
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="44" cy="172" rx="14" ry="5.5" fill="rgba(232,244,255,0.65)" stroke="#E8F4FF" stroke-width="2.5"/><path d="M57,173 L58,180" stroke="#E8F4FF" stroke-width="3" stroke-linecap="round"/><ellipse cx="116" cy="172" rx="14" ry="5.5" fill="rgba(232,244,255,0.65)" stroke="#E8F4FF" stroke-width="2.5"/><path d="M129,173 L130,180" stroke="#E8F4FF" stroke-width="3" stroke-linecap="round"/><circle cx="36" cy="170" r="2.5" fill="#E8F4FF" opacity="0.9"/><circle cx="108" cy="170" r="2.5" fill="#E8F4FF" opacity="0.9"/><circle cx="44" cy="172" r="2" fill="white" opacity="0.8"/><circle cx="116" cy="172" r="2" fill="white" opacity="0.8"/></g>`},
   {id:'aged-reserve-oxfords',tier:4,slot:'feet',name:'Aged Reserve Oxfords',cost:700,emoji:'🎩',
-    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="162" rx="14" ry="6" fill="#1A0500" stroke="#C9920A" stroke-width="2"/><ellipse cx="97" cy="162" rx="14" ry="6" fill="#1A0500" stroke="#C9920A" stroke-width="2"/><path d="M53,160 L73,160" stroke="#F5C518" stroke-width="1.5" stroke-dasharray="2,2"/><path d="M87,160 L107,160" stroke="#F5C518" stroke-width="1.5" stroke-dasharray="2,2"/></g>`},
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="44" cy="173" rx="16" ry="7" fill="#1A0500" stroke="#C9920A" stroke-width="3"/><ellipse cx="116" cy="173" rx="16" ry="7" fill="#1A0500" stroke="#C9920A" stroke-width="3"/><path d="M30,171 L58,171" stroke="#F5C518" stroke-width="1.5" stroke-dasharray="2,2"/><path d="M102,171 L130,171" stroke="#F5C518" stroke-width="1.5" stroke-dasharray="2,2"/><ellipse cx="34" cy="170" rx="6" ry="2" fill="rgba(200,140,50,0.35)"/><ellipse cx="106" cy="170" rx="6" ry="2" fill="rgba(200,140,50,0.35)"/><circle cx="46" cy="167" r="2" fill="#F5C518" opacity="0.7"/><circle cx="118" cy="167" r="2" fill="#F5C518" opacity="0.7"/></g>`},
   {id:'royale-platforms',tier:4,slot:'feet',name:'The Royale Platforms',cost:750,emoji:'🌟',
-    svg:`<g id="cosmetic-feet-item"><ellipse cx="63" cy="159" rx="13" ry="5" fill="#F5C518"/><rect x="50" y="161" width="26" height="7" rx="3" fill="#C9920A"/><ellipse cx="97" cy="159" rx="13" ry="5" fill="#F5C518"/><rect x="84" y="161" width="26" height="7" rx="3" fill="#C9920A"/></g>`},
+    svg:`<g id="cosmetic-feet-item"><ellipse cx="44" cy="169" rx="14" ry="5" fill="#F5C518" stroke="#C9920A" stroke-width="2.5"/><rect x="29" y="170" width="30" height="7" rx="3" fill="#C9920A" stroke="#8B6400" stroke-width="2"/><ellipse cx="116" cy="169" rx="14" ry="5" fill="#F5C518" stroke="#C9920A" stroke-width="2.5"/><rect x="101" y="170" width="30" height="7" rx="3" fill="#C9920A" stroke="#8B6400" stroke-width="2"/><ellipse cx="36" cy="167" rx="6" ry="2" fill="rgba(255,240,150,0.45)"/><ellipse cx="108" cy="167" rx="6" ry="2" fill="rgba(255,240,150,0.45)"/></g>`},
   {id:'fromage-royale-tiara',tier:4,slot:'head',name:'Fromage Royale Tiara',cost:500,emoji:'👑',
     svg:`<g id="cosmetic-head-item"><path d="M55,20 L60,8 L68,16 L80,4 L92,16 L100,8 L105,20Z" fill="#F5C518" stroke="#C9920A" stroke-width="1.5"/><circle cx="80" cy="4" r="4" fill="#FF2D78"/><circle cx="68" cy="16" r="3" fill="#E8F4FF"/><circle cx="92" cy="16" r="3" fill="#E8F4FF"/></g>`},
   {id:'chapeau-magnifique',tier:4,slot:'head',name:'Le Chapeau Magnifique',cost:600,emoji:'🎩',
@@ -1810,13 +1843,13 @@ const ITEMS=[
   {id:'diamond-wedge-hat',tier:4,slot:'head',name:'The Diamond Wedge',cost:750,emoji:'💎',
     svg:`<g id="cosmetic-head-item"><path d="M55,22 L65,2 L95,2 L105,22Z" fill="rgba(232,244,255,0.2)" stroke="#E8F4FF" stroke-width="2"/><ellipse cx="80" cy="22" rx="32" ry="5" fill="rgba(232,244,255,0.3)" stroke="#E8F4FF" stroke-width="1.5"/><circle cx="65" cy="2" r="2.5" fill="#E8F4FF"/><circle cx="80" cy="-2" r="3" fill="#E8F4FF"/><circle cx="95" cy="2" r="2.5" fill="#E8F4FF"/></g>`},
   {id:'silk-gauntlets',tier:4,slot:'hands',name:'The Silk Gauntlets',cost:500,emoji:'⚔️',
-    svg:`<g id="cosmetic-hands-item"><rect x="5" y="100" width="18" height="28" rx="9" fill="#E8E8E8" stroke="#F5C518" stroke-width="2" transform="rotate(-20 14 114)"/><rect x="137" y="100" width="18" height="28" rx="9" fill="#E8E8E8" stroke="#F5C518" stroke-width="2" transform="rotate(20 146 114)"/></g>`},
+    svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="14" fill="#E8E8E8" stroke="#F5C518" stroke-width="3"/><circle cx="152" cy="162" r="14" fill="#E8E8E8" stroke="#F5C518" stroke-width="3"/><circle cx="4" cy="157" r="5.5" fill="rgba(255,255,255,0.75)"/><circle cx="148" cy="157" r="5.5" fill="rgba(255,255,255,0.75)"/><ellipse cx="8" cy="167" rx="12" ry="4.5" fill="none" stroke="#F5C518" stroke-width="2"/><ellipse cx="152" cy="167" rx="12" ry="4.5" fill="none" stroke="#F5C518" stroke-width="2"/><path d="M0,158 L16,158" stroke="#C9920A" stroke-width="1.5"/><path d="M144,158 L160,158" stroke="#C9920A" stroke-width="1.5"/></g>`},
   {id:'gants-parfaits',tier:4,slot:'hands',name:'Les Gants Parfaits',cost:600,emoji:'🕊️',
-    svg:`<g id="cosmetic-hands-item"><rect x="5" y="100" width="18" height="28" rx="9" fill="#FFF5E0" stroke="#C9920A" stroke-width="2" transform="rotate(-20 14 114)"/><rect x="137" y="100" width="18" height="28" rx="9" fill="#FFF5E0" stroke="#C9920A" stroke-width="2" transform="rotate(20 146 114)"/><circle cx="14" cy="104" r="2.5" fill="#F5C518" transform="rotate(-20 14 104)"/><circle cx="146" cy="104" r="2.5" fill="#F5C518" transform="rotate(20 146 104)"/></g>`},
+    svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="14" fill="#FFF5E0" stroke="#C9920A" stroke-width="3"/><circle cx="152" cy="162" r="14" fill="#FFF5E0" stroke="#C9920A" stroke-width="3"/><circle cx="4" cy="157" r="5.5" fill="rgba(255,240,200,0.7)"/><circle cx="148" cy="157" r="5.5" fill="rgba(255,240,200,0.7)"/><circle cx="8" cy="155" r="3" fill="#F5C518" stroke="#C9920A" stroke-width="0.5"/><circle cx="152" cy="155" r="3" fill="#F5C518" stroke="#C9920A" stroke-width="0.5"/><ellipse cx="8" cy="167" rx="12" ry="4.5" fill="none" stroke="#C9920A" stroke-width="2"/><ellipse cx="152" cy="167" rx="12" ry="4.5" fill="none" stroke="#C9920A" stroke-width="2"/></g>`},
   {id:'velvet-imperials',tier:4,slot:'hands',name:'The Velvet Imperials',cost:700,emoji:'🦁',
-    svg:`<g id="cosmetic-hands-item"><rect x="5" y="100" width="18" height="28" rx="9" fill="#4B0082" stroke="#B06AE0" stroke-width="2.5" transform="rotate(-20 14 114)"/><rect x="137" y="100" width="18" height="28" rx="9" fill="#4B0082" stroke="#B06AE0" stroke-width="2.5" transform="rotate(20 146 114)"/></g>`},
+    svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="14" fill="#4B0082" stroke="#B06AE0" stroke-width="3.5"/><circle cx="152" cy="162" r="14" fill="#4B0082" stroke="#B06AE0" stroke-width="3.5"/><circle cx="4" cy="157" r="5.5" fill="rgba(176,106,224,0.4)"/><circle cx="148" cy="157" r="5.5" fill="rgba(176,106,224,0.4)"/><ellipse cx="8" cy="167" rx="12" ry="4.5" fill="none" stroke="#B06AE0" stroke-width="2"/><ellipse cx="152" cy="167" rx="12" ry="4.5" fill="none" stroke="#B06AE0" stroke-width="2"/><path d="M0,158 L16,158" stroke="#7B2FBE" stroke-width="1.5"/><path d="M144,158 L160,158" stroke="#7B2FBE" stroke-width="1.5"/></g>`},
   {id:'jeweled-mantle-gloves',tier:4,slot:'hands',name:'Jeweled Mantle Gloves',cost:750,emoji:'💎',
-    svg:`<g id="cosmetic-hands-item"><rect x="5" y="100" width="18" height="28" rx="9" fill="#1A0030" stroke="#F5C518" stroke-width="3" transform="rotate(-20 14 114)"/><rect x="137" y="100" width="18" height="28" rx="9" fill="#1A0030" stroke="#F5C518" stroke-width="3" transform="rotate(20 146 114)"/><circle cx="11" cy="107" r="2.5" fill="#FF2D78" transform="rotate(-20 11 107)"/><circle cx="17" cy="104" r="2" fill="#00E5FF" transform="rotate(-20 17 104)"/><circle cx="143" cy="107" r="2.5" fill="#FF2D78" transform="rotate(20 143 107)"/><circle cx="149" cy="104" r="2" fill="#00E5FF" transform="rotate(20 149 104)"/></g>`},
+    svg:`<g id="cosmetic-hands-item"><circle cx="8" cy="162" r="14" fill="#1A0030" stroke="#F5C518" stroke-width="3.5"/><circle cx="152" cy="162" r="14" fill="#1A0030" stroke="#F5C518" stroke-width="3.5"/><circle cx="4" cy="157" r="5.5" fill="rgba(245,197,24,0.25)"/><circle cx="148" cy="157" r="5.5" fill="rgba(245,197,24,0.25)"/><circle cx="8" cy="155" r="2.5" fill="#FF2D78"/><circle cx="13" cy="159" r="2" fill="#00E5FF"/><circle cx="3" cy="159" r="2" fill="#F5C518"/><circle cx="152" cy="155" r="2.5" fill="#FF2D78"/><circle cx="157" cy="159" r="2" fill="#00E5FF"/><circle cx="147" cy="159" r="2" fill="#F5C518"/><ellipse cx="8" cy="167" rx="12" ry="4.5" fill="none" stroke="#F5C518" stroke-width="2"/><ellipse cx="152" cy="167" rx="12" ry="4.5" fill="none" stroke="#F5C518" stroke-width="2"/></g>`},
   {id:'fromage-dor-collar',tier:4,slot:'body',name:"Fromage d'Or Collar",cost:500,emoji:'🧀',
     svg:`<g id="cosmetic-body-item"><path d="M54,91 Q80,104 106,91" stroke="#F5C518" stroke-width="4.5" fill="none" stroke-linecap="round"/><path d="M54,91 Q80,104 106,91" stroke="#FFE066" stroke-width="1.5" stroke-dasharray="3,4" fill="none"/><polygon points="77,105 80,98 83,105 80,111" fill="#F5C518" stroke="#C9920A" stroke-width="1"/></g>`},
   {id:'collier-eternel',tier:4,slot:'body',name:'Le Collier Éternel',cost:600,emoji:'🌙',
@@ -1903,11 +1936,15 @@ function toggleEquip(itemId) {
   updateSwankyCosmetics('wardrobe-swanky-root', 'w-');
   renderWardrobe();
   setSpeak("Looking SWANKY! 🧀✨");
+  // strut reaction in wardrobe
+  tweenPose(POSES.swagger_c, 300, easeInOut, () =>
+    tweenPose(POSES.cool_idle, 400, easeInOut, null));
 }
 
 function updateSwankyCosmetics(rootId, prefix='') {
+  const pfx = prefix || '';
   ['head','eyes','body','mouth','feet','hands','gear'].forEach(slot => {
-    const el = document.getElementById((prefix?'w-':'')+'cosmetic-'+slot);
+    const el = document.getElementById(pfx+'cosmetic-'+slot);
     if (!el) return;
     const equippedId = STATE.equippedItems[slot];
     if (equippedId) {
@@ -1926,6 +1963,320 @@ function unequipAll() {
 }
 
 // =====================
+// === POSE / DANCE SYSTEM ===
+// =====================
+
+// Each pose: bezier d-strings for 6 limb paths + optional body transform
+const POSES = {
+  idle: {
+    armL: 'M 22,115 C 5,130 -2,148 8,162',
+    armR: 'M 138,115 C 155,130 162,148 152,162',
+    legL: 'M 60,148 C 52,158 46,165 44,172',
+    legR: 'M 100,148 C 108,158 114,165 116,172',
+    body: 'translate(0,0) rotate(0,80,90)',
+  },
+  hiphop_a: {
+    armL: 'M 22,115 C 30,80 15,55 35,42',
+    armR: 'M 138,115 C 155,130 162,152 148,168',
+    legL: 'M 60,148 C 45,152 20,148 8,148',
+    legR: 'M 100,148 C 108,158 114,165 116,172',
+    body: 'translate(-4,6) rotate(-5,80,90)',
+  },
+  hiphop_b: {
+    armL: 'M 22,115 C 5,130 -2,148 8,162',
+    armR: 'M 138,115 C 148,95 150,70 142,52',
+    legL: 'M 60,148 C 52,158 46,165 44,172',
+    legR: 'M 100,148 C 112,148 136,148 148,148',
+    body: 'translate(4,6) rotate(5,80,90)',
+  },
+  jazz_a: {
+    armL: 'M 22,115 C 60,85 80,90 95,100',
+    armR: 'M 138,115 C 158,95 168,80 162,62',
+    legL: 'M 60,148 C 55,152 50,158 48,162',
+    legR: 'M 100,148 C 108,158 114,165 116,172',
+    body: 'translate(6,0) rotate(8,80,90)',
+  },
+  jazz_b: {
+    armL: 'M 22,115 C 2,95 -8,80 -2,62',
+    armR: 'M 138,115 C 100,85 80,90 65,100',
+    legL: 'M 60,148 C 52,158 46,165 44,172',
+    legR: 'M 100,148 C 105,152 110,158 112,162',
+    body: 'translate(-6,0) rotate(-8,80,90)',
+  },
+  techno_a: {
+    armL: 'M 22,115 C 0,115 -20,115 -28,115',
+    armR: 'M 138,115 C 160,115 180,115 188,115',
+    legL: 'M 60,148 C 52,158 46,165 44,172',
+    legR: 'M 100,148 C 108,158 114,165 116,172',
+    body: 'translate(0,-5) rotate(0,80,90)',
+  },
+  techno_b: {
+    armL: 'M 22,115 C 10,130 0,148 -5,162',
+    armR: 'M 138,115 C 148,100 155,82 158,68',
+    legL: 'M 60,148 C 55,138 52,128 52,120',
+    legR: 'M 100,148 C 108,158 114,165 116,172',
+    body: 'translate(0,0) rotate(0,80,90)',
+  },
+  reggae_a: {
+    armL: 'M 22,115 C -5,105 -18,100 -20,108',
+    armR: 'M 138,115 C 165,105 178,100 180,108',
+    legL: 'M 60,148 C 52,155 46,162 44,170',
+    legR: 'M 100,148 C 108,155 114,162 116,170',
+    body: 'translate(0,2) rotate(-6,80,90)',
+  },
+  reggae_b: {
+    armL: 'M 22,115 C -8,110 -22,112 -18,122',
+    armR: 'M 138,115 C 168,110 182,112 178,122',
+    legL: 'M 60,148 C 52,158 46,165 44,172',
+    legR: 'M 100,148 C 108,158 114,165 116,172',
+    body: 'translate(0,2) rotate(6,80,90)',
+  },
+  house_down: {
+    armL: 'M 22,115 C 20,90 22,65 24,45',
+    armR: 'M 138,115 C 155,130 162,148 152,162',
+    legL: 'M 60,148 C 52,158 46,165 44,172',
+    legR: 'M 100,148 C 108,158 114,165 116,172',
+    body: 'translate(0,10) rotate(0,80,90)',
+  },
+  house_up: {
+    armL: 'M 22,115 C 5,130 -2,148 8,162',
+    armR: 'M 138,115 C 140,90 138,65 136,45',
+    legL: 'M 60,148 C 52,158 46,165 44,172',
+    legR: 'M 100,148 C 108,158 114,165 116,172',
+    body: 'translate(0,0) rotate(0,80,90)',
+  },
+  bossa_a: {
+    armL: 'M 22,115 C 10,100 5,88 15,78',
+    armR: 'M 138,115 C 150,130 158,145 152,158',
+    legL: 'M 60,148 C 55,156 50,163 48,170',
+    legR: 'M 100,148 C 108,156 114,163 116,170',
+    body: 'translate(4,-2) rotate(4,80,90)',
+  },
+  bossa_b: {
+    armL: 'M 22,115 C 10,130 5,145 12,158',
+    armR: 'M 138,115 C 150,100 155,88 145,78',
+    legL: 'M 60,148 C 52,158 46,165 44,172',
+    legR: 'M 100,148 C 110,156 116,163 118,170',
+    body: 'translate(-4,-2) rotate(-4,80,90)',
+  },
+  swagger_a: {
+    armL: 'M 22,115 C 5,130 -2,148 8,162',
+    armR: 'M 138,115 C 140,75 135,45 133,25',
+    legL: 'M 60,148 C 52,158 46,165 44,172',
+    legR: 'M 100,148 C 108,158 114,165 116,172',
+    body: 'translate(-6,0) rotate(-12,80,90)',
+  },
+  swagger_b: {
+    armL: 'M 22,115 C 20,75 25,45 27,25',
+    armR: 'M 138,115 C 155,130 162,148 152,162',
+    legL: 'M 60,148 C 52,158 46,165 44,172',
+    legR: 'M 100,148 C 108,158 114,165 116,172',
+    body: 'translate(6,0) rotate(12,80,90)',
+  },
+  swagger_c: {
+    armL: 'M 22,115 C -5,100 -18,105 -15,120',
+    armR: 'M 138,115 C 165,100 178,105 175,120',
+    legL: 'M 60,148 C 52,158 46,165 44,172',
+    legR: 'M 100,148 C 108,158 114,165 116,172',
+    body: 'translate(0,0) rotate(0,80,90)',
+  },
+  droop: {
+    armL: 'M 22,115 C 15,128 10,145 8,165',
+    armR: 'M 138,115 C 145,128 150,145 152,165',
+    legL: 'M 60,148 C 56,156 52,163 50,172',
+    legR: 'M 100,148 C 104,156 108,163 110,172',
+    body: 'translate(0,5) rotate(0,80,90)',
+  },
+  cool_idle: {
+    // wardrobe default — arm crosses front, weight on one leg
+    armL: 'M 22,115 C 40,110 65,118 75,125',
+    armR: 'M 138,115 C 145,128 145,148 140,162',
+    legL: 'M 60,148 C 55,156 50,163 48,170',
+    legR: 'M 100,148 C 108,158 114,165 116,172',
+    body: 'translate(-3,0) rotate(-5,80,90)',
+  },
+};
+
+// Parse a bezier d string into array of 8 numbers [M x y C cx1 cy1 cx2 cy2 ex ey]
+function parseBezier(d) {
+  return d.replace(/[MCmc]/g,' ').trim().split(/[\s,]+/).map(Number);
+}
+
+// Lerp two bezier d strings by t (0→1), return interpolated d string
+function lerpBezier(dA, dB, t) {
+  const a = parseBezier(dA), b = parseBezier(dB);
+  const r = a.map((v,i) => v + (b[i]-v)*t);
+  return `M ${r[0]},${r[1]} C ${r[2]},${r[3]} ${r[4]},${r[5]} ${r[6]},${r[7]}`;
+}
+
+// Lerp transform strings: "translate(x,y) rotate(deg,cx,cy)"
+function lerpTransform(tA, tB, t) {
+  const nums = s => s.replace(/[a-z()]/gi,' ').trim().split(/[\s,]+/).map(Number);
+  const a = nums(tA), b = nums(tB);
+  const r = a.map((v,i) => v + (b[i]-v)*t);
+  return `translate(${r[0]},${r[1]}) rotate(${r[2]},${r[3]},${r[4]})`;
+}
+
+function easeInOut(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+
+let _danceRAF = null;
+let _currentPose = POSES.idle; // live state for both SVGs
+let _currentDanceName = 'idle';
+let _ambientDance = 'idle'; // the looping dance to return to after a reaction
+
+// Apply a pose object immediately to both SVGs
+function applyPose(pose) {
+  _currentPose = pose;
+  const ids = [
+    ['arm-l-out','arm-l','arm-l-hi'],
+    ['arm-r-out','arm-r','arm-r-hi'],
+    ['leg-l-out','leg-l','leg-l-hi'],
+    ['leg-r-out','leg-r','leg-r-hi'],
+  ];
+  const vals = [pose.armL, pose.armR, pose.legL, pose.legR];
+  ['','w-'].forEach(pfx => {
+    vals.forEach((d, i) => {
+      ids[i].forEach(id => {
+        const el = document.getElementById(pfx+id);
+        if (el) el.setAttribute('d', d);
+      });
+    });
+    ['swanky-root','wardrobe-swanky-root'].forEach((rid, ri) => {
+      const root = document.getElementById(ri === 0 ? 'swanky-root' : 'wardrobe-swanky-root');
+      if (root) root.setAttribute('transform', pose.body);
+    });
+  });
+  // also update hand/foot positions derived from limb endpoints
+  _updateEndpoints(pose);
+}
+
+// Move hand-blob and foot ellipses to limb endpoints
+function _updateEndpoints(pose) {
+  const endpt = d => { const n = parseBezier(d); return {x:n[6],y:n[7]}; };
+  const lh = endpt(pose.armL), rh = endpt(pose.armR);
+  const lf = endpt(pose.legL), rf = endpt(pose.legR);
+  [['hand-l',lh],['hand-r',rh]].forEach(([id,pt]) => {
+    ['','w-'].forEach(pfx => {
+      const el = document.getElementById(pfx+id);
+      if (el) { el.setAttribute('cx', pt.x); el.setAttribute('cy', pt.y); }
+    });
+  });
+  [['foot-l',lf],['foot-r',rf]].forEach(([id,pt]) => {
+    ['','w-'].forEach(pfx => {
+      const el = document.getElementById(pfx+id);
+      if (el) { el.setAttribute('cx', pt.x); el.setAttribute('cy', pt.y); }
+    });
+  });
+}
+
+// Tween from current pose to target pose over durationMs, call onDone when complete
+function tweenPose(targetPose, durationMs, easeFn, onDone) {
+  if (_danceRAF) cancelAnimationFrame(_danceRAF);
+  const from = {..._currentPose};
+  const start = performance.now();
+  function tick(now) {
+    let t = Math.min(1, (now - start) / durationMs);
+    const e = easeFn ? easeFn(t) : t;
+    const interp = {
+      armL: lerpBezier(from.armL, targetPose.armL, e),
+      armR: lerpBezier(from.armR, targetPose.armR, e),
+      legL: lerpBezier(from.legL, targetPose.legL, e),
+      legR: lerpBezier(from.legR, targetPose.legR, e),
+      body: lerpTransform(from.body, targetPose.body, e),
+    };
+    applyPose(interp);
+    if (t < 1) { _danceRAF = requestAnimationFrame(tick); }
+    else { _danceRAF = null; if (onDone) onDone(); }
+  }
+  _danceRAF = requestAnimationFrame(tick);
+}
+
+// Loop between two poses forever (ambient dance)
+function loopPoses(poseA, poseB, halfPeriodMs, easeFn) {
+  function goToB() { tweenPose(poseB, halfPeriodMs, easeFn, goToA); }
+  function goToA() { tweenPose(poseA, halfPeriodMs, easeFn, goToB); }
+  tweenPose(poseA, halfPeriodMs, easeFn, goToB);
+}
+
+// Snap between poses with no interpolation (for techno robot)
+function snapLoop(poseA, poseB, intervalMs) {
+  if (_danceRAF) cancelAnimationFrame(_danceRAF);
+  let on = true;
+  function tick() {
+    applyPose(on ? poseA : poseB);
+    on = !on;
+    _danceRAF = setTimeout(tick, intervalMs);
+  }
+  tick();
+}
+
+const DANCE_SPECS = {
+  idle:      () => loopPoses(POSES.idle, {...POSES.idle, body:'translate(3,0) rotate(2,80,90)'}, 900, easeInOut),
+  hiphop:    () => loopPoses(POSES.hiphop_a, POSES.hiphop_b, 400, easeInOut),
+  jazz:      () => loopPoses(POSES.jazz_a, POSES.jazz_b, 700, easeInOut),
+  techno:    () => snapLoop(POSES.techno_a, POSES.techno_b, 280),
+  reggae:    () => loopPoses(POSES.reggae_a, POSES.reggae_b, 1100, easeInOut),
+  house:     () => loopPoses(POSES.house_down, POSES.house_up, 360, easeInOut),
+  bossanova: () => loopPoses(POSES.bossa_a, POSES.bossa_b, 900, easeInOut),
+  shimmy:    () => loopPoses(POSES.idle, {...POSES.idle, body:'translate(3,0) rotate(2,80,90)'}, 280, easeInOut),
+  cool:      () => tweenPose(POSES.cool_idle, 600, easeInOut, null),
+};
+
+const GENRE_DANCE_MAP = {
+  hiphop:'hiphop', jazz:'jazz', techno:'techno', reggae:'reggae',
+  house:'house', bossanova:'bossanova', eightbit:'techno',
+  romance:'jazz', showtunes:'hiphop', swanky:'hiphop',
+};
+
+function startDance(name) {
+  if (_danceRAF) { cancelAnimationFrame(_danceRAF); clearTimeout(_danceRAF); _danceRAF = null; }
+  _currentDanceName = name;
+  (DANCE_SPECS[name] || DANCE_SPECS.idle)();
+}
+
+function returnToAmbient() { startDance(_ambientDance); }
+
+// Grade reaction then return to ambient
+function playGradeReaction(grade) {
+  if (grade === 'S') {
+    tweenPose(POSES.swagger_a, 400, easeInOut, () =>
+      tweenPose(POSES.swagger_b, 400, easeInOut, () =>
+        tweenPose(POSES.swagger_c, 500, easeInOut, () =>
+          setTimeout(returnToAmbient, 800))));
+  } else if (grade === 'A') {
+    tweenPose(POSES.jazz_a, 350, easeInOut, () =>
+      tweenPose(POSES.jazz_b, 350, easeInOut, () =>
+        tweenPose(POSES.jazz_a, 350, easeInOut, () =>
+          tweenPose(POSES.jazz_b, 350, easeInOut, returnToAmbient))));
+  } else if (grade === 'B') {
+    tweenPose(POSES.hiphop_a, 320, easeInOut, () =>
+      tweenPose(POSES.hiphop_b, 320, easeInOut, () =>
+        tweenPose(POSES.hiphop_a, 320, easeInOut, returnToAmbient)));
+  } else if (grade === 'C') {
+    startDance('shimmy');
+    setTimeout(returnToAmbient, 2000);
+  } else {
+    tweenPose(POSES.droop, 600, easeInOut, () => setTimeout(returnToAmbient, 2500));
+  }
+}
+
+// Compatibility shim — old code calls setSwankyDance(className)
+function setSwankyDance(danceClass) {
+  const map = {
+    'dance-idle':'idle','dance-shimmy':'shimmy','dance-slide':'jazz',
+    'dance-shake':'techno','dance-bounce':'hiphop','dance-dip':'bossanova','dance-swagger':'jazz',
+  };
+  const name = map[danceClass] || 'idle';
+  startDance(name);
+  // preserve playing-pulse by checking STATE
+  ['swanky-root','wardrobe-swanky-root'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && STATE.isPlaying) el.classList.add('playing-pulse');
+    else if (el) el.classList.remove('playing-pulse');
+  });
+}
+
+// =====================
 // === SWANKY UI ===
 // =====================
 const SWANKY_QUIPS = [
@@ -1936,13 +2287,6 @@ const SWANKY_QUIPS = [
   "Stay swanky, stay funky! 💎",
   "Aged to perfection! 🏆",
 ];
-
-function setSwankyDance(danceClass) {
-  const root = document.getElementById('swanky-root');
-  if (!root) return;
-  root.className = danceClass;
-  if (STATE.isPlaying) root.classList.add('playing-pulse');
-}
 
 function setSpeak(msg) {
   document.getElementById('speech-bubble').textContent = msg;
@@ -1973,7 +2317,7 @@ function switchTab(tab) {
   document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['beatlab','wardrobe'][i]===tab));
   document.getElementById('tab-beatlab').style.display = tab==='beatlab' ? '' : 'none';
   document.getElementById('tab-wardrobe').style.display = tab==='wardrobe' ? '' : 'none';
-  if (tab === 'wardrobe') renderWardrobe();
+  if (tab === 'wardrobe') { renderWardrobe(); startDance('cool'); }
 }
 
 // =====================
@@ -1981,6 +2325,7 @@ function switchTab(tab) {
 // =====================
 renderSequencer();
 updateStats();
+startDance('idle');
 
 // Build genre pills
 (function() {
