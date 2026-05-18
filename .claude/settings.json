@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "command": "& { $raw = [Console]::In.ReadToEnd(); $j = $raw | ConvertFrom-Json; if ($j.tool_input.file_path -like '*beat-maker-mobile*') { Write-Output 'Tests may need updating - open beat-maker-tests.html in your browser to re-run the mobile validation suite.' } }",
+            "statusMessage": "Checking if mobile tests need re-run..."
+          }
+        ]
+      }
+    ]
+  }
+}

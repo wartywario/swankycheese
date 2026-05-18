@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beat Maker — Unit Tests</title>
+<style>
+  body { font-family: monospace; background: #0D0018; color: #FFF8DC; padding: 20px; }
+  h1 { color: #F5C518; margin-bottom: 20px; }
+  .suite { margin-bottom: 24px; }
+  .suite-name { color: #B06AE0; font-size: 1rem; font-weight: bold; margin-bottom: 8px; }
+  .test { padding: 4px 0; display: flex; gap: 10px; align-items: flex-start; font-size: .85rem; }
+  .pass { color: #06D6A0; }
+  .fail { color: #FF6B35; }
+  .icon { flex-shrink: 0; width: 16px; }
+  .summary { margin-top: 24px; padding: 12px 16px; border-radius: 8px; font-size: 1rem; font-weight: bold; }
+  .summary.all-pass { background: rgba(6,214,160,.15); color: #06D6A0; border: 1px solid #06D6A0; }
+  .summary.has-fail  { background: rgba(255,107,53,.15); color: #FF6B35; border: 1px solid #FF6B35; }
+  .err { color: #FFD166; font-size: .75rem; margin-left: 26px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>🧪 Beat Maker Unit Tests</h1>
+<div id="output"></div>
+
+<script>
+// =====================
+// === TEST HARNESS ===
+// =====================
+const results = [];
+let currentSuite = '';
+
+function suite(name) { currentSuite = name; }
+
+function test(name, fn) {
+  try {
+    fn();
+    results.push({ suite: currentSuite, name, pass: true });
+  } catch (e) {
+    results.push({ suite: currentSuite, name, pass: false, err: e.message });
+  }
+}
+
+function assert(condition, msg) {
+  if (!condition) throw new Error(msg || 'Assertion failed');
+}
+
+function assertEqual(a, b, msg) {
+  if (a !== b) throw new Error(msg || `Expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`);
+}
+
+function assertArrayEqual(a, b, msg) {
+  const sa = JSON.stringify(a), sb = JSON.stringify(b);
+  if (sa !== sb) throw new Error(msg || `Expected ${sb}, got ${sa}`);
+}
+
+// =====================
+// === INLINE COPIES OF PRODUCTION CODE UNDER TEST ===
+// (Extracted from beat-maker.html so tests run without DOM dependencies)
+// =====================
+
+const INST_META = {
+  kick:  { label: 'Kick',   short: 'KICK', color: '#FF6B35', emoji: '🔴', cssClass: 'kick'  },
+  snare: { label: 'Snare',  short: 'SNAR', color: '#FFD166', emoji: '🟡', cssClass: 'snare' },
+  hihat: { label: 'Hi-Hat', short: 'HIHT', color: '#06D6A0', emoji: '🟢', cssClass: 'hihat' },
+  bass:  { label: 'Bass',   short: 'BASS', color: '#B06AE0', emoji: '🟣', cssClass: 'bass'  },
+  keys:  { label: 'Keys',   short: 'KEYS', color: '#00E5FF', emoji: '🎹', cssClass: 'keys'  },
+};
+const NOTES   = ['C','D','E','F','G','A','B'];
+const OCTAVES = ['low','mid','high'];
+const OCTAVE_NUM = { low: 3, mid: 4, high: 5 };
+
+const NOTE_FREQ = {
+  'C3':130.81,'D3':146.83,'E3':164.81,'F3':174.61,'G3':196.00,'A3':220.00,'B3':246.94,
+  'C4':261.63,'D4':293.66,'E4':329.63,'F4':349.23,'G4':392.00,'A4':440.00,'B4':493.88,
+  'C5':523.25,'D5':587.33,'E5':659.25,'F5':698.46,'G5':783.99,'A5':880.00,'B5':987.77,
+};
+
+function makeSlot(instrument = 'kick', note = 'C', octave = 'mid') {
+  return { instrument, note, octave, pattern: new Array(16).fill(false) };
+}
+
+function getKeyFreq(note, octave) {
+  return NOTE_FREQ[note + OCTAVE_NUM[octave]] || 440;
+}
+
+// Grading logic (pure, no DOM)
+function computeGrade(slots) {
+  const allActive = slots.flatMap(s => s.pattern).filter(Boolean);
+  const totalPads = slots.length * 16;
+  const filled = allActive.length;
+  const density = filled / totalPads;
+
+  const densityScore = density < 0.15 ? 10 : density < 0.3 ? 20 : density <= 0.55 ? 30 : density <= 0.75 ? 20 : 10;
+
+  const activeTypes = new Set(slots.filter(s => s.pattern.some(Boolean)).map(s => s.instrument));
+  const varietyScore = Math.min(25, activeTypes.size * 5);
+
+  const offBeats = [2,4,6,10,12,14];
+  let offCount = 0;
+  slots.forEach(s => offBeats.forEach(step => { if (s.pattern[step]) offCount++; }));
+  const syncoScore = Math.min(20, Math.floor((offCount / Math.max(1, slots.length * offBeats.length)) * 40));
+
+  const kickSlots  = slots.filter(s => s.instrument === 'kick');
+  const snareSlots = slots.filter(s => s.instrument === 'snare');
+  let anchorScore = 0;
+  if (kickSlots.some(s => s.pattern[0]))                    anchorScore += 8;
+  if (snareSlots.some(s => s.pattern[4] || s.pattern[8]))   anchorScore += 7;
+
+  const keysSlots = slots.filter(s => s.instrument === 'keys' && s.pattern.some(Boolean));
+  const distinctPitches = new Set(keysSlots.map(s => `${s.note}${OCTAVE_NUM[s.octave]}`));
+  let harmonicScore = 0;
+  if (keysSlots.length >= 1)     harmonicScore += 8;
+  if (distinctPitches.size >= 2) harmonicScore += 7;
+  if (distinctPitches.size >= 3) harmonicScore += 5;
+
+  const exploScore = slots.length >= 10 ? 10 : slots.length >= 7 ? 5 : 0;
+
+  const total = densityScore + varietyScore + syncoScore + anchorScore + harmonicScore + exploScore;
+  const grade = total >= 90 ? 'S' : total >= 75 ? 'A' : total >= 55 ? 'B' : total >= 35 ? 'C' : 'D';
+
+  return { total, grade, densityScore, varietyScore, syncoScore, anchorScore, harmonicScore, exploScore };
+}
+
+// Slot management (pure, operating on a slots array passed in)
+function addSlot_pure(slots) {
+  if (slots.length >= 12) return slots;
+  return [...slots, makeSlot('kick')];
+}
+
+function removeSlot_pure(slots, i) {
+  if (slots.length <= 1) return slots;
+  return slots.filter((_, idx) => idx !== i);
+}
+
+function setSlotInstrument_pure(slots, i, instrument) {
+  const updated = slots.map((s, idx) => idx === i ? { ...s, instrument } : s);
+  if (instrument === 'keys' && !updated[i].note) {
+    updated[i] = { ...updated[i], note: 'C', octave: 'mid' };
+  }
+  return updated;
+}
+
+// =====================
+// === TESTS ===
+// =====================
+
+// --- makeSlot ---
+suite('makeSlot()');
+
+test('returns correct shape', () => {
+  const s = makeSlot();
+  assert('instrument' in s, 'missing instrument');
+  assert('note' in s,       'missing note');
+  assert('octave' in s,     'missing octave');
+  assert('pattern' in s,    'missing pattern');
+});
+
+test('defaults to kick/C/mid', () => {
+  const s = makeSlot();
+  assertEqual(s.instrument, 'kick');
+  assertEqual(s.note,       'C');
+  assertEqual(s.octave,     'mid');
+});
+
+test('pattern is 16 falses', () => {
+  const s = makeSlot();
+  assertEqual(s.pattern.length, 16);
+  assert(s.pattern.every(v => v === false), 'pattern not all false');
+});
+
+test('custom args are applied', () => {
+  const s = makeSlot('snare', 'G', 'high');
+  assertEqual(s.instrument, 'snare');
+  assertEqual(s.note,       'G');
+  assertEqual(s.octave,     'high');
+});
+
+// --- addSlot_pure / removeSlot_pure ---
+suite('Slot management');
+
+test('addSlot appends a kick slot', () => {
+  const slots = [makeSlot('kick')];
+  const next = addSlot_pure(slots);
+  assertEqual(next.length, 2);
+  assertEqual(next[1].instrument, 'kick');
+});
+
+test('addSlot enforces max 12', () => {
+  let slots = Array.from({ length: 12 }, () => makeSlot());
+  const next = addSlot_pure(slots);
+  assertEqual(next.length, 12, 'should not exceed 12');
+});
+
+test('removeSlot removes correct index', () => {
+  const slots = [makeSlot('kick'), makeSlot('snare'), makeSlot('hihat')];
+  const next = removeSlot_pure(slots, 1);
+  assertEqual(next.length, 2);
+  assertEqual(next[0].instrument, 'kick');
+  assertEqual(next[1].instrument, 'hihat');
+});
+
+test('removeSlot enforces min 1', () => {
+  const slots = [makeSlot('kick')];
+  const next = removeSlot_pure(slots, 0);
+  assertEqual(next.length, 1, 'should not go below 1');
+});
+
+test('removeSlot preserves pattern data of surviving slots', () => {
+  const s1 = makeSlot('kick');  s1.pattern[0] = true;
+  const s2 = makeSlot('snare'); s2.pattern[4] = true;
+  const s3 = makeSlot('hihat');
+  const next = removeSlot_pure([s1, s2, s3], 2);
+  assert(next[1].pattern[4], 'snare pattern[4] should survive');
+});
+
+test('setSlotInstrument preserves pattern', () => {
+  const slots = [makeSlot('kick')];
+  slots[0].pattern[3] = true;
+  const next = setSlotInstrument_pure(slots, 0, 'snare');
+  assertEqual(next[0].instrument, 'snare');
+  assert(next[0].pattern[3], 'pattern should be preserved');
+});
+
+test('setSlotInstrument to keys sets default note/octave', () => {
+  const slots = [makeSlot('kick')];
+  slots[0].note = '';
+  const next = setSlotInstrument_pure(slots, 0, 'keys');
+  assertEqual(next[0].instrument, 'keys');
+  assertEqual(next[0].note, 'C');
+  assertEqual(next[0].octave, 'mid');
+});
+
+// --- getKeyFreq ---
+suite('getKeyFreq()');
+
+test('C3 = 130.81 Hz (low octave)', () => {
+  assertEqual(getKeyFreq('C', 'low'), 130.81);
+});
+
+test('C4 = 261.63 Hz (mid octave)', () => {
+  assertEqual(getKeyFreq('C', 'mid'), 261.63);
+});
+
+test('C5 = 523.25 Hz (high octave)', () => {
+  assertEqual(getKeyFreq('C', 'high'), 523.25);
+});
+
+test('A4 = 440 Hz', () => {
+  assertEqual(getKeyFreq('A', 'mid'), 440.00);
+});
+
+test('all 21 note/octave combos return a number > 0', () => {
+  let missing = [];
+  NOTES.forEach(n => OCTAVES.forEach(o => {
+    const f = getKeyFreq(n, o);
+    if (typeof f !== 'number' || f <= 0) missing.push(`${n}/${o}`);
+  }));
+  assert(missing.length === 0, `Missing freqs: ${missing.join(', ')}`);
+});
+
+test('fallback to 440 on unknown note', () => {
+  assertEqual(getKeyFreq('X', 'mid'), 440);
+});
+
+// --- INST_META ---
+suite('INST_META');
+
+test('all 5 instruments defined', () => {
+  const keys = Object.keys(INST_META);
+  assertEqual(keys.length, 5);
+  ['kick','snare','hihat','bass','keys'].forEach(k => {
+    assert(k in INST_META, `missing: ${k}`);
+  });
+});
+
+test('each instrument has required fields', () => {
+  Object.entries(INST_META).forEach(([id, meta]) => {
+    assert(meta.label,    `${id} missing label`);
+    assert(meta.short,    `${id} missing short`);
+    assert(meta.color,    `${id} missing color`);
+    assert(meta.emoji,    `${id} missing emoji`);
+    assert(meta.cssClass, `${id} missing cssClass`);
+  });
+});
+
+// --- Grading: Density ---
+suite('gradeBeat() — Density');
+
+test('density < 0.15 → densityScore 10', () => {
+  const slots = [makeSlot('kick')]; // 1 slot = 16 pads
+  slots[0].pattern[0] = true; // 1/16 = 6.25%
+  const { densityScore } = computeGrade(slots);
+  assertEqual(densityScore, 10);
+});
+
+test('sweet spot 20–55% → densityScore 30', () => {
+  const slots = [makeSlot('kick'), makeSlot('snare')]; // 32 pads
+  // activate 10 pads = 31.25%
+  for (let i = 0; i < 10; i++) slots[0].pattern[i] = true;
+  const { densityScore } = computeGrade(slots);
+  assertEqual(densityScore, 30);
+});
+
+test('density > 0.75 → densityScore 10', () => {
+  const slots = [makeSlot('kick')];
+  slots[0].pattern.fill(true); // 16/16 = 100%
+  const { densityScore } = computeGrade(slots);
+  assertEqual(densityScore, 10);
+});
+
+// --- Grading: Variety ---
+suite('gradeBeat() — Variety');
+
+test('1 instrument type → 5 pts', () => {
+  const slots = [makeSlot('kick'), makeSlot('kick')];
+  slots[0].pattern[0] = true;
+  slots[1].pattern[0] = true;
+  const { varietyScore } = computeGrade(slots);
+  assertEqual(varietyScore, 5);
+});
+
+test('all 5 instrument types → 25 pts', () => {
+  const slots = ['kick','snare','hihat','bass','keys'].map(i => {
+    const s = makeSlot(i); s.pattern[0] = true; return s;
+  });
+  const { varietyScore } = computeGrade(slots);
+  assertEqual(varietyScore, 25);
+});
+
+test('instrument in slot but no active pads → not counted', () => {
+  const slots = [makeSlot('kick'), makeSlot('snare')];
+  slots[0].pattern[0] = true;
+  // snare has no active pads
+  const { varietyScore } = computeGrade(slots);
+  assertEqual(varietyScore, 5, 'empty snare should not count');
+});
+
+// --- Grading: Rhythm Anchor ---
+suite('gradeBeat() — Rhythm Anchor');
+
+test('kick step 0 + snare step 4 → 15 pts', () => {
+  const slots = [makeSlot('kick'), makeSlot('snare')];
+  slots[0].pattern[0] = true;
+  slots[1].pattern[4] = true;
+  const { anchorScore } = computeGrade(slots);
+  assertEqual(anchorScore, 15);
+});
+
+test('kick step 0 + snare step 8 → 15 pts', () => {
+  const slots = [makeSlot('kick'), makeSlot('snare')];
+  slots[0].pattern[0] = true;
+  slots[1].pattern[8] = true;
+  const { anchorScore } = computeGrade(slots);
+  assertEqual(anchorScore, 15);
+});
+
+test('kick not on step 0 → 0 kick pts', () => {
+  const slots = [makeSlot('kick'), makeSlot('snare')];
+  slots[0].pattern[4] = true; // kick on wrong step
+  slots[1].pattern[4] = true;
+  const { anchorScore } = computeGrade(slots);
+  assertEqual(anchorScore, 7, 'only snare pts');
+});
+
+test('anchor found when kick is in any slot, not just first', () => {
+  const slots = [makeSlot('snare'), makeSlot('kick')];
+  slots[1].pattern[0] = true; // kick in slot 1
+  slots[0].pattern[4] = true;
+  const { anchorScore } = computeGrade(slots);
+  assertEqual(anchorScore, 15, 'should scan all slots by instrument type');
+});
+
+// --- Grading: Harmonic Depth ---
+suite('gradeBeat() — Harmonic Depth');
+
+test('0 keys slots → 0 harmonic pts', () => {
+  const slots = [makeSlot('kick')];
+  slots[0].pattern[0] = true;
+  const { harmonicScore } = computeGrade(slots);
+  assertEqual(harmonicScore, 0);
+});
+
+test('1 keys slot active → 8 pts', () => {
+  const slots = [makeSlot('keys', 'C', 'mid')];
+  slots[0].pattern[0] = true;
+  const { harmonicScore } = computeGrade(slots);
+  assertEqual(harmonicScore, 8);
+});
+
+test('2 distinct keys pitches → 15 pts', () => {
+  const s1 = makeSlot('keys', 'C', 'mid'); s1.pattern[0] = true;
+  const s2 = makeSlot('keys', 'G', 'mid'); s2.pattern[0] = true;
+  const { harmonicScore } = computeGrade([s1, s2]);
+  assertEqual(harmonicScore, 15);
+});
+
+test('3 distinct keys pitches → 20 pts', () => {
+  const s1 = makeSlot('keys', 'C', 'mid'); s1.pattern[0] = true;
+  const s2 = makeSlot('keys', 'G', 'mid'); s2.pattern[0] = true;
+  const s3 = makeSlot('keys', 'E', 'high'); s3.pattern[0] = true;
+  const { harmonicScore } = computeGrade([s1, s2, s3]);
+  assertEqual(harmonicScore, 20);
+});
+
+test('same pitch in two slots counts as 1 distinct pitch', () => {
+  const s1 = makeSlot('keys', 'C', 'mid'); s1.pattern[0] = true;
+  const s2 = makeSlot('keys', 'C', 'mid'); s2.pattern[0] = true;
+  const { harmonicScore } = computeGrade([s1, s2]);
+  assertEqual(harmonicScore, 8, 'duplicate pitch should not boost score');
+});
+
+test('keys slot with no active pads not counted', () => {
+  const s1 = makeSlot('keys', 'C', 'mid'); // empty pattern
+  const s2 = makeSlot('kick'); s2.pattern[0] = true;
+  const { harmonicScore } = computeGrade([s1, s2]);
+  assertEqual(harmonicScore, 0, 'inactive keys should not count');
+});
+
+// --- Grading: Slot Exploration ---
+suite('gradeBeat() — Slot Exploration');
+
+test('6 slots → 0 exploration pts', () => {
+  const slots = Array.from({ length: 6 }, () => { const s = makeSlot(); s.pattern[0] = true; return s; });
+  const { exploScore } = computeGrade(slots);
+  assertEqual(exploScore, 0);
+});
+
+test('7 slots → 5 pts', () => {
+  const slots = Array.from({ length: 7 }, () => { const s = makeSlot(); s.pattern[0] = true; return s; });
+  const { exploScore } = computeGrade(slots);
+  assertEqual(exploScore, 5);
+});
+
+test('10 slots → 10 pts', () => {
+  const slots = Array.from({ length: 10 }, () => { const s = makeSlot(); s.pattern[0] = true; return s; });
+  const { exploScore } = computeGrade(slots);
+  assertEqual(exploScore, 10);
+});
+
+test('12 slots → 10 pts', () => {
+  const slots = Array.from({ length: 12 }, () => { const s = makeSlot(); s.pattern[0] = true; return s; });
+  const { exploScore } = computeGrade(slots);
+  assertEqual(exploScore, 10);
+});
+
+// --- Grade thresholds ---
+suite('gradeBeat() — Grade thresholds');
+
+test('total ≥ 90 → S', () => {
+  // Max score setup: kick on 0, snare on 4, all 5 types, sweet density, 3 key pitches, 10 slots
+  const slots = [
+    makeSlot('kick'), makeSlot('snare'), makeSlot('hihat'),
+    makeSlot('bass'), makeSlot('keys','C','mid'), makeSlot('keys','G','mid'),
+    makeSlot('keys','E','high'), makeSlot('kick'), makeSlot('snare'), makeSlot('hihat'),
+  ];
+  slots[0].pattern[0] = true;
+  slots[1].pattern[4] = true;
+  [2,3,4,5,6].forEach(i => slots[i].pattern[0] = true);
+  [0,1,2,3,4,5].forEach(i => { slots[i].pattern[2] = true; slots[i].pattern[6] = true; });
+  for (let i = 0; i < 6; i++) slots[0].pattern[i] = true;
+  const { grade } = computeGrade(slots);
+  assertEqual(grade, 'S');
+});
+
+test('total < 35 → D', () => {
+  const slots = [makeSlot('kick')];
+  slots[0].pattern[1] = true; // off-beat kick only, no anchor
+  const { grade } = computeGrade(slots);
+  assertEqual(grade, 'D');
+});
+
+// =====================
+// === MOBILE FILE VALIDATION (async — fetches beat-maker-mobile.html) ===
+// =====================
+async function runMobileValidation() {
+  let html = '';
+  try {
+    const res = await fetch('beat-maker-mobile.html');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    html = await res.text();
+  } catch (e) {
+    results.push({ suite: 'Mobile HTML Validation', name: 'fetch beat-maker-mobile.html', pass: false, err: e.message });
+    renderResults();
+    return;
+  }
+
+  suite('Mobile HTML Validation');
+
+  test('viewport includes viewport-fit=cover', () => {
+    assert(html.includes('viewport-fit=cover'), 'viewport meta missing viewport-fit=cover');
+  });
+
+  test('viewport disables user-scalable', () => {
+    assert(html.includes('user-scalable=no'), 'user-scalable=no missing');
+  });
+
+  test('apple-mobile-web-app-capable meta tag present', () => {
+    assert(html.includes('apple-mobile-web-app-capable'), 'apple-mobile-web-app-capable meta missing');
+  });
+
+  test('overscroll-behavior: none on body', () => {
+    assert(html.includes('overscroll-behavior: none'), 'overscroll-behavior: none missing from body CSS');
+  });
+
+  test('-webkit-user-select: none on body', () => {
+    assert(html.includes('-webkit-user-select: none'), '-webkit-user-select missing');
+  });
+
+  test('-webkit-touch-callout: none on body', () => {
+    assert(html.includes('-webkit-touch-callout: none'), '-webkit-touch-callout missing');
+  });
+
+  test('min-height: 100dvh present', () => {
+    assert(html.includes('100dvh'), '100dvh missing — iOS full-height fix absent');
+  });
+
+  test('-webkit-fill-available fallback present', () => {
+    assert(html.includes('-webkit-fill-available'), '-webkit-fill-available missing');
+  });
+
+  test('env(safe-area-inset-bottom) on tab bar', () => {
+    assert(html.includes('env(safe-area-inset-bottom)'), 'safe-area-inset-bottom missing from tabs');
+  });
+
+  test('global touchstart audio unlock listener present', () => {
+    assert(html.includes("'touchstart', _touchUnlock") || html.includes('"touchstart", _touchUnlock'),
+      'global touchstart audio unlock listener missing');
+  });
+
+  test('audio prompt uses touchend listener', () => {
+    assert(html.includes("'touchend', acceptAudio") || html.includes('"touchend", acceptAudio'),
+      'audio prompt missing touchend handler');
+  });
+
+  test('seq-scroll-outer wrapper present in HTML', () => {
+    assert(html.includes('seq-scroll-outer'), 'seq-scroll-outer missing — 32-beat horizontal scroll not set up');
+  });
+
+  test('pad min-height ≥ 32px (mobile increase)', () => {
+    const m = html.match(/\.pad\s*\{[^}]*min-height\s*:\s*(\d+)px/);
+    assert(m && parseInt(m[1]) >= 32, `pad min-height should be ≥ 32px, found: ${m ? m[1] : 'none'}`);
+  });
+
+  test('touch-action: none suppresses rubber-band on SVG / game area', () => {
+    assert(html.includes('touch-action:none') || html.includes('touch-action: none'),
+      'touch-action: none not found');
+  });
+
+  test('overscroll-behavior-x: contain on scroll wrapper', () => {
+    assert(html.includes('overscroll-behavior-x: contain'), 'overscroll-behavior-x: contain missing from scroll wrapper');
+  });
+
+  test('seq-label-cell min-height ≥ 32px', () => {
+    const m = html.match(/\.seq-label-cell\s*\{[^}]*min-height\s*:\s*(\d+)px/);
+    assert(m && parseInt(m[1]) >= 32, `seq-label-cell min-height should be ≥ 32px, found: ${m ? m[1] : 'none'}`);
+  });
+
+  test('changeBeatCount toggles 32-beat scroll class', () => {
+    assert(html.includes('beats-32-active'), 'changeBeatCount does not set 32-beat scroll class');
+  });
+
+  renderResults();
+}
+
+// =====================
+// === RENDER RESULTS ===
+// =====================
+function renderResults() {
+  const suiteMap = {};
+  results.forEach(r => {
+    if (!suiteMap[r.suite]) suiteMap[r.suite] = [];
+    suiteMap[r.suite].push(r);
+  });
+
+  const out = document.getElementById('output');
+  out.innerHTML = '';
+  const passed = results.filter(r => r.pass).length;
+  const failed = results.filter(r => !r.pass).length;
+
+  Object.entries(suiteMap).forEach(([suiteName, tests]) => {
+    const div = document.createElement('div');
+    div.className = 'suite';
+    div.innerHTML = `<div class="suite-name">${suiteName}</div>`;
+    tests.forEach(t => {
+      const row = document.createElement('div');
+      row.className = `test ${t.pass ? 'pass' : 'fail'}`;
+      row.innerHTML = `<span class="icon">${t.pass ? '✓' : '✗'}</span><span>${t.name}</span>`;
+      div.appendChild(row);
+      if (!t.pass) {
+        const err = document.createElement('div');
+        err.className = 'err';
+        err.textContent = t.err;
+        div.appendChild(err);
+      }
+    });
+    out.appendChild(div);
+  });
+
+  const summary = document.createElement('div');
+  summary.className = `summary ${failed === 0 ? 'all-pass' : 'has-fail'}`;
+  summary.textContent = failed === 0
+    ? `✓ All ${passed} tests passed`
+    : `✗ ${failed} failed, ${passed} passed (${results.length} total)`;
+  out.appendChild(summary);
+}
+
+// Run sync tests first, then async mobile validation
+renderResults();
+runMobileValidation();
+</script>
+</body>
+</html>
