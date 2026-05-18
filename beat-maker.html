@@ -399,6 +399,64 @@
   .beat-count-toggle{display:flex;background:rgba(255,255,255,.05);border-radius:var(--radius-sm);overflow:hidden;border:1px solid rgba(255,255,255,.1);}
   .beat-count-btn{flex:1;padding:5px 12px;border:none;background:transparent;color:var(--text);font-family:'Fredoka One',cursive;font-size:.78rem;cursor:pointer;opacity:.5;transition:all .15s;touch-action:manipulation;}
   .beat-count-btn.active{background:var(--purple-mid);opacity:1;}
+
+  /* NAMING MODAL */
+  #naming-modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;
+    align-items:center;justify-content:center;z-index:500;padding:16px;}
+  .naming-card{background:var(--card2);border:1px solid rgba(245,197,24,.4);
+    border-radius:var(--radius);padding:24px 20px;max-width:340px;width:100%;
+    display:flex;flex-direction:column;gap:14px;
+    box-shadow:0 8px 40px rgba(0,0,0,.6),0 0 60px rgba(245,197,24,.08);}
+  .naming-title{font-family:'Fredoka One',cursive;font-size:1.4rem;color:var(--gold);text-align:center;}
+  .naming-subtitle{font-size:.8rem;opacity:.65;text-align:center;line-height:1.5;}
+  #naming-input{background:rgba(255,255,255,.06);border:1px solid rgba(245,197,24,.3);
+    border-radius:var(--radius-sm);color:var(--text);font-family:'Nunito',sans-serif;
+    font-size:.95rem;padding:10px 12px;width:100%;outline:none;transition:border-color .15s;}
+  #naming-input:focus{border-color:var(--gold);background:rgba(245,197,24,.06);}
+  #naming-input.stanky{border-color:var(--pink);animation:stanky-shake .35s ease;}
+  @keyframes stanky-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+  .naming-error{font-size:.75rem;color:var(--pink);text-align:center;min-height:1.1em;
+    font-family:'Fredoka One',cursive;letter-spacing:.3px;transition:opacity .2s;}
+  .naming-btns{display:flex;gap:10px;}
+  .naming-btns button{flex:1;padding:10px;border-radius:var(--radius-sm);border:none;
+    font-family:'Fredoka One',cursive;font-size:.9rem;cursor:pointer;transition:filter .1s;}
+  .naming-btns button:first-child{background:var(--gold);color:var(--jet);}
+  .naming-btns button:first-child:hover{filter:brightness(1.1);}
+  .naming-btns button:last-child{background:rgba(255,255,255,.08);color:var(--text);
+    border:1px solid rgba(255,255,255,.15);}
+
+  /* TOP HITS TAB */
+  #tab-tophits{padding-bottom:8px;}
+  .tophits-panel{background:var(--card);border-radius:var(--radius);
+    padding:12px;border:1px solid rgba(245,197,24,.15);}
+  .tophits-header{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;}
+  .tophits-header h2{font-size:.95rem;color:var(--gold-light);}
+  .tophits-count{font-family:'Nunito',sans-serif;font-size:.65rem;color:var(--purple-light);opacity:.6;}
+  .tophits-empty{text-align:center;padding:36px 16px;font-size:.8rem;opacity:.45;line-height:2;}
+  .tophits-entry{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);
+    border:1px solid rgba(245,197,24,.08);border-radius:var(--radius-sm);
+    padding:9px 10px;margin-bottom:5px;transition:border-color .12s,background .12s;}
+  .tophits-entry:hover{border-color:rgba(245,197,24,.3);background:rgba(255,255,255,.07);}
+  .tophits-rank{font-family:'Fredoka One',cursive;font-size:.82rem;color:var(--gold);
+    min-width:26px;text-align:center;opacity:.55;}
+  .tophits-rank.gold{color:#FFD700;opacity:1;font-size:.95rem;}
+  .tophits-rank.silver{color:#C0C0C0;opacity:1;}
+  .tophits-rank.bronze{color:#CD7F32;opacity:1;}
+  .tophits-info{flex:1;min-width:0;}
+  .tophits-name{font-family:'Fredoka One',cursive;font-size:.88rem;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tophits-meta{font-size:.58rem;opacity:.45;margin-top:2px;}
+  .tophits-grade{font-family:'Fredoka One',cursive;font-size:1.15rem;min-width:22px;text-align:center;}
+  .tophits-score{font-family:'Fredoka One',cursive;font-size:.75rem;
+    color:var(--purple-light);min-width:26px;text-align:right;opacity:.6;}
+  .tophits-load{background:var(--purple-mid);border:none;border-radius:var(--radius-sm);
+    color:#fff;font-family:'Fredoka One',cursive;font-size:.7rem;padding:6px 10px;
+    cursor:pointer;white-space:nowrap;touch-action:manipulation;transition:background .1s;}
+  .tophits-load:hover{background:var(--purple-light);}
+  .tophits-reset{background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:var(--radius-sm);
+    color:rgba(255,255,255,.35);font-family:'Fredoka One',cursive;font-size:.62rem;padding:4px 9px;
+    cursor:pointer;white-space:nowrap;touch-action:manipulation;transition:all .15s;margin-left:auto;}
+  .tophits-reset:hover{border-color:rgba(255,107,53,.5);color:rgba(255,107,53,.8);}
 </style>
 </head>
 <body>
@@ -433,6 +491,7 @@
   <div class="tabs">
     <button class="tab active" onclick="switchTab('beatlab')"><span class="tab-icon">🎹</span>Beat Lab</button>
     <button class="tab" onclick="switchTab('wardrobe')"><span class="tab-icon">👑</span>Wardrobe</button>
+    <button class="tab" onclick="switchTab('tophits')"><span class="tab-icon">🏆</span>Top Hits</button>
   </div>
 
   <!-- BEAT LAB -->
@@ -713,6 +772,33 @@
     </div>
   </div>
 
+  <!-- TOP HITS TAB CONTENT -->
+  <div id="tab-tophits" style="display:none;">
+    <div class="tophits-panel">
+      <div class="tophits-header">
+        <h2>🏆 Top Hits</h2>
+        <span class="tophits-count" id="tophits-count"></span>
+        <button class="tophits-reset" onclick="resetLeaderboard()">↺ Reset</button>
+      </div>
+      <div id="tophits-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- NAMING MODAL -->
+<div id="naming-modal" style="display:none;">
+  <div class="naming-card">
+    <div class="naming-title">🏆 #<span id="naming-rank"></span> on Top Hits!</div>
+    <div class="naming-subtitle">Your beat made the scoreboard. Give it a name — or skip to save it unnamed.</div>
+    <input id="naming-input" type="text" placeholder="My Funky Beat" maxlength="40"
+      onkeydown="if(event.key==='Enter')submitBeatName()">
+    <div class="naming-error" id="naming-error"></div>
+    <div class="naming-btns">
+      <button onclick="submitBeatName()">Save to Top Hits</button>
+      <button onclick="skipBeatName()">Skip</button>
+    </div>
+  </div>
 </div>
 
 <!-- TOAST -->
@@ -725,6 +811,7 @@
   <button class="ap-dismiss" id="ap-dismiss">✕</button>
 </div>
 
+<script src="scoreboard.js"></script>
 <script>
 // =====================
 // === STATE ===
@@ -1819,6 +1906,10 @@ async function gradeBeat() {
   setSpeak(GRADE_MESSAGES[grade]);
   playGradeSound(grade);
   showToast(`${grade} Grade! +${pts} pts`);
+
+  // Check if this beat makes the Top Hits scoreboard.
+  // Delayed slightly so the grade panel and toast settle first.
+  setTimeout(() => checkScoreboard(grade, total, pts), 950);
 }
 
 function playGradeSound(grade) {
@@ -2513,10 +2604,13 @@ function showToast(msg) {
 // === TABS ===
 // =====================
 function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['beatlab','wardrobe'][i]===tab));
-  document.getElementById('tab-beatlab').style.display = tab==='beatlab' ? '' : 'none';
+  const tabs = ['beatlab','wardrobe','tophits'];
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', tabs[i]===tab));
+  document.getElementById('tab-beatlab').style.display  = tab==='beatlab'  ? '' : 'none';
   document.getElementById('tab-wardrobe').style.display = tab==='wardrobe' ? '' : 'none';
+  document.getElementById('tab-tophits').style.display  = tab==='tophits'  ? '' : 'none';
   if (tab === 'wardrobe') { renderWardrobe(); startDance('cool'); }
+  if (tab === 'tophits')  { renderTopHits(); }
 }
 
 // =====================
@@ -2557,6 +2651,358 @@ startDance('idle');
   });
   dismissBtn.addEventListener('click', () => { prompt.style.display = 'none'; });
 }());
+
+// =====================
+// === TOP HITS / SCOREBOARD ===
+// =====================
+
+// Pending score waiting for the user to name it.
+let _pendingScore = null;
+
+function checkScoreboard(grade, rawScore, ptsAwarded) {
+  const result = Scoreboard.tryAdd(rawScore, ptsAwarded);
+  if (!result.qualifies) return;
+
+  // Snapshot the beat NOW (before the player modifies anything).
+  _pendingScore = {
+    grade, rawScore, ptsAwarded, rank: result.rank,
+    snapshot: Scoreboard.buildEntry('', grade, rawScore, ptsAwarded,
+      SLOTS, STATE.bpm, STATE.beatCount),
+  };
+
+  document.getElementById('naming-rank').textContent = result.rank;
+  document.getElementById('naming-input').value = '';
+  document.getElementById('naming-modal').style.display = 'flex';
+  // Focus input after modal renders (requestAnimationFrame avoids mobile keyboard glitch)
+  requestAnimationFrame(() => document.getElementById('naming-input').focus());
+}
+
+// Profanity filter. Normalise → strip all non-alpha → substring match.
+// Catches spaces, punctuation, and l33t between letters (f u c k, f*ck, etc.).
+const _STANKY_WORDS = [
+  'fuck','fucker','fucking','fucked',
+  'shit','shitting','shitty',
+  'bitch','bitches',
+  'cunt','cunts',
+  'cock','cocks',
+  'dick','dicks',
+  'pussy','pussies',
+  'asshole','assholes','asshat',
+  'nigger','niggers','nigga','niggas',
+  'faggot','faggots','fag','fags',
+  'whore','whores',
+  'slut','sluts',
+  'twat','twats',
+  'dildo','dildos',
+  'kike','kikes',
+  'chink','chinks',
+  'wetback','wetbacks',
+  'retard','retards',
+];
+
+function _isStanky(str) {
+  // 1. Lowercase + substitute common l33t characters.
+  // 2. Strip everything that isn't a letter — kills spaces, punctuation, numbers.
+  const norm = str.toLowerCase()
+    .replace(/[@4]/g, 'a').replace(/3/g, 'e')
+    .replace(/[!1]/g, 'i').replace(/0/g, 'o').replace(/[$5]/g, 's')
+    .replace(/[^a-z]/g, '');
+  return _STANKY_WORDS.some(w => norm.includes(w));
+}
+
+function submitBeatName(skip) {
+  if (!_pendingScore) return;
+
+  const raw = document.getElementById('naming-input').value.trim();
+
+  // Block offensive names — show inline error, keep modal open.
+  if (!skip && raw && _isStanky(raw)) {
+    const inp = document.getElementById('naming-input');
+    const err = document.getElementById('naming-error');
+    inp.classList.remove('stanky');
+    void inp.offsetWidth; // restart animation
+    inp.classList.add('stanky');
+    err.textContent = '🧀 Keep it swanky, not stanky!';
+    inp.addEventListener('input', () => { inp.classList.remove('stanky'); err.textContent = ''; }, { once: true });
+    return;
+  }
+
+  const modal = document.getElementById('naming-modal');
+  modal.style.display = 'none';
+  document.getElementById('naming-error').textContent = '';
+
+  const name = (!skip && raw) ? raw : ('Beat ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+  _pendingScore.snapshot.name = name;
+
+  const finalRank = Scoreboard.addEntry(_pendingScore.snapshot);
+  _pendingScore = null;
+
+  if (finalRank) showToast(`🏆 #${finalRank} on Top Hits: "${name}"`);
+
+  // Refresh tab if already open.
+  if (document.getElementById('tab-tophits').style.display !== 'none') renderTopHits();
+}
+
+function skipBeatName() { submitBeatName(true); }
+
+// ── Grade colour palette (matches pad colours) ──────────────────────────────
+const GRADE_COLOR = { S:'#F5C518', A:'#06D6A0', B:'#00E5FF', C:'#B06AE0', D:'#FF6B35' };
+
+function _esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderTopHits() {
+  const list    = document.getElementById('tophits-list');
+  const counter = document.getElementById('tophits-count');
+  const top20   = Scoreboard.getTop20();
+  const total   = Scoreboard.historyCount();
+
+  counter.textContent = total > 0
+    ? `${top20.length} on the board · ${total} all-time`
+    : '';
+
+  if (top20.length === 0) {
+    list.innerHTML = '<div class="tophits-empty">No hits yet!<br>Grade some beats to get on the board. 🎵</div>';
+    return;
+  }
+
+  list.innerHTML = top20.map((entry, i) => {
+    const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+    const rankLabel = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i+1}`;
+    return `
+      <div class="tophits-entry">
+        <div class="tophits-rank ${rankClass}">${rankLabel}</div>
+        <div class="tophits-info">
+          <div class="tophits-name">${_esc(entry.name)}</div>
+          <div class="tophits-meta">${entry.bpm} BPM · ${entry.beatCount} steps · ${entry.date}</div>
+        </div>
+        <div class="tophits-grade" style="color:${GRADE_COLOR[entry.grade]||'#fff'}">${entry.grade}</div>
+        <div class="tophits-score">${entry.rawScore}</div>
+        <button class="tophits-load" onclick="loadBeatFromScore(${i})">▶ Load</button>
+      </div>`;
+  }).join('');
+}
+
+function loadBeatFromScore(rankIndex) {
+  const top20 = Scoreboard.getTop20();
+  const entry = top20[rankIndex];
+  if (!entry) return;
+
+  // Stop sequencer cleanly.
+  if (STATE.isPlaying) {
+    stopSequencer();
+    STATE.isPlaying = false;
+    const playBtn = document.getElementById('btn-play');
+    playBtn.textContent = '▶ Play Beat';
+    playBtn.classList.remove('playing');
+    document.getElementById('swanky-root').classList.remove('playing-pulse');
+    startDance('idle');
+  }
+
+  // Replace slots with the saved beat.
+  SLOTS.length = 0;
+  entry.slots.forEach(s => SLOTS.push({
+    instrument: s.instrument,
+    note: s.note,
+    octave: s.octave,
+    pattern: Array.from(s.pattern),
+  }));
+
+  // Apply beat count without calling changeBeatCount (which would mutate patterns).
+  STATE.beatCount = entry.beatCount;
+  const beatLab = document.querySelector('.beat-lab');
+  beatLab.classList.remove('beats-8', 'beats-32');
+  if (entry.beatCount === 8)  beatLab.classList.add('beats-8');
+  if (entry.beatCount === 32) beatLab.classList.add('beats-32');
+  document.querySelectorAll('.beat-count-btn').forEach(btn =>
+    btn.classList.toggle('active', parseInt(btn.dataset.beats) === entry.beatCount));
+
+  // Apply BPM.
+  STATE.bpm = entry.bpm;
+  const bpmRange = document.getElementById('bpm-range');
+  if (bpmRange) bpmRange.value = entry.bpm;
+  document.getElementById('bpm-display').textContent = entry.bpm;
+
+  // Rebuild sequencer UI.
+  rebuildBeatHeader();
+  renderSequencer();
+  document.getElementById('grade-panel').classList.remove('show');
+
+  switchTab('beatlab');
+  showToast(`🎵 Loaded: "${_esc(entry.name)}"`);
+}
+
+// =====================
+// === SEED LEADERBOARD ===
+// =====================
+// Ten cheese-themed house beats that populate the board on first load.
+// Each song's score is pre-computed from the grading algorithm:
+//   Density(30) + Variety(25) + Syncopation(20) + Anchor(15) + Harmonic(20) + Exploration(10)
+const _SEED_BEATS = [
+  // ── S grade ──────────────────────────────────────────────────────────────
+  {
+    name: 'Gouda Vibrations', grade: 'S', rawScore: 120, ptsAwarded: 100,
+    bpm: 112, beatCount: 16, daysAgo: 60,
+    // density=30 variety=25 synco=20 anchor=15 harmonic=20 explore=10 → 120
+    slots: [
+      { instrument: 'kick',  note: 'C', octave: 'mid',  pattern: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0] },
+      { instrument: 'kick',  note: 'C', octave: 'mid',  pattern: [0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0] },
+      { instrument: 'snare', note: 'C', octave: 'mid',  pattern: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] },
+      { instrument: 'snare', note: 'C', octave: 'mid',  pattern: [0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0] },
+      { instrument: 'hihat', note: 'C', octave: 'mid',  pattern: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1] },
+      { instrument: 'hihat', note: 'C', octave: 'mid',  pattern: [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1] },
+      { instrument: 'bass',  note: 'G', octave: 'low',  pattern: [1,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0] },
+      { instrument: 'keys',  note: 'C', octave: 'mid',  pattern: [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0] },
+      { instrument: 'keys',  note: 'E', octave: 'mid',  pattern: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] },
+      { instrument: 'keys',  note: 'G', octave: 'high', pattern: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0] },
+    ],
+  },
+  {
+    name: 'Brie-Liever', grade: 'S', rawScore: 120, ptsAwarded: 100,
+    bpm: 78, beatCount: 16, daysAgo: 55,
+    // density=30 variety=25 synco=20 anchor=15 harmonic=20 explore=10 → 120
+    slots: [
+      { instrument: 'kick',  note: 'C', octave: 'mid',  pattern: [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0] },
+      { instrument: 'kick',  note: 'C', octave: 'mid',  pattern: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0] },
+      { instrument: 'snare', note: 'C', octave: 'mid',  pattern: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] },
+      { instrument: 'snare', note: 'C', octave: 'mid',  pattern: [0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0] },
+      { instrument: 'hihat', note: 'C', octave: 'mid',  pattern: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1] },
+      { instrument: 'hihat', note: 'C', octave: 'mid',  pattern: [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0] },
+      { instrument: 'bass',  note: 'G', octave: 'low',  pattern: [1,0,1,0,0,0,1,0,1,0,1,0,0,0,1,0] },
+      { instrument: 'keys',  note: 'D', octave: 'mid',  pattern: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0] },
+      { instrument: 'keys',  note: 'F', octave: 'mid',  pattern: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0] },
+      { instrument: 'keys',  note: 'A', octave: 'mid',  pattern: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] },
+    ],
+  },
+  // ── A grade ──────────────────────────────────────────────────────────────
+  {
+    name: 'Cheddar Funk', grade: 'A', rawScore: 87, ptsAwarded: 75,
+    bpm: 90, beatCount: 16, daysAgo: 45,
+    // density=30 variety=20 synco=17 anchor=15 harmonic=0 explore=5 → 87
+    slots: [
+      { instrument: 'kick',  note: 'C', octave: 'mid',  pattern: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0] },
+      { instrument: 'kick',  note: 'C', octave: 'mid',  pattern: [0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0] },
+      { instrument: 'snare', note: 'C', octave: 'mid',  pattern: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] },
+      { instrument: 'snare', note: 'C', octave: 'mid',  pattern: [0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0] },
+      { instrument: 'hihat', note: 'C', octave: 'mid',  pattern: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1] },
+      { instrument: 'hihat', note: 'C', octave: 'mid',  pattern: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] },
+      { instrument: 'bass',  note: 'G', octave: 'low',  pattern: [1,0,0,1,0,0,1,0,1,0,0,1,0,0,1,0] },
+    ],
+  },
+  {
+    name: 'Mozzarella Moonwalk', grade: 'A', rawScore: 84, ptsAwarded: 75,
+    bpm: 120, beatCount: 16, daysAgo: 38,
+    // density=20 variety=25 synco=16 anchor=15 harmonic=8 explore=0 → 84
+    slots: [
+      { instrument: 'kick',  note: 'C', octave: 'mid',  pattern: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0] },
+      { instrument: 'snare', note: 'C', octave: 'mid',  pattern: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] },
+      { instrument: 'hihat', note: 'C', octave: 'mid',  pattern: [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0] },
+      { instrument: 'bass',  note: 'F', octave: 'low',  pattern: [1,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0] },
+      { instrument: 'keys',  note: 'C', octave: 'mid',  pattern: [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0] },
+    ],
+  },
+  {
+    name: 'Parmesan Parade', grade: 'A', rawScore: 78, ptsAwarded: 75,
+    bpm: 96, beatCount: 16, daysAgo: 30,
+    // density=20 variety=25 synco=10 anchor=15 harmonic=8 explore=0 → 78
+    slots: [
+      { instrument: 'kick',  note: 'C', octave: 'mid',  pattern: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0] },
+      { instrument: 'snare', note: 'C', octave: 'mid',  pattern: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] },
+      { instrument: 'hihat', note: 'C', octave: 'mid',  pattern: [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1] },
+      { instrument: 'bass',  note: 'C', octave: 'low',  pattern: [1,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0] },
+      { instrument: 'keys',  note: 'G', octave: 'mid',  pattern: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0] },
+    ],
+  },
+  // ── B grade ──────────────────────────────────────────────────────────────
+  {
+    name: 'Camembert Club', grade: 'B', rawScore: 70, ptsAwarded: 50,
+    bpm: 85, beatCount: 16, daysAgo: 22,
+    // density=20 variety=15 synco=20 anchor=15 harmonic=0 explore=0 → 70
+    slots: [
+      { instrument: 'kick',  note: 'C', octave: 'mid',  pattern: [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0] },
+      { instrument: 'snare', note: 'C', octave: 'mid',  pattern: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] },
+      { instrument: 'hihat', note: 'C', octave: 'mid',  pattern: [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0] },
+      { instrument: 'hihat', note: 'C', octave: 'mid',  pattern: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0] },
+    ],
+  },
+  {
+    name: 'Ricotta Rhythm', grade: 'B', rawScore: 60, ptsAwarded: 50,
+    bpm: 70, beatCount: 16, daysAgo: 15,
+    // density=20 variety=15 synco=10 anchor=15 harmonic=0 explore=0 → 60
+    slots: [
+      { instrument: 'kick',  note: 'C', octave: 'mid',  pattern: [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0] },
+      { instrument: 'kick',  note: 'C', octave: 'mid',  pattern: [0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0] },
+      { instrument: 'snare', note: 'C', octave: 'mid',  pattern: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] },
+      { instrument: 'bass',  note: 'C', octave: 'low',  pattern: [1,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0] },
+    ],
+  },
+  {
+    name: 'Gruyère Groove', grade: 'B', rawScore: 56, ptsAwarded: 50,
+    bpm: 104, beatCount: 16, daysAgo: 10,
+    // density=20 variety=15 synco=6 anchor=15 harmonic=0 explore=0 → 56
+    slots: [
+      { instrument: 'kick',  note: 'C', octave: 'mid',  pattern: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0] },
+      { instrument: 'snare', note: 'C', octave: 'mid',  pattern: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] },
+      { instrument: 'hihat', note: 'C', octave: 'mid',  pattern: [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1] },
+      { instrument: 'hihat', note: 'C', octave: 'mid',  pattern: [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0] },
+    ],
+  },
+  // ── C grade ──────────────────────────────────────────────────────────────
+  {
+    name: 'Muenster Mash', grade: 'C', rawScore: 54, ptsAwarded: 25,
+    bpm: 95, beatCount: 16, daysAgo: 5,
+    // density=20 variety=15 synco=4 anchor=15 harmonic=0 explore=0 → 54
+    slots: [
+      { instrument: 'kick',  note: 'C', octave: 'mid',  pattern: [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] },
+      { instrument: 'snare', note: 'C', octave: 'mid',  pattern: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] },
+      { instrument: 'hihat', note: 'C', octave: 'mid',  pattern: [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1] },
+    ],
+  },
+  {
+    name: 'Velveeta Vibes', grade: 'C', rawScore: 38, ptsAwarded: 25,
+    bpm: 60, beatCount: 16, daysAgo: 2,
+    // density=20 variety=10 synco=0 anchor=8 harmonic=0 explore=0 → 38
+    slots: [
+      { instrument: 'kick',  note: 'C', octave: 'mid',  pattern: [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] },
+      { instrument: 'hihat', note: 'C', octave: 'mid',  pattern: [0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1] },
+    ],
+  },
+];
+
+function seedLeaderboard() {
+  if (Scoreboard.historyCount() > 0) return;
+  const DAY = 86400000;
+  _SEED_BEATS.forEach((s, i) => {
+    const ts = Date.now() - s.daysAgo * DAY;
+    Scoreboard.addEntry({
+      id: 'seed_' + i,
+      name: s.name,
+      grade: s.grade,
+      rawScore: s.rawScore,
+      ptsAwarded: s.ptsAwarded,
+      bpm: s.bpm,
+      beatCount: s.beatCount,
+      slots: s.slots.map(sl => ({
+        instrument: sl.instrument,
+        note: sl.note,
+        octave: sl.octave,
+        pattern: Array.from(sl.pattern, Boolean),
+      })),
+      timestamp: ts,
+      date: new Date(ts).toLocaleDateString(),
+    });
+  });
+}
+
+function resetLeaderboard() {
+  localStorage.removeItem('swankycheese_scoreboard_v1');
+  seedLeaderboard();
+  renderTopHits();
+  showToast('🧀 Top Hits reset to defaults');
+}
+
+seedLeaderboard();
 </script>
 </body>
 </html>
