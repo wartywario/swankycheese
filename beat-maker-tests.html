@@ -523,9 +523,21 @@ async function runMobileValidation() {
     assert(html.includes('env(safe-area-inset-bottom)'), 'safe-area-inset-bottom missing from tabs');
   });
 
-  test('global touchstart audio unlock listener present', () => {
-    assert(html.includes("'touchstart', _touchUnlock") || html.includes('"touchstart", _touchUnlock'),
-      'global touchstart audio unlock listener missing');
+  test('global touchend audio unlock listener present (not touchstart — weaker iOS gesture)', () => {
+    assert(
+      html.includes('_globalAudioUnlock') || html.includes('touchend') && html.includes('unlockAudio'),
+      'global touchend audio unlock listener missing'
+    );
+    assert(
+      !html.includes("'touchstart', _touchUnlock") && !html.includes('"touchstart", _touchUnlock'),
+      'old touchstart-based _touchUnlock still present — should have been replaced'
+    );
+  });
+
+  test('silent buffer bootstrap in unlockAudio (fixes iOS currentTime-stuck-at-0 bug)', () => {
+    assert(html.includes('_audioBootstrapped'), '_audioBootstrapped flag missing from unlockAudio');
+    assert(html.includes('createBuffer(1, 1') || html.includes('createBuffer(1,1'), 'silent 1-sample buffer creation missing');
+    assert(html.includes('createBufferSource'), 'BufferSource for silent unlock missing');
   });
 
   test('audio prompt uses touchend listener', () => {
