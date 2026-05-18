@@ -141,6 +141,90 @@ function setSlotInstrument_pure(slots, i, instrument) {
   return updated;
 }
 
+// Profanity filter (inline copy from beat-maker.html)
+const _STANKY_WORDS = [
+  'fuck','fucker','fucking','fucked',
+  'shit','shitting','shitty',
+  'bitch','bitches',
+  'cunt','cunts',
+  'cock','cocks',
+  'dick','dicks',
+  'pussy','pussies',
+  'asshole','assholes','asshat',
+  'nigger','niggers','nigga','niggas',
+  'faggot','faggots','fag','fags',
+  'whore','whores',
+  'slut','sluts',
+  'twat','twats',
+  'dildo','dildos',
+  'kike','kikes',
+  'chink','chinks',
+  'wetback','wetbacks',
+  'retard','retards',
+];
+function _isStanky(str) {
+  const norm = str.toLowerCase()
+    .replace(/[@4]/g, 'a').replace(/3/g, 'e')
+    .replace(/[!1]/g, 'i').replace(/0/g, 'o').replace(/[$5]/g, 's')
+    .replace(/[^a-z]/g, '');
+  return _STANKY_WORDS.some(w => norm.includes(w));
+}
+
+// Scoreboard module (inline copy using an isolated test key so tests don't touch real data)
+const _testSB = (() => {
+  const KEY = 'swankycheese_test_' + Math.random().toString(36).slice(2);
+  const TOP_SIZE = 20;
+  function _load() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || { top20: [], history: [] }; }
+    catch { return { top20: [], history: [] }; }
+  }
+  function _save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch {} }
+  function _cmp(a, b) {
+    if (b.rawScore !== a.rawScore) return b.rawScore - a.rawScore;
+    if (b.ptsAwarded !== a.ptsAwarded) return b.ptsAwarded - a.ptsAwarded;
+    return a.timestamp - b.timestamp;
+  }
+  function tryAdd(rawScore, ptsAwarded) {
+    const { top20 } = _load();
+    if (top20.length < TOP_SIZE) {
+      const h = { rawScore, ptsAwarded, timestamp: Date.now() };
+      const rank = [...top20, h].sort(_cmp).findIndex(e => e === h) + 1;
+      return { qualifies: true, rank };
+    }
+    const worst = [...top20].sort(_cmp)[TOP_SIZE - 1];
+    if (rawScore < worst.rawScore) return { qualifies: false, rank: null };
+    if (rawScore === worst.rawScore && ptsAwarded <= worst.ptsAwarded) return { qualifies: false, rank: null };
+    const h = { rawScore, ptsAwarded, timestamp: Date.now() };
+    const sorted = [...top20, h].sort(_cmp);
+    const rank = sorted.findIndex(e => e === h) + 1;
+    return { qualifies: rank <= TOP_SIZE, rank: rank <= TOP_SIZE ? rank : null };
+  }
+  function buildEntry(name, grade, rawScore, ptsAwarded, slots, bpm, beatCount) {
+    return {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      name: (name || '').trim() || 'Unnamed Beat',
+      grade, rawScore, ptsAwarded, bpm, beatCount,
+      slots: slots.map(s => ({ instrument: s.instrument, note: s.note, octave: s.octave, pattern: Array.from(s.pattern) })),
+      timestamp: Date.now(),
+      date: new Date().toLocaleDateString(),
+    };
+  }
+  function addEntry(entry) {
+    const data = _load();
+    data.history.push({ ...entry });
+    data.top20.push(entry);
+    data.top20.sort(_cmp);
+    if (data.top20.length > TOP_SIZE) data.top20.length = TOP_SIZE;
+    _save(data);
+    const rank = data.top20.findIndex(e => e.id === entry.id);
+    return rank >= 0 ? rank + 1 : null;
+  }
+  function getTop20() { return _load().top20; }
+  function historyCount() { return _load().history.length; }
+  function clear() { localStorage.removeItem(KEY); }
+  return { tryAdd, buildEntry, addEntry, getTop20, historyCount, clear };
+})();
+
 // =====================
 // === TESTS ===
 // =====================
@@ -470,6 +554,156 @@ test('total < 35 → D', () => {
   assertEqual(grade, 'D');
 });
 
+// --- Profanity filter ---
+suite('_isStanky() profanity filter');
+
+test('clean names return false', () => {
+  assert(!_isStanky('Gouda Vibrations'), 'Gouda Vibrations should be clean');
+  assert(!_isStanky('Cheddar Funk'),     'Cheddar Funk should be clean');
+  assert(!_isStanky('My Beat'),          'My Beat should be clean');
+  assert(!_isStanky(''),                 'empty string should be clean');
+});
+
+test('common offensive words are blocked', () => {
+  assert(_isStanky('fuck'),    'fuck not caught');
+  assert(_isStanky('shit'),    'shit not caught');
+  assert(_isStanky('bitch'),   'bitch not caught');
+  assert(_isStanky('asshole'), 'asshole not caught');
+  assert(_isStanky('nigger'),  'nigger not caught');
+});
+
+test('l33t substitutions are caught (@→a, 3→e, !→i, 0→o, $→s)', () => {
+  assert(_isStanky('f@ck'),  'f@ck (@ as a) not caught');
+  assert(_isStanky('sh!t'),  'sh!t (! as i) not caught');
+  assert(_isStanky('a$$h0le'), 'a$$h0le not caught');
+  assert(_isStanky('b1tch'), 'b1tch (1 as i) not caught');
+});
+
+test('spaces between letters are caught', () => {
+  assert(_isStanky('f u c k'),     'f u c k with spaces not caught');
+  assert(_isStanky('s h i t'),     's h i t with spaces not caught');
+  assert(_isStanky('f-u-c-k'),     'f-u-c-k with dashes not caught');
+  assert(_isStanky('a.s.s.h.o.l.e'), 'dotted asshole not caught');
+});
+
+test('word embedded in otherwise clean text is caught', () => {
+  assert(_isStanky('my shit beat'), 'embedded "shit" not caught');
+  assert(_isStanky('thefuckingbest'), 'embedded "fucking" not caught');
+});
+
+test('legitimate words with partial matches are not false-positives', () => {
+  assert(!_isStanky('Classic Beat'),   '"class" in classic should not trigger');
+  assert(!_isStanky('Scunthorpe Mix'), 'Scunthorpe should be fine (no word in list matches)');
+  // Note: "Cocktail" contains "cock" after stripping and is intentionally blocked —
+  // the tradeoff of substring matching over word-boundary matching.
+  assert(_isStanky('Cocktail Jazz'),   'cocktail contains "cock" — known substring match');
+});
+
+// --- Scoreboard ---
+suite('Scoreboard — tryAdd()');
+
+test('qualifies when board is empty', () => {
+  _testSB.clear();
+  const r = _testSB.tryAdd(80, 75);
+  assert(r.qualifies, 'should qualify on empty board');
+  assertEqual(r.rank, 1);
+});
+
+test('qualifies when board has < 20 entries', () => {
+  _testSB.clear();
+  _testSB.addEntry({ ..._testSB.buildEntry('A', 'A', 80, 75, [], 120, 16), id: 't1' });
+  const r = _testSB.tryAdd(60, 50);
+  assert(r.qualifies, 'should qualify when board not full');
+});
+
+test('higher rawScore ranks above lower', () => {
+  _testSB.clear();
+  _testSB.addEntry({ ..._testSB.buildEntry('A', 'S', 90, 100, [], 120, 16), id: 't1' });
+  const r = _testSB.tryAdd(95, 100);
+  assert(r.qualifies, 'higher score should qualify');
+  assertEqual(r.rank, 1, 'higher score should rank #1');
+});
+
+test('does not qualify when score is below full board worst', () => {
+  _testSB.clear();
+  // Fill 20 entries with score 50
+  for (let i = 0; i < 20; i++) {
+    _testSB.addEntry({ ..._testSB.buildEntry(`E${i}`, 'B', 50, 50, [], 120, 16), id: `t${i}` });
+  }
+  const r = _testSB.tryAdd(30, 25);
+  assert(!r.qualifies, 'score below worst should not qualify');
+  assertEqual(r.rank, null);
+});
+
+suite('Scoreboard — buildEntry()');
+
+test('returns required fields', () => {
+  const slots = [makeSlot('kick')];
+  const e = _testSB.buildEntry('Test Beat', 'A', 80, 75, slots, 120, 16);
+  assert(e.id,        'missing id');
+  assert(e.name,      'missing name');
+  assert(e.grade,     'missing grade');
+  assert(e.timestamp, 'missing timestamp');
+  assert(e.date,      'missing date');
+  assert(Array.isArray(e.slots), 'slots should be array');
+});
+
+test('fallback name when empty string passed', () => {
+  const e = _testSB.buildEntry('', 'B', 60, 50, [], 90, 16);
+  assertEqual(e.name, 'Unnamed Beat');
+});
+
+test('slot patterns are copied as arrays', () => {
+  const s = makeSlot('kick'); s.pattern[0] = true;
+  const e = _testSB.buildEntry('X', 'A', 80, 75, [s], 120, 16);
+  assert(Array.isArray(e.slots[0].pattern), 'pattern should be array');
+  assert(e.slots[0].pattern[0], 'pattern[0] should be true');
+});
+
+suite('Scoreboard — addEntry() / persistence');
+
+test('addEntry returns rank 1 for first entry', () => {
+  _testSB.clear();
+  const e = { ..._testSB.buildEntry('First', 'S', 100, 100, [], 120, 16), id: 'first1' };
+  const rank = _testSB.addEntry(e);
+  assertEqual(rank, 1);
+});
+
+test('higher score displaces lower score to rank 2', () => {
+  _testSB.clear();
+  const e1 = { ..._testSB.buildEntry('Low', 'A', 70, 75, [], 120, 16), id: 'low1' };
+  _testSB.addEntry(e1);
+  const e2 = { ..._testSB.buildEntry('High', 'S', 100, 100, [], 120, 16), id: 'high1' };
+  const rank = _testSB.addEntry(e2);
+  assertEqual(rank, 1, 'higher score should be rank 1');
+  assertEqual(_testSB.getTop20()[0].id, 'high1', 'top20[0] should be the higher-score entry');
+});
+
+test('top20 never exceeds 20 entries', () => {
+  _testSB.clear();
+  for (let i = 0; i < 25; i++) {
+    _testSB.addEntry({ ..._testSB.buildEntry(`B${i}`, 'B', 50 + i, 50, [], 120, 16), id: `b${i}` });
+  }
+  assert(_testSB.getTop20().length <= 20, 'top20 exceeded 20');
+});
+
+test('history records all entries including those outside top20', () => {
+  _testSB.clear();
+  for (let i = 0; i < 25; i++) {
+    _testSB.addEntry({ ..._testSB.buildEntry(`B${i}`, 'B', 50 + i, 50, [], 120, 16), id: `h${i}` });
+  }
+  assertEqual(_testSB.historyCount(), 25, 'history should have all 25 entries');
+});
+
+test('tiebreak: earlier timestamp ranks higher', () => {
+  _testSB.clear();
+  const e1 = { ..._testSB.buildEntry('Old', 'S', 100, 100, [], 120, 16), id: 'old1', timestamp: 1000 };
+  const e2 = { ..._testSB.buildEntry('New', 'S', 100, 100, [], 120, 16), id: 'new1', timestamp: 2000 };
+  _testSB.addEntry(e2);
+  _testSB.addEntry(e1);
+  assertEqual(_testSB.getTop20()[0].id, 'old1', 'earlier timestamp should rank higher on tie');
+});
+
 // =====================
 // === MOBILE FILE VALIDATION (async — fetches beat-maker-mobile.html) ===
 // =====================
@@ -570,6 +804,65 @@ async function runMobileValidation() {
 
   test('changeBeatCount toggles 32-beat scroll class', () => {
     assert(html.includes('beats-32-active'), 'changeBeatCount does not set 32-beat scroll class');
+  });
+
+  // ── Top Hits / Scoreboard ──────────────────────────────────────────────
+  test('scoreboard.js script tag present', () => {
+    assert(html.includes('src="scoreboard.js"'), 'scoreboard.js script tag missing');
+  });
+
+  test('#tab-tophits div present', () => {
+    assert(html.includes('id="tab-tophits"'), '#tab-tophits div missing');
+  });
+
+  test('Top Hits tab button present', () => {
+    assert(html.includes("switchTab('tophits')"), 'Top Hits tab button missing');
+  });
+
+  test('naming modal present', () => {
+    assert(html.includes('id="naming-modal"'), 'naming-modal div missing');
+    assert(html.includes('id="naming-input"'), 'naming-input field missing');
+    assert(html.includes('id="naming-rank"'),  'naming-rank span missing');
+  });
+
+  test('renderTopHits function defined', () => {
+    assert(html.includes('function renderTopHits'), 'renderTopHits function missing');
+  });
+
+  test('loadBeatFromScore function defined', () => {
+    assert(html.includes('function loadBeatFromScore'), 'loadBeatFromScore function missing');
+  });
+
+  test('checkScoreboard hooked into gradeBeat via setTimeout', () => {
+    assert(html.includes('checkScoreboard'), 'checkScoreboard call missing');
+    assert(html.includes('setTimeout') && html.includes('checkScoreboard'), 'checkScoreboard not called via setTimeout');
+  });
+
+  test('profanity filter present (_isStanky + word list)', () => {
+    assert(html.includes('_isStanky'), '_isStanky function missing');
+    assert(html.includes('_STANKY_WORDS'), '_STANKY_WORDS list missing');
+    assert(html.includes('Keep it swanky, not stanky'), 'stanky error message missing');
+  });
+
+  test('seed beats array present', () => {
+    assert(html.includes('_SEED_BEATS'), '_SEED_BEATS array missing');
+    assert(html.includes('Gouda Vibrations'), 'seed beat "Gouda Vibrations" missing');
+    assert(html.includes('Velveeta Vibes'),   'seed beat "Velveeta Vibes" missing');
+  });
+
+  test('seedLeaderboard function present and called', () => {
+    assert(html.includes('function seedLeaderboard'), 'seedLeaderboard function missing');
+    assert(html.includes('seedLeaderboard()'), 'seedLeaderboard() call missing');
+  });
+
+  test('resetLeaderboard function present with reset button', () => {
+    assert(html.includes('function resetLeaderboard'), 'resetLeaderboard function missing');
+    assert(html.includes('resetLeaderboard()'), 'resetLeaderboard() call on button missing');
+  });
+
+  test('switchTab handles tophits', () => {
+    assert(html.includes("tab==='tophits'"), "switchTab missing 'tophits' branch");
+    assert(html.includes('renderTopHits()'), 'switchTab does not call renderTopHits()');
   });
 
   renderResults();
