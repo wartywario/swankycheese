@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<!--
+  SWANKY CHEESE — Title Section Variations
+  =========================================
+  Open this file in a browser to preview all 5 options.
+  Tell me which letter (A–E) you want applied to index.html.
+
+  Each variation is self-contained: CSS + HTML + any JS.
+  The dashed box shows exactly what replaces the current
+  <h1> + .subtitle block (and updates the h1/subtitle CSS).
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Title Variations — Swanky Cheese</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  :root {
+    --green: #33ff33;
+    --dark-green: #00aa00;
+    --black: #0a0a0a;
+    --amber: #ffb000;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #111;
+    font-family: 'Press Start 2P', monospace;
+    padding: 32px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 60px;
+    align-items: center;
+    image-rendering: pixelated;
+    color: #555;
+  }
+
+  /* ── GALLERY WRAPPER ── */
+  .variation {
+    width: 100%;
+    max-width: 760px;
+  }
+
+  .variation-label {
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: #444;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .variation-label strong {
+    color: #ffb000;
+    font-size: 11px;
+  }
+
+  .preview-box {
+    background: #0a0a0a;
+    border: 1px dashed #333;
+    padding: 40px 20px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* scanline shared */
+  .preview-box::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px, transparent 3px,
+      rgba(0,0,0,0.15) 3px, rgba(0,0,0,0.15) 4px
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* ════════════════════════════════════════
+     VARIATION A — GLITCH TERMINAL
+     Hacker-green glitch effect on the title,
+     with a typewriter subtitle that writes itself.
+  ════════════════════════════════════════ */
+  .a-title {
+    font-size: clamp(18px, 5vw, 36px);
+    color: var(--green);
+    letter-spacing: 6px;
+    position: relative;
+    text-align: center;
+    animation: glitch-main 4s infinite;
+    margin-bottom: 4px;
+  }
+
+  .a-title::before,
+  .a-title::after {
+    content: 'SWANKY CHEESE';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    text-align: center;
+  }
+  .a-title::before {
+    color: #ff003c;
+    animation: glitch-r 4s infinite;
+    clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%);
+  }
+  .a-title::after {
+    color: #00fff9;
+    animation: glitch-b 4s infinite;
+    clip-path: polygon(0 55%, 100% 55%, 100% 75%, 0 75%);
+  }
+
+  @keyframes glitch-main {
+    0%,89%,91%,100% { transform: none; }
+    90% { transform: skewX(-2deg) translateX(2px); }
+  }
+  @keyframes glitch-r {
+    0%,89%,93%,100% { transform: none; opacity: 0; }
+    90% { transform: translateX(-3px); opacity: 0.8; }
+    91% { transform: translateX(3px); opacity: 0.8; }
+    92% { opacity: 0; }
+  }
+  @keyframes glitch-b {
+    0%,89%,93%,100% { transform: none; opacity: 0; }
+    90% { transform: translateX(4px); opacity: 0.7; }
+    91% { transform: translateX(-2px); opacity: 0.7; }
+    92% { opacity: 0; }
+  }
+
+  .a-sub {
+    font-size: 8px;
+    color: var(--dark-green);
+    letter-spacing: 3px;
+    margin-top: 10px;
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 2px solid var(--green);
+    width: 0;
+    animation: a-type 1.8s steps(24,end) 0.5s forwards, a-caret 0.7s step-end 0.5s infinite;
+  }
+
+  @keyframes a-type {
+    to { width: 21ch; }
+  }
+  @keyframes a-caret {
+    0%,100% { border-color: var(--green); }
+    50% { border-color: transparent; }
+  }
+
+
+  /* ════════════════════════════════════════
+     VARIATION B — GOLDEN MARQUEE
+     Amber title with a light-sweep shine,
+     flanked by animated ★ brackets,
+     plus a scrolling marquee ticker below.
+  ════════════════════════════════════════ */
+  .b-stars {
+    color: var(--amber);
+    font-size: 10px;
+    letter-spacing: 8px;
+    margin-bottom: 10px;
+    animation: b-star-pulse 2s ease-in-out infinite;
+  }
+  @keyframes b-star-pulse {
+    0%,100% { opacity: 0.5; letter-spacing: 8px; }
+    50% { opacity: 1; letter-spacing: 12px; }
+  }
+
+  .b-title {
+    font-size: clamp(16px, 4.5vw, 34px);
+    color: var(--amber);
+    letter-spacing: 5px;
+    text-align: center;
+    position: relative;
+    text-shadow: 3px 3px 0 #7a4400, 0 0 30px #ffb000cc;
+    overflow: hidden;
+  }
+  .b-title::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,220,0.35), transparent);
+    animation: b-shine 3s ease-in-out 1s infinite;
+  }
+  @keyframes b-shine {
+    0% { left: -80%; }
+    60%,100% { left: 140%; }
+  }
+
+  .b-ticker-wrap {
+    width: 100%;
+    overflow: hidden;
+    border-top: 1px solid #3a2800;
+    border-bottom: 1px solid #3a2800;
+    margin-top: 14px;
+    padding: 5px 0;
+  }
+  .b-ticker {
+    display: inline-block;
+    white-space: nowrap;
+    font-size: 7px;
+    color: #7a5500;
+    letter-spacing: 2px;
+    animation: b-scroll 18s linear infinite;
+  }
+  @keyframes b-scroll {
+    from { transform: translateX(100vw); }
+    to   { transform: translateX(-100%); }
+  }
+
+
+  /* ════════════════════════════════════════
+     VARIATION C — CHEESE DRIP LOGO
+     Stacked layout: small badge text above,
+     large title, animated cheese drips below
+     the text using CSS clip/keyframes.
+  ════════════════════════════════════════ */
+  .c-badge {
+    font-size: 6px;
+    color: #7a5500;
+    letter-spacing: 4px;
+    border: 1px solid #3a2800;
+    padding: 4px 10px;
+    margin-bottom: 14px;
+  }
+
+  .c-title-wrap {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 6px;
+  }
+
+  .c-title {
+    font-size: clamp(18px, 5vw, 38px);
+    color: var(--amber);
+    letter-spacing: 5px;
+    text-shadow: 4px 4px 0 #5a3000, 0 0 24px #ffb000bb;
+    display: block;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* drip drops below the text */
+  .c-drips {
+    position: relative;
+    height: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    margin-top: 0;
+  }
+  .c-drip {
+    width: 6px;
+    background: var(--amber);
+    border-radius: 0 0 4px 4px;
+    transform-origin: top center;
+    animation: c-drip-fall 2.4s ease-in-out infinite;
+    opacity: 0.85;
+  }
+  .c-drip:nth-child(1) { height: 8px;  animation-delay: 0s;    animation-duration: 2.2s; }
+  .c-drip:nth-child(2) { height: 14px; animation-delay: 0.4s;  animation-duration: 2.8s; }
+  .c-drip:nth-child(3) { height: 6px;  animation-delay: 0.8s;  animation-duration: 2.0s; }
+  .c-drip:nth-child(4) { height: 12px; animation-delay: 1.2s;  animation-duration: 2.5s; }
+  .c-drip:nth-child(5) { height: 9px;  animation-delay: 0.2s;  animation-duration: 2.3s; }
+  .c-drip:nth-child(6) { height: 5px;  animation-delay: 1.6s;  animation-duration: 1.9s; }
+
+  @keyframes c-drip-fall {
+    0%,100% { transform: scaleY(1); opacity: 0.85; }
+    50%      { transform: scaleY(1.3); opacity: 1; }
+  }
+
+  .c-sub {
+    font-size: 7px;
+    color: var(--dark-green);
+    letter-spacing: 3px;
+    margin-top: 10px;
+  }
+
+  .c-sub .cursor {
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+
+
+  /* ════════════════════════════════════════
+     VARIATION D — BOOT SEQUENCE
+     Fake OS boot screen that plays on load:
+     shows startup lines, then flashes to reveal
+     the real title. Playful and immersive.
+  ════════════════════════════════════════ */
+  .d-boot {
+    font-size: 8px;
+    color: var(--green);
+    letter-spacing: 1px;
+    line-height: 2.2;
+    text-align: left;
+    width: 100%;
+    max-width: 420px;
+    min-height: 80px;
+  }
+
+  .d-boot-line {
+    display: block;
+    opacity: 0;
+  }
+  .d-boot-line.show { opacity: 1; }
+
+  .d-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 7px;
+    color: var(--dark-green);
+    opacity: 0;
+  }
+  .d-bar-wrap.show { opacity: 1; }
+  .d-bar {
+    height: 6px;
+    background: #001400;
+    border: 1px solid var(--dark-green);
+    width: 160px;
+    position: relative;
+    overflow: hidden;
+  }
+  .d-bar-fill {
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    background: var(--green);
+    width: 0%;
+    transition: width 1.2s ease;
+  }
+
+  .d-title-reveal {
+    display: none;
+    text-align: center;
+    width: 100%;
+    animation: d-flash 0.4s ease;
+  }
+  .d-title-reveal.show { display: block; }
+
+  @keyframes d-flash {
+    0%,100% { opacity: 1; }
+    25%,75% { opacity: 0; }
+    50%      { opacity: 1; }
+  }
+
+  .d-title {
+    font-size: clamp(16px, 4.5vw, 32px);
+    color: var(--amber);
+    letter-spacing: 5px;
+    text-shadow: 3px 3px 0 #7a4400, 0 0 22px #ffb000bb;
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .d-sub {
+    font-size: 8px;
+    color: var(--dark-green);
+    letter-spacing: 2px;
+  }
+
+
+  /* ════════════════════════════════════════
+     VARIATION E — STACKED NEON PULSE
+     "SWANKY" and "CHEESE" on two lines,
+     much larger, with an animated neon glow
+     that pulses between green and amber.
+     More dramatic / game-title energy.
+  ════════════════════════════════════════ */
+  .e-title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    margin-bottom: 12px;
+  }
+
+  .e-line1 {
+    font-size: clamp(22px, 6.5vw, 52px);
+    color: var(--green);
+    letter-spacing: 8px;
+    text-shadow:
+      0 0 8px #33ff33,
+      0 0 20px #33ff3388,
+      3px 3px 0 #004400;
+    animation: e-pulse-g 3s ease-in-out infinite;
+  }
+
+  .e-divider {
+    width: 80%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--dark-green), transparent);
+    margin: 4px 0;
+  }
+
+  .e-line2 {
+    font-size: clamp(22px, 6.5vw, 52px);
+    color: var(--amber);
+    letter-spacing: 8px;
+    text-shadow:
+      0 0 8px #ffb000,
+      0 0 20px #ffb00088,
+      3px 3px 0 #7a4400;
+    animation: e-pulse-a 3s ease-in-out 1.5s infinite;
+  }
+
+  @keyframes e-pulse-g {
+    0%,100% { text-shadow: 0 0 8px #33ff33, 0 0 20px #33ff3388, 3px 3px 0 #004400; }
+    50%      { text-shadow: 0 0 16px #33ff33, 0 0 40px #33ff33aa, 0 0 60px #33ff3344, 3px 3px 0 #004400; }
+  }
+  @keyframes e-pulse-a {
+    0%,100% { text-shadow: 0 0 8px #ffb000, 0 0 20px #ffb00088, 3px 3px 0 #7a4400; }
+    50%      { text-shadow: 0 0 16px #ffb000, 0 0 40px #ffb000aa, 0 0 60px #ffb00044, 3px 3px 0 #7a4400; }
+  }
+
+  .e-sub {
+    font-size: 7px;
+    color: var(--dark-green);
+    letter-spacing: 3px;
+    text-align: center;
+  }
+  .e-sub span {
+    display: inline-block;
+    animation: blink 1s step-end infinite;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     VARIATION A — GLITCH TERMINAL
+═══════════════════════════════════════════════ -->
+<div class="variation">
+  <p class="variation-label"><strong>A</strong> &mdash; GLITCH TERMINAL &nbsp;/&nbsp; hacker-green with RGB split glitch + typewriter subtitle</p>
+  <div class="preview-box">
+    <h1 class="a-title">SWANKY CHEESE</h1>
+    <p class="a-sub">&gt; SELECT YOUR CHEESE</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     VARIATION B — GOLDEN MARQUEE
+═══════════════════════════════════════════════ -->
+<div class="variation">
+  <p class="variation-label"><strong>B</strong> &mdash; GOLDEN MARQUEE &nbsp;/&nbsp; light-sweep shine, pulsing star row, scrolling ticker</p>
+  <div class="preview-box">
+    <p class="b-stars">★ ★ ★ ★ ★</p>
+    <h1 class="b-title">SWANKY CHEESE</h1>
+    <div class="b-ticker-wrap">
+      <span class="b-ticker">
+        &nbsp;&nbsp;&nbsp;★ THE FINEST PIXEL DAIRY ★ EST. 2026 ★ CHEDDAR &bull; SWISS &bull; GOUDA &bull; BRIE ★ GET YOUR DRIP ON ★ TOTALLY SWANKY ★&nbsp;&nbsp;&nbsp;
+        ★ THE FINEST PIXEL DAIRY ★ EST. 2026 ★ CHEDDAR &bull; SWISS &bull; GOUDA &bull; BRIE ★ GET YOUR DRIP ON ★ TOTALLY SWANKY ★
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     VARIATION C — CHEESE DRIP LOGO
+═══════════════════════════════════════════════ -->
+<div class="variation">
+  <p class="variation-label"><strong>C</strong> &mdash; CHEESE DRIP LOGO &nbsp;/&nbsp; badge lockup, dripping amber drops, warm amber title</p>
+  <div class="preview-box">
+    <span class="c-badge">EST. 2026 &mdash; THE PIXEL CREAMERY</span>
+    <div class="c-title-wrap">
+      <span class="c-title">SWANKY CHEESE</span>
+      <div class="c-drips">
+        <div class="c-drip"></div>
+        <div class="c-drip"></div>
+        <div class="c-drip"></div>
+        <div class="c-drip"></div>
+        <div class="c-drip"></div>
+        <div class="c-drip"></div>
+      </div>
+    </div>
+    <p class="c-sub">&gt; SELECT YOUR CHEESE<span class="cursor">_</span></p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     VARIATION D — BOOT SEQUENCE
+═══════════════════════════════════════════════ -->
+<div class="variation">
+  <p class="variation-label"><strong>D</strong> &mdash; BOOT SEQUENCE &nbsp;/&nbsp; fake OS startup lines, loading bar, title flash-reveal on load</p>
+  <div class="preview-box" id="d-box">
+    <div class="d-boot" id="d-boot">
+      <span class="d-boot-line" id="dl1">SWANKY CHEESE OS v2.0.26 &mdash; BOOTING...</span>
+      <span class="d-boot-line" id="dl2">CHECKING DAIRY RESERVES... OK</span>
+      <div class="d-bar-wrap" id="dl3">
+        LOADING CHEESE
+        <div class="d-bar"><div class="d-bar-fill" id="d-fill"></div></div>
+        <span id="d-pct">0%</span>
+      </div>
+      <span class="d-boot-line" id="dl4">ALL CHEESES LOADED. WELCOME.</span>
+    </div>
+    <div class="d-title-reveal" id="d-reveal">
+      <span class="d-title">SWANKY CHEESE</span>
+      <p class="d-sub">&gt; SELECT YOUR CHEESE<span style="animation:blink 1s step-end infinite;display:inline-block">_</span></p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     VARIATION E — STACKED NEON PULSE
+═══════════════════════════════════════════════ -->
+<div class="variation">
+  <p class="variation-label"><strong>E</strong> &mdash; STACKED NEON PULSE &nbsp;/&nbsp; two-line oversized title, alternating green/amber neon glow pulse</p>
+  <div class="preview-box">
+    <div class="e-title">
+      <span class="e-line1">SWANKY</span>
+      <div class="e-divider"></div>
+      <span class="e-line2">CHEESE</span>
+    </div>
+    <p class="e-sub">&gt; SELECT YOUR CHEESE<span>_</span></p>
+  </div>
+</div>
+
+<style>
+  @keyframes blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+</style>
+
+<script>
+  // ── VARIATION D: Boot sequence animation ──────────────────────────────────
+  (function() {
+    const lines = [
+      { el: document.getElementById('dl1'), delay: 100 },
+      { el: document.getElementById('dl2'), delay: 700 },
+      { el: document.getElementById('dl3'), delay: 1300 },
+    ];
+
+    function show(el, delay) {
+      setTimeout(() => el.classList.add('show'), delay);
+    }
+
+    lines.forEach(({ el, delay }) => show(el, delay));
+
+    // loading bar
+    setTimeout(() => {
+      const fill  = document.getElementById('d-fill');
+      const label = document.getElementById('d-pct');
+      let pct = 0;
+      const iv = setInterval(() => {
+        pct = Math.min(100, pct + Math.floor(Math.random() * 18) + 5);
+        fill.style.width = pct + '%';
+        label.textContent = pct + '%';
+        if (pct >= 100) {
+          clearInterval(iv);
+          show(document.getElementById('dl4'), 200);
+          setTimeout(() => {
+            document.getElementById('d-boot').style.display = 'none';
+            document.getElementById('d-reveal').classList.add('show');
+          }, 900);
+        }
+      }, 120);
+    }, 1400);
+  }());
+</script>
+</body>
+</html>
